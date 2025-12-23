@@ -152,7 +152,7 @@ class AlertCard extends StatelessWidget {
   final Alert alert;
   final VoidCallback? onTap;
   final Color? customColor;
-  
+
   // Behavior can be customized without modifying the widget
 }
 ```
@@ -239,7 +239,7 @@ DockFooter(
 ```dart
 void _handleAlertTap(Alert alert) {
   if (alert.isResolved) return;  // Guard clause
-  
+
   // Single responsibility: navigate to alert details
   context.push('/alerts/${alert.id}');
 }
@@ -252,14 +252,14 @@ class MyWidget extends StatelessWidget {
   // 1. Props (grouped logically)
   final String title;
   final VoidCallback onTap;
-  
+
   // 2. Constructor
   const MyWidget({
     super.key,
     required this.title,
     required this.onTap,
   });
-  
+
   // 3. Build method (should be readable at a glance)
   @override
   Widget build(BuildContext context) {
@@ -267,12 +267,12 @@ class MyWidget extends StatelessWidget {
       child: _buildContent(),
     );
   }
-  
+
   // 4. Private helper methods (extract complex logic)
   Widget _buildContent() {
     // ...
   }
-  
+
   // 5. Private computed properties
   Color get _backgroundColor => isActive ? Colors.blue : Colors.grey;
 }
@@ -308,7 +308,7 @@ const double _kDefaultPadding = 16.0;
 **Good Example:**
 ```dart
 /// Displays user status with Available/Busy/Away options.
-/// 
+///
 /// The selected status is persisted to user preferences
 /// and synced across devices via the backend.
 class StatusToggle extends StatelessWidget {
@@ -419,8 +419,272 @@ void updateStatus(UserStatus status) {  // Type-safe!
 ### Architecture Patterns:
 - **Clean Architecture**: Separation of concerns (data, domain, presentation)
 - **Repository Pattern**: Abstract data sources
+- **Adapter Pattern**: Wrap external dependencies with interfaces (see below)
 - **SOLID Principles**: Single responsibility, open/closed, etc.
 - **Error Handling**: Use Result/Either types or try-catch with specific failures
+
+### Adapter Pattern (MANDATORY for Infrastructure)
+
+**CRITICAL: All infrastructure dependencies MUST use the Adapter Pattern following Dependency Inversion Principle.**
+
+#### What is the Adapter Pattern?
+
+The Adapter Pattern wraps external libraries (HTTP clients, databases, storage, WebSockets) behind interface abstractions. This allows:
+- **Easy Testing**: Mock implementations for unit tests
+- **Flexibility**: Swap libraries without changing business logic
+- **SOLID Compliance**: Follows Dependency Inversion Principle
+- **No Vendor Lock-in**: Not tied to specific library implementations
+
+#### When to Use Adapters
+
+**ALWAYS use adapters for:**
+1. ✅ HTTP/API clients (Dio, http)
+2. ✅ Secure storage (FlutterSecureStorage)
+3. ✅ Databases (sqflite, Hive, Drift)
+4. ✅ WebSocket/Real-time clients (web_socket_channel, socket.io)
+5. ✅ Local storage (SharedPreferences)
+6. ✅ File system operations
+7. ✅ External APIs (Firebase, AWS, etc.)
+
+**DO NOT use adapters for:**
+- ❌ Pure Dart utilities (no external dependencies)
+- ❌ Flutter framework widgets
+- ❌ Simple data models
+- ❌ Riverpod providers themselves
+
+#### Adapter Pattern Implementation
+
+**Step 1: Create the Interface**
+
+```dart
+// lib/core/network/http_client_interface.dart
+
+/// HTTP Client Interface - Abstraction for HTTP operations
+/// Depend on this interface, not concrete implementations
+abstract class IHttpClient {
+  Future<HttpResponse<T>> get<T>(String path, {Map<String, dynamic>? queryParameters});
+  Future<HttpResponse<T>> post<T>(String path, {dynamic data});
+  Future<HttpResponse<T>> put<T>(String path, {dynamic data});
+  Future<HttpResponse<T>> delete<T>(String path);
+
+  void setAccessToken(String? token);
+  String? get accessToken;
+  void close();
+}
+
+/// Response wrapper to decouple from Dio's Response class
+class HttpResponse<T> {
+  final T data;
+  final int? statusCode;
+  final Map<String, dynamic>? headers;
+
+  HttpResponse({required this.data, this.statusCode, this.headers});
+}
+```
+
+**Step 2: Create the Adapter**
+
+```dart
+// lib/core/network/dio_http_client.dart
+
+import 'package:dio/dio.dart';
+import 'package:lighten_up/core/network/http_client_interface.dart';
+
+/// Dio adapter implementing IHttpClient interface
+/// Wraps Dio to match our interface - easy to swap or mock
+class DioHttpClient implements IHttpClient {
+  late final Dio _dio;
+  String? _accessToken;
+
+  DioHttpClient({String? baseUrl, String? accessToken}) : _accessToken = accessToken {
+    _dio = Dio(BaseOptions(baseUrl: baseUrl ?? ApiEndpoints.baseUrl));
+  }
+
+  @override
+  void setAccessToken(String? token) {
+    _accessToken = token;
+  }
+
+  @override
+  String? get accessToken => _accessToken;
+
+  @override
+  Future<HttpResponse<T>> get<T>(String path, {Map<String, dynamic>? queryParameters}) async {
+    try {
+      final response = await _dio.get<T>(path, queryParameters: queryParameters);
+      return HttpResponse.fromDioResponse(response);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  // Implement other methods...
+
+  @override
+  void close() {
+    _dio.close();
+  }
+}
+```
+
+**Step 3: Create Export Module (Optional but Recommended)**
+
+```dart
+// lib/core/network/api_client.dart
+
+/// API Client - HTTP client abstraction layer
+/// Use IHttpClient interface for all dependencies
+
+library;
+
+export 'http_client_interface.dart';
+export 'dio_http_client.dart';
+```
+
+**Step 4: Use Interface in Providers**
+
+```dart
+// lib/presentation/providers/core_providers.dart
+
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:lighten_up/core/network/http_client_interface.dart';
+import 'package:lighten_up/core/network/dio_http_client.dart';
+
+/// Provides IHttpClient instance (using Dio adapter)
+/// Depends on interface, not concrete implementation
+@Riverpod(keepAlive: true)
+IHttpClient httpClient(Ref ref) {
+  return DioHttpClient(); // Can easily swap for MockHttpClient in tests
+}
+```
+
+**Step 5: Depend on Interface in Repositories**
+
+```dart
+// lib/data/repositories/auth_repository_impl.dart
+
+import 'package:lighten_up/core/network/http_client_interface.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
+  final IHttpClient _httpClient;  // ✅ Interface, not concrete class
+
+  AuthRepositoryImpl({required IHttpClient httpClient})
+      : _httpClient = httpClient;
+
+  @override
+  Future<AuthResponse> login(LoginRequest request) async {
+    final response = await _httpClient.post(
+      ApiEndpoints.login,
+      data: request.toJson(),
+    );
+    return AuthResponse.fromJson(response.data);
+  }
+}
+```
+
+#### Existing Adapters in the Project
+
+**Current adapters (MUST use these):**
+
+1. **HTTP Client** (`lib/core/network/`)
+   - Interface: `IHttpClient`
+   - Adapter: `DioHttpClient`
+   - Export: `api_client.dart`
+   - Purpose: HTTP requests to backend API
+
+2. **Secure Storage** (`lib/core/storage/`)
+   - Interface: `ISecureStorage`
+   - Adapter: `FlutterSecureStorageAdapter`
+   - Export: `secure_storage.dart`
+   - Purpose: Encrypted storage for tokens, passwords, sensitive data
+
+3. **WebSocket/Real-time Client** (`lib/core/network/`)
+   - Interface: `IRealtimeClient`
+   - Adapter: `WebSocketChannelAdapter`
+   - Export: `websocket_client.dart`
+   - Purpose: Real-time bidirectional communication
+
+4. **NoSQL Database** (`lib/core/storage/`)
+   - Interface: `IDatabase` and `IDatabaseBox<T>`
+   - Adapter: `HiveDatabaseAdapter` and `HiveBoxAdapter<T>`
+   - Export: `database_helper.dart`
+   - Purpose: Local NoSQL database for caching and offline storage
+   - Currently using: **Hive** (key-value store)
+   - Can swap for: Isar, ObjectBox, Realm, Firebase/Firestore
+
+#### Testing with Adapters
+
+**Adapters make testing easy:**
+
+```dart
+// test/mocks/mock_http_client.dart
+
+class MockHttpClient implements IHttpClient {
+  @override
+  Future<HttpResponse<T>> get<T>(String path, {Map<String, dynamic>? queryParameters}) async {
+    // Return mock data
+    return HttpResponse(data: {'mock': 'data'} as T);
+  }
+
+  // Implement other methods with mock data...
+}
+
+// In tests:
+test('login returns user data', () async {
+  final mockClient = MockHttpClient();
+  final repository = AuthRepositoryImpl(httpClient: mockClient);
+
+  final result = await repository.login(LoginRequest(email: 'test@example.com'));
+
+  expect(result.user.email, 'test@example.com');
+});
+```
+
+#### Adapter Pattern Checklist
+
+When creating new adapters:
+
+- [ ] Create `I<Name>` interface in appropriate directory
+- [ ] Define all required methods in interface
+- [ ] Create `<Library><Name>Adapter` class implementing interface
+- [ ] Add `@override` annotations to all implemented methods
+- [ ] Create export module file (optional but recommended)
+- [ ] Update providers to return interface type
+- [ ] Update all consumers to depend on interface type
+- [ ] Run `flutter pub run build_runner build` if using Riverpod annotations
+- [ ] Verify with `flutter analyze` and `flutter test`
+
+#### Common Mistakes to Avoid
+
+❌ **DON'T depend on concrete implementations:**
+```dart
+class AuthRepositoryImpl {
+  final Dio _dio;  // ❌ Direct dependency on Dio
+  AuthRepositoryImpl({required Dio dio}) : _dio = dio;
+}
+```
+
+✅ **DO depend on interfaces:**
+```dart
+class AuthRepositoryImpl {
+  final IHttpClient _httpClient;  // ✅ Depends on interface
+  AuthRepositoryImpl({required IHttpClient httpClient}) : _httpClient = httpClient;
+}
+```
+
+❌ **DON'T expose library-specific types:**
+```dart
+abstract class IHttpClient {
+  Future<Response> get(String path);  // ❌ Exposes Dio's Response type
+}
+```
+
+✅ **DO wrap library-specific types:**
+```dart
+abstract class IHttpClient {
+  Future<HttpResponse> get(String path);  // ✅ Uses our wrapper type
+}
+```
 
 ### Performance:
 - Use `const` constructors liberally
@@ -465,6 +729,7 @@ Before marking any task complete:
 - [ ] Performance considerations addressed
 - [ ] State management follows Riverpod patterns
 - [ ] Follows repository pattern for data access
+- [ ] Infrastructure dependencies use Adapter Pattern (IHttpClient, ISecureStorage, etc.)
 - [ ] `const` constructors used where possible
 
 ## Common Commands Reference

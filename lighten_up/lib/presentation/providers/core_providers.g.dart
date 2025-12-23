@@ -6,13 +6,14 @@ part of 'core_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$secureStorageHash() => r'5c9908c0046ad0e39469ee7acbb5540397b36693';
+String _$secureStorageHash() => r'bdd778205a66e2a9aaae41ad6c85020c45d3b947';
 
-/// Provides singleton instance of SecureStorage
+/// Provides singleton instance of ISecureStorage
+/// Follows Adapter Pattern - depends on interface, not implementation
 ///
 /// Copied from [secureStorage].
 @ProviderFor(secureStorage)
-final secureStorageProvider = Provider<SecureStorage>.internal(
+final secureStorageProvider = Provider<ISecureStorage>.internal(
   secureStorage,
   name: r'secureStorageProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -24,7 +25,7 @@ final secureStorageProvider = Provider<SecureStorage>.internal(
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef SecureStorageRef = ProviderRef<SecureStorage>;
+typedef SecureStorageRef = ProviderRef<ISecureStorage>;
 String _$preferencesStorageHash() =>
     r'54ec9105ec7b797620d16be1d5547026eec509de';
 
@@ -45,46 +46,48 @@ final preferencesStorageProvider = Provider<PreferencesStorage>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PreferencesStorageRef = ProviderRef<PreferencesStorage>;
-String _$databaseHelperHash() => r'58556b75b05652cf1b077db4f63da63f60aa2fbc';
+String _$databaseHash() => r'2215f016986d832968b21a226c6d55dd6d3a3137';
 
-/// Provides singleton instance of DatabaseHelper
+/// Provides singleton instance of IDatabase (using Hive adapter)
+/// Follows Adapter Pattern - depends on interface, not implementation
 ///
-/// Copied from [databaseHelper].
-@ProviderFor(databaseHelper)
-final databaseHelperProvider = Provider<DatabaseHelper>.internal(
-  databaseHelper,
-  name: r'databaseHelperProvider',
+/// Copied from [database].
+@ProviderFor(database)
+final databaseProvider = Provider<IDatabase>.internal(
+  database,
+  name: r'databaseProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$databaseHelperHash,
+      : _$databaseHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef DatabaseHelperRef = ProviderRef<DatabaseHelper>;
-String _$apiClientHash() => r'63fc6dff4895b61d89488481f5dbf487f473518d';
+typedef DatabaseRef = ProviderRef<IDatabase>;
+String _$httpClientHash() => r'236c542c16f371606a6d9f8663b2553f89991ea0';
 
-/// Provides singleton instance of ApiClient
+/// Provides singleton instance of IHttpClient (using Dio adapter)
 /// With mock interceptor for development (no backend required)
+/// Follows Adapter Pattern - depends on interface, not implementation
 ///
-/// Copied from [apiClient].
-@ProviderFor(apiClient)
-final apiClientProvider = Provider<ApiClient>.internal(
-  apiClient,
-  name: r'apiClientProvider',
+/// Copied from [httpClient].
+@ProviderFor(httpClient)
+final httpClientProvider = Provider<IHttpClient>.internal(
+  httpClient,
+  name: r'httpClientProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$apiClientHash,
+      : _$httpClientHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef ApiClientRef = ProviderRef<ApiClient>;
-String _$authRepositoryHash() => r'8322fe2d5cee4dae605fab578a3ce024a64bb414';
+typedef HttpClientRef = ProviderRef<IHttpClient>;
+String _$authRepositoryHash() => r'b1687964d500954c888036330f3516c33859eb0f';
 
 /// Provides singleton instance of AuthRepository
 ///

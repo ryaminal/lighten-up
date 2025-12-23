@@ -1,32 +1,28 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'alert_settings_provider.dart';
+part of 'room_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$alertSettingsNotifierHash() =>
-    r'3631c2f7cab4fd0a4c3767794294c13aa984613d';
+String _$roomNotifierHash() => r'7322a2b2e87a3ee0f39223dafed7f3ee389e0f69';
 
-/// Provider for managing alert settings
+/// Provider for managing room data and filtering
 ///
-/// Copied from [AlertSettingsNotifier].
-@ProviderFor(AlertSettingsNotifier)
-final alertSettingsNotifierProvider =
-    AutoDisposeNotifierProvider<
-      AlertSettingsNotifier,
-      AlertSettingsState
-    >.internal(
-      AlertSettingsNotifier.new,
-      name: r'alertSettingsNotifierProvider',
+/// Copied from [RoomNotifier].
+@ProviderFor(RoomNotifier)
+final roomNotifierProvider =
+    AutoDisposeNotifierProvider<RoomNotifier, RoomState>.internal(
+      RoomNotifier.new,
+      name: r'roomNotifierProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$alertSettingsNotifierHash,
+          : _$roomNotifierHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$AlertSettingsNotifier = AutoDisposeNotifier<AlertSettingsState>;
+typedef _$RoomNotifier = AutoDisposeNotifier<RoomState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

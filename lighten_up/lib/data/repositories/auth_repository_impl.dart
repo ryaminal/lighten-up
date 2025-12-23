@@ -1,20 +1,21 @@
 import 'package:lighten_up/core/error/exceptions.dart';
-import 'package:lighten_up/core/network/api_client.dart';
+import 'package:lighten_up/core/network/http_client_interface.dart';
 import 'package:lighten_up/core/network/api_endpoints.dart';
-import 'package:lighten_up/core/storage/secure_storage.dart';
+import 'package:lighten_up/core/storage/secure_storage_interface.dart';
 import 'package:lighten_up/core/utils/logger.dart';
 import 'package:lighten_up/data/models/user.dart';
 import 'package:lighten_up/data/repositories/auth_repository.dart';
 
-/// Implementation of AuthRepository using ApiClient and SecureStorage
+/// Implementation of AuthRepository using IHttpClient and ISecureStorage
+/// Follows Adapter Pattern - depends on interfaces, not concrete implementations
 class AuthRepositoryImpl implements AuthRepository {
-  final ApiClient _apiClient;
-  final SecureStorage _secureStorage;
+  final IHttpClient _httpClient;
+  final ISecureStorage _secureStorage;
 
   AuthRepositoryImpl({
-    required ApiClient apiClient,
-    required SecureStorage secureStorage,
-  }) : _apiClient = apiClient,
+    required IHttpClient httpClient,
+    required ISecureStorage secureStorage,
+  }) : _httpClient = httpClient,
        _secureStorage = secureStorage;
 
   @override
@@ -22,7 +23,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       AppLogger.info('Attempting login for: ${request.email}');
 
-      final response = await _apiClient.post(
+      final response = await _httpClient.post(
         ApiEndpoints.login,
         data: request.toJson(),
       );
@@ -35,7 +36,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _secureStorage.saveUserId(authResponse.user.id);
 
       // Update API client with new access token
-      _apiClient.setAccessToken(authResponse.accessToken);
+      _httpClient.setAccessToken(authResponse.accessToken);
 
       AppLogger.info('Login successful for user: ${authResponse.user.id}');
 
@@ -58,7 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (accessToken != null) {
         try {
           // Attempt to logout on server
-          await _apiClient.post(ApiEndpoints.logout);
+          await _httpClient.post(ApiEndpoints.logout);
         } catch (e) {
           // Continue with local logout even if server logout fails
           AppLogger.warning(
@@ -73,7 +74,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _secureStorage.deleteUserId();
 
       // Clear API client token
-      _apiClient.setAccessToken(null);
+      _httpClient.setAccessToken(null);
 
       AppLogger.info('Logout complete');
     } catch (e) {
@@ -92,7 +93,7 @@ class AuthRepositoryImpl implements AuthRepository {
         throw AuthenticationException(message: 'No refresh token available');
       }
 
-      final response = await _apiClient.post(
+      final response = await _httpClient.post(
         ApiEndpoints.refreshToken,
         data: {'refresh_token': refreshToken},
       );
@@ -104,7 +105,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _secureStorage.saveRefreshToken(authResponse.refreshToken);
 
       // Update API client with new access token
-      _apiClient.setAccessToken(authResponse.accessToken);
+      _httpClient.setAccessToken(authResponse.accessToken);
 
       AppLogger.info('Token refresh successful');
 
@@ -114,7 +115,7 @@ class AuthRepositoryImpl implements AuthRepository {
       // Clear tokens on refresh failure
       await _secureStorage.deleteAccessToken();
       await _secureStorage.deleteRefreshToken();
-      _apiClient.setAccessToken(null);
+      _httpClient.setAccessToken(null);
       rethrow;
     } catch (e) {
       AppLogger.error('Unexpected token refresh error: $e');
@@ -127,7 +128,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       AppLogger.info('Verifying PIN for user: ${request.userId}');
 
-      final response = await _apiClient.post(
+      final response = await _httpClient.post(
         ApiEndpoints.verifyPin,
         data: request.toJson(),
       );
@@ -151,7 +152,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       AppLogger.info('Fetching current user');
 
-      final response = await _apiClient.get(ApiEndpoints.currentUser);
+      final response = await _httpClient.get(ApiEndpoints.currentUser);
 
       final user = User.fromJson(response.data);
 
@@ -194,7 +195,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       AppLogger.info('Updating user profile: ${user.id}');
 
-      final response = await _apiClient.put(
+      final response = await _httpClient.put(
         '${ApiEndpoints.users}/${user.id}',
         data: user.toJson(),
       );
@@ -221,7 +222,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       AppLogger.info('Changing password');
 
-      await _apiClient.post(
+      await _httpClient.post(
         ApiEndpoints.changePassword,
         data: {
           'current_password': currentPassword,

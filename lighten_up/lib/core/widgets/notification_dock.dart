@@ -7,9 +7,11 @@ import 'package:lighten_up/core/widgets/notification_dock/alert_section.dart';
 import 'package:lighten_up/core/widgets/notification_dock/dock_footer.dart';
 import 'package:lighten_up/data/models/alert.dart';
 import 'package:lighten_up/data/models/user.dart';
+import 'package:lighten_up/presentation/providers/alert_provider.dart';
 import 'package:lighten_up/presentation/providers/auth_provider.dart';
 
 /// Notification dock widget - right sidebar showing alerts and status
+/// Refactored to follow Single Responsibility Principle - UI orchestrator only
 class NotificationDock extends ConsumerStatefulWidget {
   const NotificationDock({super.key});
 
@@ -19,52 +21,6 @@ class NotificationDock extends ConsumerStatefulWidget {
 
 class _NotificationDockState extends ConsumerState<NotificationDock> {
   UserStatus selectedStatus = UserStatus.online;
-
-  // Mock alert data - will be replaced with real data from provider
-  List<Alert> get mockAlerts => [
-    Alert(
-      id: '1',
-      title: 'Exam Room 1',
-      description: 'Code Blue',
-      type: AlertType.emergency,
-      severity: AlertSeverity.emergency,
-      status: AlertStatus.active,
-      createdAt: DateTime.now().subtract(const Duration(seconds: 45)),
-    ),
-    Alert(
-      id: '2',
-      title: 'Triage 3',
-      description: 'Nurse Needed',
-      type: AlertType.medical,
-      severity: AlertSeverity.high,
-      status: AlertStatus.active,
-      createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
-    ),
-    Alert(
-      id: '3',
-      title: 'Exam Room 4',
-      description: 'Patient Ready',
-      type: AlertType.medical,
-      severity: AlertSeverity.medium,
-      status: AlertStatus.active,
-      createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
-    ),
-    Alert(
-      id: '4',
-      title: 'Hygiene 2',
-      description: 'Room Available',
-      type: AlertType.system,
-      severity: AlertSeverity.low,
-      status: AlertStatus.active,
-      createdAt: DateTime.now().subtract(const Duration(minutes: 8)),
-    ),
-  ];
-
-  List<Alert> get urgentAlerts =>
-      mockAlerts.where((alert) => alert.isCritical).toList();
-
-  List<Alert> get roomStatusAlerts =>
-      mockAlerts.where((alert) => !alert.isCritical).toList();
 
   void _handleStatusChanged(UserStatus newStatus) {
     setState(() {
@@ -76,6 +32,8 @@ class _NotificationDockState extends ConsumerState<NotificationDock> {
   void _handleAlertTap(Alert alert) {
     // TODO: Handle alert tap - show details, acknowledge, etc.
     debugPrint('Alert tapped: ${alert.id} - ${alert.title}');
+    // Example: Acknowledge alert
+    ref.read(alertNotifierProvider.notifier).acknowledgeAlert(alert.id);
   }
 
   void _handleMenuTap() {
@@ -90,7 +48,12 @@ class _NotificationDockState extends ConsumerState<NotificationDock> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final alertState = ref.watch(alertNotifierProvider);
     final user = authState.user;
+
+    // Get alerts from provider instead of local state
+    final urgentAlerts = alertState.urgentAlerts;
+    final roomStatusAlerts = alertState.roomStatusAlerts;
 
     return Material(
       color: AppColors.backgroundDark,
