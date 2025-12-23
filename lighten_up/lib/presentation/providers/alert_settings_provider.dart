@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:lighten_up/data/models/alert_settings.dart';
 import 'package:lighten_up/data/models/workstation.dart';
+import 'package:lighten_up/presentation/providers/mock_alert_settings_data.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'alert_settings_provider.g.dart';
@@ -62,7 +63,7 @@ class AlertSettingsNotifier extends _$AlertSettingsNotifier {
       // TODO: Replace with actual API call
       await Future.delayed(const Duration(milliseconds: 500));
 
-      final workstations = _getMockWorkstations();
+      final workstations = MockAlertSettingsData.getWorkstations();
 
       state = state.copyWith(
         workstations: workstations,
@@ -96,7 +97,9 @@ class AlertSettingsNotifier extends _$AlertSettingsNotifier {
       // TODO: Replace with actual API call
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final settings = _getMockSettingsForWorkstation(workstationId);
+      final settings = MockAlertSettingsData.getSettingsForWorkstation(
+        workstationId,
+      );
 
       state = state.copyWith(
         selectedWorkstationSettings: settings,
@@ -118,7 +121,7 @@ class AlertSettingsNotifier extends _$AlertSettingsNotifier {
       // TODO: Replace with actual API call
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final settings = _getMockGlobalSettings();
+      final settings = MockAlertSettingsData.getGlobalSettings();
 
       state = state.copyWith(globalSettings: settings, isLoading: false);
     } catch (e) {
@@ -182,122 +185,5 @@ class AlertSettingsNotifier extends _$AlertSettingsNotifier {
             .copyWith(quietHours: quietHours),
       );
     }
-  }
-
-  // Mock data - will be replaced with actual API calls
-
-  List<Workstation> _getMockWorkstations() {
-    return [
-      const Workstation(
-        id: '1',
-        name: 'Front Desk',
-        zone: 'Reception',
-        status: WorkstationStatus.active,
-      ),
-      const Workstation(
-        id: '2',
-        name: 'Doctor Office 1',
-        zone: 'Doctor\'s Wing',
-        status: WorkstationStatus.active,
-      ),
-      const Workstation(
-        id: '3',
-        name: 'Hygiene Room 1',
-        zone: 'Hygiene Wing',
-        status: WorkstationStatus.active,
-      ),
-      const Workstation(
-        id: '4',
-        name: 'Lab Workstation',
-        zone: 'Laboratory',
-        status: WorkstationStatus.offline,
-      ),
-    ];
-  }
-
-  AlertSettings _getMockSettingsForWorkstation(String workstationId) {
-    return AlertSettings(
-      id: 'settings-$workstationId',
-      workstationId: workstationId,
-      visual: const VisualSettings(
-        popupWindow: true,
-        flashScreen: true,
-        forceFocus: false,
-      ),
-      eventMappings: const [
-        EventMapping(
-          id: '1',
-          eventName: 'Emergency Call',
-          eventDescription: 'Code Blue, Security',
-          priority: AlertEventPriority.emergency,
-          soundId: 'Urgent Siren',
-          volume: 90,
-        ),
-        EventMapping(
-          id: '2',
-          eventName: 'Routine Message',
-          eventDescription: 'Internal chat, Check-in',
-          priority: AlertEventPriority.normal,
-          soundId: 'Soft Chime',
-          volume: 45,
-        ),
-        EventMapping(
-          id: '3',
-          eventName: 'Patient Arrived',
-          eventDescription: 'Waiting room alert',
-          priority: AlertEventPriority.urgent,
-          soundId: 'Ding Dong',
-          volume: 60,
-        ),
-        EventMapping(
-          id: '4',
-          eventName: 'Lab Results',
-          eventDescription: 'Results ready notification',
-          priority: AlertEventPriority.low,
-          soundId: 'Digital',
-          volume: 30,
-        ),
-      ],
-      quietHours: const QuietHours(
-        startTime: '22:00',
-        endTime: '06:00',
-        enabled: false,
-      ),
-    );
-  }
-
-  AlertSettings _getMockGlobalSettings() {
-    return const AlertSettings(
-      id: 'global-settings',
-      workstationId: 'global',
-      visual: VisualSettings(
-        popupWindow: true,
-        flashScreen: false,
-        forceFocus: false,
-      ),
-      eventMappings: [
-        EventMapping(
-          id: '1',
-          eventName: 'Emergency Call',
-          eventDescription: 'Code Blue, Security',
-          priority: AlertEventPriority.emergency,
-          soundId: 'Urgent Siren',
-          volume: 85,
-        ),
-        EventMapping(
-          id: '2',
-          eventName: 'Routine Message',
-          eventDescription: 'Internal chat, Check-in',
-          priority: AlertEventPriority.normal,
-          soundId: 'Soft Chime',
-          volume: 50,
-        ),
-      ],
-      quietHours: QuietHours(
-        startTime: '22:00',
-        endTime: '06:00',
-        enabled: true,
-      ),
-    );
   }
 }
