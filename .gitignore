@@ -51,6 +51,7 @@ lib/gen/**/*.pbjson.dart
 lib/gen/**/*.pbserver.dart
 lib/gen/**/*.connect.client.dart
 lib/gen/**/*.connect.spec.dart
+lib/gen/**/*.meta
 
 # Keep the gen directory structure but ignore generated files
 !lib/gen/.gitkeep
