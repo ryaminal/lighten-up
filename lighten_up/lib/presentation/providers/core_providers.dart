@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:lighten_up/core/network/api_client.dart';
+import 'package:lighten_up/core/network/mock_api_interceptor.dart';
 import 'package:lighten_up/core/storage/secure_storage.dart';
 import 'package:lighten_up/core/storage/preferences_storage.dart';
 import 'package:lighten_up/core/storage/database_helper.dart';
@@ -28,9 +29,15 @@ DatabaseHelper databaseHelper(Ref ref) {
 }
 
 /// Provides singleton instance of ApiClient
+/// With mock interceptor for development (no backend required)
 @Riverpod(keepAlive: true)
 ApiClient apiClient(Ref ref) {
-  return ApiClient();
+  // Create API client with mock interceptor for development
+  return ApiClient(
+    additionalInterceptors: [
+      MockApiInterceptor(), // Mock API responses - remove when using real backend
+    ],
+  );
 }
 
 /// Provides singleton instance of AuthRepository

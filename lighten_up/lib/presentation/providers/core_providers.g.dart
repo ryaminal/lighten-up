@@ -64,9 +64,10 @@ final databaseHelperProvider = Provider<DatabaseHelper>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef DatabaseHelperRef = ProviderRef<DatabaseHelper>;
-String _$apiClientHash() => r'05eacc6dc3fa586c44e47dd0c1e5cf2b1ed1f36a';
+String _$apiClientHash() => r'63fc6dff4895b61d89488481f5dbf487f473518d';
 
 /// Provides singleton instance of ApiClient
+/// With mock interceptor for development (no backend required)
 ///
 /// Copied from [apiClient].
 @ProviderFor(apiClient)
