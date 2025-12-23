@@ -6,9 +6,11 @@ import 'package:lighten_up/core/constants/app_dimensions.dart';
 import 'package:lighten_up/core/utils/validators.dart';
 import 'package:lighten_up/core/widgets/app_button.dart';
 import 'package:lighten_up/core/widgets/app_card.dart';
+import 'package:lighten_up/core/widgets/app_text_field.dart';
+import 'package:lighten_up/core/widgets/error_banner.dart';
 import 'package:lighten_up/presentation/providers/auth_provider.dart';
 
-/// Login screen for user authentication
+/// Login screen for user authentication - Clean orchestrator
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -41,7 +43,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
-
       // Navigation will be handled by go_router based on auth state
     } catch (e) {
       // Error is already handled in the provider and shown in the UI
@@ -72,262 +73,136 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo/Title
-                  Icon(
-                    Icons.medical_services_rounded,
-                    size: 80,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(height: AppDimensions.spaceLg),
-                  Text(
-                    'Lighten Up',
-                    style: AppTextStyles.headingLarge.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppDimensions.spaceSm),
-                  Text(
-                    'Medical Office Communication',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                  _buildHeader(),
                   const SizedBox(height: AppDimensions.space2xl),
-
-                  // Login Form Card
-                  AppCard(
-                    variant: CardVariant.elevated,
-                    padding: const EdgeInsets.all(AppDimensions.spaceLg),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Sign In',
-                            style: AppTextStyles.headingMedium.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: AppDimensions.spaceLg),
-
-                          // Email Field
-                          TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'Email',
-                              labelStyle: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                              hintText: 'Enter your email',
-                              hintStyle: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textMuted,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.email_outlined,
-                                color: AppColors.textSecondary,
-                              ),
-                              filled: true,
-                              fillColor: AppColors.surfaceDark,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                                borderSide: BorderSide(
-                                  color: AppColors.borderDark,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                                borderSide: BorderSide(
-                                  color: AppColors.borderDark,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                                borderSide: BorderSide(
-                                  color: AppColors.primary,
-                                  width: 2,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                                borderSide: BorderSide(color: AppColors.error),
-                              ),
-                            ),
-                            validator: Validators.email,
-                            enabled: !authState.isLoading,
-                          ),
-                          const SizedBox(height: AppDimensions.spaceMd),
-
-                          // Password Field
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              labelStyle: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                              hintText: 'Enter your password',
-                              hintStyle: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textMuted,
-                              ),
-                              prefixIcon: Icon(
-                                Icons.lock_outlined,
-                                color: AppColors.textSecondary,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  color: AppColors.textSecondary,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                              ),
-                              filled: true,
-                              fillColor: AppColors.surfaceDark,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                                borderSide: BorderSide(
-                                  color: AppColors.borderDark,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                                borderSide: BorderSide(
-                                  color: AppColors.borderDark,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                                borderSide: BorderSide(
-                                  color: AppColors.primary,
-                                  width: 2,
-                                ),
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusMd,
-                                ),
-                                borderSide: BorderSide(color: AppColors.error),
-                              ),
-                            ),
-                            validator: (value) =>
-                                Validators.required(value, 'Password'),
-                            enabled: !authState.isLoading,
-                          ),
-                          const SizedBox(height: AppDimensions.spaceSm),
-
-                          // Forgot Password Link
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: authState.isLoading
-                                  ? null
-                                  : () {
-                                      // TODO: Implement forgot password
-                                    },
-                              child: Text(
-                                'Forgot Password?',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: AppDimensions.spaceMd),
-
-                          // Login Button
-                          AppButton(
-                            label: 'Sign In',
-                            onPressed: _handleLogin,
-                            isLoading: authState.isLoading,
-                            fullWidth: true,
-                            size: AppButtonSize.large,
-                          ),
-
-                          // Error Message
-                          if (authState.error != null) ...[
-                            const SizedBox(height: AppDimensions.spaceMd),
-                            Container(
-                              padding: const EdgeInsets.all(
-                                AppDimensions.spaceMd,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(
-                                  AppDimensions.radiusSm,
-                                ),
-                                border: Border.all(color: AppColors.error),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.error_outline,
-                                    color: AppColors.error,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: AppDimensions.spaceSm),
-                                  Expanded(
-                                    child: Text(
-                                      authState.error!,
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        color: AppColors.error,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-
+                  _buildLoginForm(authState),
                   const SizedBox(height: AppDimensions.spaceLg),
-
-                  // Version/Footer
-                  Text(
-                    'Version 1.0.0',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textMuted,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+                  _buildFooter(),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        const Icon(
+          Icons.medical_services_rounded,
+          size: 80,
+          color: AppColors.primary,
+        ),
+        const SizedBox(height: AppDimensions.spaceLg),
+        Text(
+          'Lighten Up',
+          style: AppTextStyles.headingLarge.copyWith(
+            color: AppColors.textPrimary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppDimensions.spaceSm),
+        Text(
+          'Medical Office Communication',
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginForm(dynamic authState) {
+    return AppCard(
+      variant: CardVariant.elevated,
+      padding: const EdgeInsets.all(AppDimensions.spaceLg),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Sign In',
+              style: AppTextStyles.headingMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spaceLg),
+            AppTextField(
+              controller: _emailController,
+              labelText: 'Email',
+              hintText: 'Enter your email',
+              prefixIcon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: Validators.email,
+              enabled: !authState.isLoading,
+            ),
+            const SizedBox(height: AppDimensions.spaceMd),
+            AppTextField(
+              controller: _passwordController,
+              labelText: 'Password',
+              hintText: 'Enter your password',
+              prefixIcon: Icons.lock_outlined,
+              obscureText: _obscurePassword,
+              validator: (value) => Validators.required(value, 'Password'),
+              enabled: !authState.isLoading,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
+                  color: AppColors.textSecondary,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spaceSm),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: authState.isLoading
+                    ? null
+                    : () {
+                        // TODO: Implement forgot password
+                      },
+                child: Text(
+                  'Forgot Password?',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.spaceMd),
+            AppButton(
+              label: 'Sign In',
+              onPressed: _handleLogin,
+              isLoading: authState.isLoading,
+              fullWidth: true,
+              size: AppButtonSize.large,
+            ),
+            if (authState.error != null) ...[
+              const SizedBox(height: AppDimensions.spaceMd),
+              ErrorBanner(message: authState.error!),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooter() {
+    return Text(
+      'Version 1.0.0',
+      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textMuted),
+      textAlign: TextAlign.center,
     );
   }
 }

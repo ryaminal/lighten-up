@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lighten_up/core/constants/app_colors.dart';
-import 'package:lighten_up/core/constants/app_text_styles.dart';
 import 'package:lighten_up/core/constants/app_dimensions.dart';
 import 'package:lighten_up/core/widgets/room_card.dart';
 import 'package:lighten_up/data/models/room.dart';
 import 'package:lighten_up/presentation/providers/auth_provider.dart';
+import 'package:lighten_up/presentation/screens/dashboard/widgets/dashboard_app_bar.dart';
+import 'package:lighten_up/presentation/screens/dashboard/widgets/light_action_dialog.dart';
+import 'package:lighten_up/presentation/screens/dashboard/widgets/mobile_time_header.dart';
+import 'package:lighten_up/presentation/screens/dashboard/widgets/zone_filter_chips.dart';
 
-/// Main room dashboard screen (Light Board)
+/// Main room dashboard screen (Light Board) - Clean orchestrator
 class RoomDashboardScreen extends ConsumerStatefulWidget {
   const RoomDashboardScreen({super.key});
 
@@ -18,6 +20,8 @@ class RoomDashboardScreen extends ConsumerStatefulWidget {
 
 class _RoomDashboardScreenState extends ConsumerState<RoomDashboardScreen> {
   String? selectedZone;
+  bool isPrivacyMode = false;
+
   final List<String> zones = [
     'All Zones',
     'Doctor\'s Wing',
@@ -145,220 +149,44 @@ class _RoomDashboardScreenState extends ConsumerState<RoomDashboardScreen> {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final now = DateTime.now();
-    final timeString =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0b1219),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF111a22),
-        elevation: 0,
-        title: Row(
-          children: [
-            Text(
-              'Office Communicator',
-              style: AppTextStyles.headingSmall.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: AppDimensions.spaceMd),
-            Container(width: 1, height: 24, color: AppColors.borderDark),
-            const SizedBox(width: AppDimensions.spaceMd),
-            // Privacy toggle button
-            InkWell(
-              onTap: () {
-                // TODO: Toggle privacy mode
-              },
-              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.spaceSm,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceDark,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.visibility,
-                      size: 18,
-                      color: AppColors.alertGreen,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Privacy: Off',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        centerTitle: false,
-        actions: [
-          // Current time display (desktop)
-          if (MediaQuery.of(context).size.width >= 600)
-            Center(
-              child: Text(
-                timeString,
-                style: AppTextStyles.headingLarge.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'monospace',
-                ),
-              ),
-            ),
-          const SizedBox(width: AppDimensions.spaceMd),
-          // User status button
-          InkWell(
-            onTap: () {
-              // TODO: Show user menu
-            },
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.spaceMd,
-                vertical: AppDimensions.spaceSm,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: AppDimensions.spaceSm),
-                  Text(
-                    user?.fullName ?? 'User',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: AppDimensions.spaceSm),
-          // Notifications button
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                color: AppColors.textSecondary,
-                onPressed: () {
-                  // TODO: Show notifications
-                },
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: AppColors.alertRed,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF111a22),
-                      width: 2,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: AppDimensions.spaceSm),
-        ],
+      appBar: DashboardAppBar(
+        user: user,
+        currentTime: now,
+        isPrivacyMode: isPrivacyMode,
+        onPrivacyToggle: () {
+          setState(() {
+            isPrivacyMode = !isPrivacyMode;
+          });
+        },
+        onUserStatusTap: () {
+          // TODO: Show user menu
+        },
+        onNotificationsTap: () {
+          // TODO: Show notifications
+        },
+        hasUnreadNotifications: true,
       ),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             // Mobile clock header
-            if (MediaQuery.of(context).size.width < 600)
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.all(AppDimensions.spaceLg),
-                  alignment: Alignment.center,
-                  child: Text(
-                    timeString,
-                    style: AppTextStyles.displayMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                ),
-              ),
+            if (isMobile)
+              SliverToBoxAdapter(child: MobileTimeHeader(currentTime: now)),
 
             // Zone filter chips
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimensions.spaceMd),
-                child: Wrap(
-                  spacing: AppDimensions.spaceSm,
-                  runSpacing: AppDimensions.spaceSm,
-                  children: zones.map((zone) {
-                    final isSelected =
-                        selectedZone == zone ||
-                        (selectedZone == null && zone == 'All Zones');
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          selectedZone = zone;
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.spaceMd,
-                          vertical: AppDimensions.spaceSm,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.surfaceDark,
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusMd,
-                          ),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppColors.primary
-                                : Colors.transparent,
-                          ),
-                        ),
-                        child: Text(
-                          zone,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: isSelected
-                                ? Colors.white
-                                : AppColors.textSecondary,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+              child: ZoneFilterChips(
+                zones: zones,
+                selectedZone: selectedZone,
+                onZoneSelected: (zone) {
+                  setState(() {
+                    selectedZone = zone;
+                  });
+                },
               ),
             ),
 
@@ -366,7 +194,7 @@ class _RoomDashboardScreenState extends ConsumerState<RoomDashboardScreen> {
             SliverPadding(
               padding: const EdgeInsets.all(AppDimensions.spaceMd),
               sliver: SliverGrid(
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                   maxCrossAxisExtent: 350,
                   mainAxisSpacing: AppDimensions.spaceMd,
                   crossAxisSpacing: AppDimensions.spaceMd,
@@ -380,8 +208,17 @@ class _RoomDashboardScreenState extends ConsumerState<RoomDashboardScreen> {
                       // TODO: Navigate to room details
                     },
                     onLightTap: (light) {
-                      // TODO: Handle light tap (activate/acknowledge)
-                      _showLightDialog(context, room, light);
+                      LightActionDialog.show(
+                        context,
+                        room,
+                        light,
+                        onActivate: () {
+                          // TODO: Activate light
+                        },
+                        onAcknowledge: () {
+                          // TODO: Acknowledge light
+                        },
+                      );
                     },
                   );
                 }, childCount: filteredRooms.length),
@@ -389,70 +226,6 @@ class _RoomDashboardScreenState extends ConsumerState<RoomDashboardScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showLightDialog(BuildContext context, Room room, RoomLight light) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceDark,
-        title: Text(
-          '${room.displayLabel} - ${light.label}',
-          style: AppTextStyles.headingSmall.copyWith(color: Colors.white),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              light.isActive ? 'Light is ACTIVE' : 'Light is inactive',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: light.isActive
-                    ? AppColors.alertGreen
-                    : AppColors.textSecondary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (light.isActive) ...[
-              const SizedBox(height: AppDimensions.spaceSm),
-              Text(
-                'Active for: ${light.timerDisplay}',
-                style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
-              ),
-              if (light.activatedByName != null) ...[
-                const SizedBox(height: AppDimensions.spaceSm),
-                Text(
-                  'Activated by: ${light.activatedByName}',
-                  style: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
-                ),
-              ],
-            ],
-          ],
-        ),
-        actions: [
-          if (!light.isActive)
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // TODO: Activate light
-              },
-              child: const Text('Activate'),
-            ),
-          if (light.isActive)
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // TODO: Acknowledge light
-              },
-              child: const Text('Acknowledge'),
-            ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }
