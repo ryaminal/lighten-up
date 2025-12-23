@@ -9,46 +9,46 @@ part of 'user.dart';
 _$UserImpl _$$UserImplFromJson(Map<String, dynamic> json) => _$UserImpl(
   id: json['id'] as String,
   email: json['email'] as String,
-  firstName: json['firstName'] as String,
-  lastName: json['lastName'] as String,
+  firstName: json['first_name'] as String,
+  lastName: json['last_name'] as String,
   role: $enumDecode(_$UserRoleEnumMap, json['role']),
   status:
       $enumDecodeNullable(_$UserStatusEnumMap, json['status']) ??
       UserStatus.offline,
-  avatarUrl: json['avatarUrl'] as String?,
-  phoneNumber: json['phoneNumber'] as String?,
+  avatarUrl: json['avatar_url'] as String?,
+  phoneNumber: json['phone_number'] as String?,
   department: json['department'] as String?,
   title: json['title'] as String?,
-  isActive: json['isActive'] as bool? ?? false,
-  isVerified: json['isVerified'] as bool? ?? false,
-  lastSeenAt: json['lastSeenAt'] == null
+  isActive: json['is_active'] as bool? ?? false,
+  isVerified: json['is_verified'] as bool? ?? false,
+  lastSeenAt: json['last_seen_at'] == null
       ? null
-      : DateTime.parse(json['lastSeenAt'] as String),
-  createdAt: json['createdAt'] == null
+      : DateTime.parse(json['last_seen_at'] as String),
+  createdAt: json['created_at'] == null
       ? null
-      : DateTime.parse(json['createdAt'] as String),
-  updatedAt: json['updatedAt'] == null
+      : DateTime.parse(json['created_at'] as String),
+  updatedAt: json['updated_at'] == null
       ? null
-      : DateTime.parse(json['updatedAt'] as String),
+      : DateTime.parse(json['updated_at'] as String),
 );
 
 Map<String, dynamic> _$$UserImplToJson(_$UserImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'email': instance.email,
-      'firstName': instance.firstName,
-      'lastName': instance.lastName,
+      'first_name': instance.firstName,
+      'last_name': instance.lastName,
       'role': _$UserRoleEnumMap[instance.role]!,
       'status': _$UserStatusEnumMap[instance.status]!,
-      'avatarUrl': instance.avatarUrl,
-      'phoneNumber': instance.phoneNumber,
+      'avatar_url': instance.avatarUrl,
+      'phone_number': instance.phoneNumber,
       'department': instance.department,
       'title': instance.title,
-      'isActive': instance.isActive,
-      'isVerified': instance.isVerified,
-      'lastSeenAt': instance.lastSeenAt?.toIso8601String(),
-      'createdAt': instance.createdAt?.toIso8601String(),
-      'updatedAt': instance.updatedAt?.toIso8601String(),
+      'is_active': instance.isActive,
+      'is_verified': instance.isVerified,
+      'last_seen_at': instance.lastSeenAt?.toIso8601String(),
+      'created_at': instance.createdAt?.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
     };
 
 const _$UserRoleEnumMap = {
@@ -68,18 +68,18 @@ const _$UserStatusEnumMap = {
 
 _$AuthResponseImpl _$$AuthResponseImplFromJson(Map<String, dynamic> json) =>
     _$AuthResponseImpl(
-      accessToken: json['accessToken'] as String,
-      refreshToken: json['refreshToken'] as String,
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
       user: User.fromJson(json['user'] as Map<String, dynamic>),
-      expiresIn: (json['expiresIn'] as num?)?.toInt() ?? 3600,
+      expiresIn: (json['expires_in'] as num?)?.toInt() ?? 3600,
     );
 
 Map<String, dynamic> _$$AuthResponseImplToJson(_$AuthResponseImpl instance) =>
     <String, dynamic>{
-      'accessToken': instance.accessToken,
-      'refreshToken': instance.refreshToken,
+      'access_token': instance.accessToken,
+      'refresh_token': instance.refreshToken,
       'user': instance.user,
-      'expiresIn': instance.expiresIn,
+      'expires_in': instance.expiresIn,
     };
 
 _$LoginRequestImpl _$$LoginRequestImplFromJson(Map<String, dynamic> json) =>

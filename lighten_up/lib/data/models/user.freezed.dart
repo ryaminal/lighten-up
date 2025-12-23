@@ -23,18 +23,27 @@ User _$UserFromJson(Map<String, dynamic> json) {
 mixin _$User {
   String get id => throw _privateConstructorUsedError;
   String get email => throw _privateConstructorUsedError;
+  @JsonKey(name: 'first_name')
   String get firstName => throw _privateConstructorUsedError;
+  @JsonKey(name: 'last_name')
   String get lastName => throw _privateConstructorUsedError;
   UserRole get role => throw _privateConstructorUsedError;
   UserStatus get status => throw _privateConstructorUsedError;
+  @JsonKey(name: 'avatar_url')
   String? get avatarUrl => throw _privateConstructorUsedError;
+  @JsonKey(name: 'phone_number')
   String? get phoneNumber => throw _privateConstructorUsedError;
   String? get department => throw _privateConstructorUsedError;
   String? get title => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_active')
   bool get isActive => throw _privateConstructorUsedError;
+  @JsonKey(name: 'is_verified')
   bool get isVerified => throw _privateConstructorUsedError;
+  @JsonKey(name: 'last_seen_at')
   DateTime? get lastSeenAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'created_at')
   DateTime? get createdAt => throw _privateConstructorUsedError;
+  @JsonKey(name: 'updated_at')
   DateTime? get updatedAt => throw _privateConstructorUsedError;
 
   /// Serializes this User to a JSON map.
@@ -54,19 +63,19 @@ abstract class $UserCopyWith<$Res> {
   $Res call({
     String id,
     String email,
-    String firstName,
-    String lastName,
+    @JsonKey(name: 'first_name') String firstName,
+    @JsonKey(name: 'last_name') String lastName,
     UserRole role,
     UserStatus status,
-    String? avatarUrl,
-    String? phoneNumber,
+    @JsonKey(name: 'avatar_url') String? avatarUrl,
+    @JsonKey(name: 'phone_number') String? phoneNumber,
     String? department,
     String? title,
-    bool isActive,
-    bool isVerified,
-    DateTime? lastSeenAt,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'is_verified') bool isVerified,
+    @JsonKey(name: 'last_seen_at') DateTime? lastSeenAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   });
 }
 
@@ -180,19 +189,19 @@ abstract class _$$UserImplCopyWith<$Res> implements $UserCopyWith<$Res> {
   $Res call({
     String id,
     String email,
-    String firstName,
-    String lastName,
+    @JsonKey(name: 'first_name') String firstName,
+    @JsonKey(name: 'last_name') String lastName,
     UserRole role,
     UserStatus status,
-    String? avatarUrl,
-    String? phoneNumber,
+    @JsonKey(name: 'avatar_url') String? avatarUrl,
+    @JsonKey(name: 'phone_number') String? phoneNumber,
     String? department,
     String? title,
-    bool isActive,
-    bool isVerified,
-    DateTime? lastSeenAt,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'is_active') bool isActive,
+    @JsonKey(name: 'is_verified') bool isVerified,
+    @JsonKey(name: 'last_seen_at') DateTime? lastSeenAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   });
 }
 
@@ -297,19 +306,19 @@ class _$UserImpl extends _User {
   const _$UserImpl({
     required this.id,
     required this.email,
-    required this.firstName,
-    required this.lastName,
+    @JsonKey(name: 'first_name') required this.firstName,
+    @JsonKey(name: 'last_name') required this.lastName,
     required this.role,
     this.status = UserStatus.offline,
-    this.avatarUrl,
-    this.phoneNumber,
+    @JsonKey(name: 'avatar_url') this.avatarUrl,
+    @JsonKey(name: 'phone_number') this.phoneNumber,
     this.department,
     this.title,
-    this.isActive = false,
-    this.isVerified = false,
-    this.lastSeenAt,
-    this.createdAt,
-    this.updatedAt,
+    @JsonKey(name: 'is_active') this.isActive = false,
+    @JsonKey(name: 'is_verified') this.isVerified = false,
+    @JsonKey(name: 'last_seen_at') this.lastSeenAt,
+    @JsonKey(name: 'created_at') this.createdAt,
+    @JsonKey(name: 'updated_at') this.updatedAt,
   }) : super._();
 
   factory _$UserImpl.fromJson(Map<String, dynamic> json) =>
@@ -320,8 +329,10 @@ class _$UserImpl extends _User {
   @override
   final String email;
   @override
+  @JsonKey(name: 'first_name')
   final String firstName;
   @override
+  @JsonKey(name: 'last_name')
   final String lastName;
   @override
   final UserRole role;
@@ -329,24 +340,29 @@ class _$UserImpl extends _User {
   @JsonKey()
   final UserStatus status;
   @override
+  @JsonKey(name: 'avatar_url')
   final String? avatarUrl;
   @override
+  @JsonKey(name: 'phone_number')
   final String? phoneNumber;
   @override
   final String? department;
   @override
   final String? title;
   @override
-  @JsonKey()
+  @JsonKey(name: 'is_active')
   final bool isActive;
   @override
-  @JsonKey()
+  @JsonKey(name: 'is_verified')
   final bool isVerified;
   @override
+  @JsonKey(name: 'last_seen_at')
   final DateTime? lastSeenAt;
   @override
+  @JsonKey(name: 'created_at')
   final DateTime? createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   final DateTime? updatedAt;
 
   @override
@@ -425,19 +441,19 @@ abstract class _User extends User {
   const factory _User({
     required final String id,
     required final String email,
-    required final String firstName,
-    required final String lastName,
+    @JsonKey(name: 'first_name') required final String firstName,
+    @JsonKey(name: 'last_name') required final String lastName,
     required final UserRole role,
     final UserStatus status,
-    final String? avatarUrl,
-    final String? phoneNumber,
+    @JsonKey(name: 'avatar_url') final String? avatarUrl,
+    @JsonKey(name: 'phone_number') final String? phoneNumber,
     final String? department,
     final String? title,
-    final bool isActive,
-    final bool isVerified,
-    final DateTime? lastSeenAt,
-    final DateTime? createdAt,
-    final DateTime? updatedAt,
+    @JsonKey(name: 'is_active') final bool isActive,
+    @JsonKey(name: 'is_verified') final bool isVerified,
+    @JsonKey(name: 'last_seen_at') final DateTime? lastSeenAt,
+    @JsonKey(name: 'created_at') final DateTime? createdAt,
+    @JsonKey(name: 'updated_at') final DateTime? updatedAt,
   }) = _$UserImpl;
   const _User._() : super._();
 
@@ -448,30 +464,39 @@ abstract class _User extends User {
   @override
   String get email;
   @override
+  @JsonKey(name: 'first_name')
   String get firstName;
   @override
+  @JsonKey(name: 'last_name')
   String get lastName;
   @override
   UserRole get role;
   @override
   UserStatus get status;
   @override
+  @JsonKey(name: 'avatar_url')
   String? get avatarUrl;
   @override
+  @JsonKey(name: 'phone_number')
   String? get phoneNumber;
   @override
   String? get department;
   @override
   String? get title;
   @override
+  @JsonKey(name: 'is_active')
   bool get isActive;
   @override
+  @JsonKey(name: 'is_verified')
   bool get isVerified;
   @override
+  @JsonKey(name: 'last_seen_at')
   DateTime? get lastSeenAt;
   @override
+  @JsonKey(name: 'created_at')
   DateTime? get createdAt;
   @override
+  @JsonKey(name: 'updated_at')
   DateTime? get updatedAt;
 
   /// Create a copy of User
@@ -488,9 +513,12 @@ AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$AuthResponse {
+  @JsonKey(name: 'access_token')
   String get accessToken => throw _privateConstructorUsedError;
+  @JsonKey(name: 'refresh_token')
   String get refreshToken => throw _privateConstructorUsedError;
   User get user => throw _privateConstructorUsedError;
+  @JsonKey(name: 'expires_in')
   int get expiresIn => throw _privateConstructorUsedError;
 
   /// Serializes this AuthResponse to a JSON map.
@@ -511,10 +539,10 @@ abstract class $AuthResponseCopyWith<$Res> {
   ) = _$AuthResponseCopyWithImpl<$Res, AuthResponse>;
   @useResult
   $Res call({
-    String accessToken,
-    String refreshToken,
+    @JsonKey(name: 'access_token') String accessToken,
+    @JsonKey(name: 'refresh_token') String refreshToken,
     User user,
-    int expiresIn,
+    @JsonKey(name: 'expires_in') int expiresIn,
   });
 
   $UserCopyWith<$Res> get user;
@@ -584,10 +612,10 @@ abstract class _$$AuthResponseImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    String accessToken,
-    String refreshToken,
+    @JsonKey(name: 'access_token') String accessToken,
+    @JsonKey(name: 'refresh_token') String refreshToken,
     User user,
-    int expiresIn,
+    @JsonKey(name: 'expires_in') int expiresIn,
   });
 
   @override
@@ -640,23 +668,25 @@ class __$$AuthResponseImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AuthResponseImpl implements _AuthResponse {
   const _$AuthResponseImpl({
-    required this.accessToken,
-    required this.refreshToken,
+    @JsonKey(name: 'access_token') required this.accessToken,
+    @JsonKey(name: 'refresh_token') required this.refreshToken,
     required this.user,
-    this.expiresIn = 3600,
+    @JsonKey(name: 'expires_in') this.expiresIn = 3600,
   });
 
   factory _$AuthResponseImpl.fromJson(Map<String, dynamic> json) =>
       _$$AuthResponseImplFromJson(json);
 
   @override
+  @JsonKey(name: 'access_token')
   final String accessToken;
   @override
+  @JsonKey(name: 'refresh_token')
   final String refreshToken;
   @override
   final User user;
   @override
-  @JsonKey()
+  @JsonKey(name: 'expires_in')
   final int expiresIn;
 
   @override
@@ -699,22 +729,25 @@ class _$AuthResponseImpl implements _AuthResponse {
 
 abstract class _AuthResponse implements AuthResponse {
   const factory _AuthResponse({
-    required final String accessToken,
-    required final String refreshToken,
+    @JsonKey(name: 'access_token') required final String accessToken,
+    @JsonKey(name: 'refresh_token') required final String refreshToken,
     required final User user,
-    final int expiresIn,
+    @JsonKey(name: 'expires_in') final int expiresIn,
   }) = _$AuthResponseImpl;
 
   factory _AuthResponse.fromJson(Map<String, dynamic> json) =
       _$AuthResponseImpl.fromJson;
 
   @override
+  @JsonKey(name: 'access_token')
   String get accessToken;
   @override
+  @JsonKey(name: 'refresh_token')
   String get refreshToken;
   @override
   User get user;
   @override
+  @JsonKey(name: 'expires_in')
   int get expiresIn;
 
   /// Create a copy of AuthResponse

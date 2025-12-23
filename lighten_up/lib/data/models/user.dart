@@ -35,19 +35,19 @@ class User with _$User {
   const factory User({
     required String id,
     required String email,
-    required String firstName,
-    required String lastName,
+    @JsonKey(name: 'first_name') required String firstName,
+    @JsonKey(name: 'last_name') required String lastName,
     required UserRole role,
     @Default(UserStatus.offline) UserStatus status,
-    String? avatarUrl,
-    String? phoneNumber,
+    @JsonKey(name: 'avatar_url') String? avatarUrl,
+    @JsonKey(name: 'phone_number') String? phoneNumber,
     String? department,
     String? title,
-    @Default(false) bool isActive,
-    @Default(false) bool isVerified,
-    DateTime? lastSeenAt,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    @JsonKey(name: 'is_active') @Default(false) bool isActive,
+    @JsonKey(name: 'is_verified') @Default(false) bool isVerified,
+    @JsonKey(name: 'last_seen_at') DateTime? lastSeenAt,
+    @JsonKey(name: 'created_at') DateTime? createdAt,
+    @JsonKey(name: 'updated_at') DateTime? updatedAt,
   }) = _User;
 
   const User._();
@@ -92,10 +92,10 @@ class User with _$User {
 @freezed
 class AuthResponse with _$AuthResponse {
   const factory AuthResponse({
-    required String accessToken,
-    required String refreshToken,
+    @JsonKey(name: 'access_token') required String accessToken,
+    @JsonKey(name: 'refresh_token') required String refreshToken,
     required User user,
-    @Default(3600) int expiresIn,
+    @JsonKey(name: 'expires_in') @Default(3600) int expiresIn,
   }) = _AuthResponse;
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>
