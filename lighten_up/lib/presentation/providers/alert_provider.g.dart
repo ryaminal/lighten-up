@@ -6,7 +6,7 @@ part of 'alert_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$alertNotifierHash() => r'425820bc7b91cbaa5417ce62f09f91ac11617d74';
+String _$alertNotifierHash() => r'323d66c55a01762ee79fc202eab05316e6feb8c9';
 
 /// Provider for managing alert data
 ///

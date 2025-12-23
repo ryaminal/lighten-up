@@ -46,7 +46,7 @@ class AlertSettingsState {
 }
 
 /// Provider for managing alert settings
-@riverpod
+@Riverpod(keepAlive: true)
 class AlertSettingsNotifier extends _$AlertSettingsNotifier {
   @override
   AlertSettingsState build() {
