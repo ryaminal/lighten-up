@@ -65,6 +65,237 @@ flutter pub get
 7. Verify all tests pass
 8. Mark task as complete
 
+## Dart/Flutter Language Standards
+
+**Follow [Effective Dart](https://dart.dev/effective-dart) guidelines for all code.**
+
+### const vs final (CRITICAL)
+
+**Understanding the difference:**
+- **`const`**: Compile-time constant (value known at compile time, deeply immutable)
+- **`final`**: Runtime constant (value set once, but determined at runtime)
+
+#### When to Use `const`
+
+**PREFER `const` for:**
+1. ✅ **Compile-time constant values** (literals, const constructors)
+2. ✅ **Widget constructors** when all parameters are compile-time constants
+3. ✅ **Collections** with compile-time constant elements
+4. ✅ **Default parameter values**
+
+**Examples:**
+```dart
+// ✅ GOOD: Compile-time constants
+const double padding = 16.0;
+const String appName = 'Lighten Up';
+const List<String> supportedPlatforms = ['iOS', 'Android', 'Web'];
+const TimeOfDay startTime = TimeOfDay(hour: 22, minute: 0);
+
+// ✅ GOOD: const constructors with const values
+const QuietHours(
+  startTime: TimeOfDay(hour: 22, minute: 0),
+  endTime: TimeOfDay(hour: 8, minute: 0),
+  enabled: true,
+);
+
+// ✅ GOOD: const widgets (performance benefit)
+const Text('Hello World');
+const SizedBox(height: 16);
+const Icon(Icons.notification_important);
+
+// ✅ GOOD: const default parameters
+Widget build(BuildContext context, {EdgeInsets padding = const EdgeInsets.all(16)}) {
+  // ...
+}
+```
+
+#### When to Use `final`
+
+**PREFER `final` for:**
+1. ✅ **Runtime values** (API responses, user input, DateTime.now())
+2. ✅ **Widget constructor parameters** (can't be const if parent isn't const)
+3. ✅ **Class fields** (unless they're compile-time constants)
+4. ✅ **Local variables** that won't change after initialization
+
+**Examples:**
+```dart
+// ✅ GOOD: Runtime values
+final now = DateTime.now();  // Value determined at runtime
+final user = await fetchUser();  // Async operation
+final theme = Theme.of(context);  // Depends on context
+
+// ✅ GOOD: Widget parameters (typical case)
+class AlertCard extends StatelessWidget {
+  final Alert alert;  // Runtime data, use final
+  final VoidCallback? onTap;
+
+  const AlertCard({super.key, required this.alert, this.onTap});
+}
+
+// ✅ GOOD: Class fields
+class AuthRepository {
+  final IHttpClient _httpClient;  // Dependency injection, use final
+
+  AuthRepository({required IHttpClient httpClient}) : _httpClient = httpClient;
+}
+
+// ✅ GOOD: Local variables
+void processData(List<int> numbers) {
+  final sum = numbers.reduce((a, b) => a + b);  // Computed value
+  final average = sum / numbers.length;
+  print('Average: $average');
+}
+```
+
+#### Common Patterns
+
+**Pattern 1: const constructors with final fields**
+```dart
+// Class with const constructor
+class AppColors {
+  final Color primary;
+  final Color secondary;
+
+  // const constructor requires all fields to be final
+  const AppColors({required this.primary, required this.secondary});
+}
+
+// Usage: Create compile-time constant instances
+const lightColors = AppColors(primary: Colors.blue, secondary: Colors.green);
+const darkColors = AppColors(primary: Colors.indigo, secondary: Colors.teal);
+```
+
+**Pattern 2: const in widget trees**
+```dart
+// ✅ GOOD: Use const for static widgets
+Widget build(BuildContext context) {
+  return Column(
+    children: [
+      const Text('Static title'),  // const - never changes
+      Text(user.name),  // NOT const - dynamic data
+      const SizedBox(height: 16),  // const - static spacing
+      const Divider(),  // const - static widget
+    ],
+  );
+}
+```
+
+**Pattern 3: Transitively const**
+```dart
+// ✅ GOOD: Everything is const all the way down
+const QuietHours quietHours = QuietHours(
+  startTime: TimeOfDay(hour: 22, minute: 0),  // const
+  endTime: TimeOfDay(hour: 8, minute: 0),  // const
+  enabled: true,  // const literal
+);
+
+// ❌ BAD: Can't be const if any part is non-const
+final QuietHours quietHours = QuietHours(
+  startTime: TimeOfDay.now(),  // Runtime value!
+  endTime: TimeOfDay(hour: 8, minute: 0),
+  enabled: true,
+);
+```
+
+#### Common Mistakes
+
+**❌ DON'T use const for runtime values:**
+```dart
+// ❌ ERROR: DateTime.now() is runtime value
+const now = DateTime.now();  // Compilation error!
+
+// ✅ CORRECT:
+final now = DateTime.now();
+```
+
+**❌ DON'T use const redundantly:**
+```dart
+// ❌ BAD: Redundant const (already in const context)
+const list = [const SizedBox(), const Text('Hello')];
+
+// ✅ GOOD: Const context applies to children
+const list = [SizedBox(), Text('Hello')];
+```
+
+**❌ DON'T forget const for compile-time constants:**
+```dart
+// ❌ BAD: Missing const (8 violations we just fixed!)
+final startTime = TimeOfDay(hour: 22, minute: 0);  // Should be const
+
+// ✅ GOOD:
+const startTime = TimeOfDay(hour: 22, minute: 0);
+```
+
+### Type Annotations
+
+**DO type annotate public APIs:**
+```dart
+// ✅ GOOD: Public API with type annotations
+String formatTime(TimeOfDay time) {
+  return '${time.hour}:${time.minute.toString().padLeft(2, '0')}';
+}
+```
+
+**CONSIDER omitting types for local variables (use type inference):**
+```dart
+// ✅ GOOD: Type inference for locals
+final user = await fetchUser();  // Type inferred as User
+final count = items.length;  // Type inferred as int
+```
+
+**DO annotate when inference fails or is unclear:**
+```dart
+// ✅ GOOD: Explicit when needed
+final List<Widget> children = [];  // Empty list needs type
+final dynamic jsonData = parseJson(response);  // Dynamic is intentional
+```
+
+### Null Safety
+
+**DO handle nulls explicitly:**
+```dart
+// ✅ GOOD: Explicit null handling
+final user = await fetchUser();
+if (user != null) {
+  print(user.name);
+}
+
+// ✅ GOOD: Null-aware operators
+final name = user?.name ?? 'Guest';
+
+// ✅ GOOD: Late initialization (when you're certain)
+late final UserPreferences _prefs;
+
+@override
+void initState() {
+  super.initState();
+  _prefs = UserPreferences.load();
+}
+```
+
+**DON'T use `!` (bang operator) without justification:**
+```dart
+// ❌ BAD: Potential null pointer exception
+final name = user!.name;  // What if user is null?
+
+// ✅ GOOD: Safe access
+final name = user?.name ?? 'Guest';
+```
+
+### Effective Dart Quick Reference
+
+**Key principles from [dart.dev/effective-dart](https://dart.dev/effective-dart):**
+1. **PREFER** making fields and top-level variables `final`
+2. **DO** use `const` for compile-time constants
+3. **CONSIDER** making constructors `const` if the class supports it
+4. **DO** follow a consistent rule for `var` and `final` on locals
+5. **PREFER** using `??` (null-coalescing) to convert `null` to a default value
+6. **AVOID** using `!` if `?` or `??` can be used instead
+7. **DON'T** redundantly type annotate initialized local variables
+8. **DO** annotate when inference doesn't work or is unclear
+
+---
+
 ## SOLID Principles & Clean Code
 
 **MANDATORY: All code MUST follow SOLID principles and clean code practices.**
@@ -99,41 +330,30 @@ lib/widgets/notification_dock/
   dock_footer.dart            (71 lines)
 ```
 
-### SOLID Principles Explained
+### SOLID Principles (Quick Reference)
+
+Apply these principles to all code. See [Wikipedia: SOLID](https://en.wikipedia.org/wiki/SOLID) for detailed explanations.
 
 #### 1. Single Responsibility Principle (SRP)
-**"A class should have one, and only one, reason to change."**
+**Rule**: A class should have one, and only one, reason to change.
 
-**In Practice:**
-- Each widget has ONE clear purpose
+**Application:**
+- Each widget has ONE clear purpose (display header, handle status selection, etc.)
 - Each provider manages ONE piece of state
 - Each service handles ONE domain concern
+- **Anti-pattern**: 500-line widget handling header + status + alerts + footer + logic
 
-**Good Example:**
+**Example:**
 ```dart
-// GOOD: Single responsibility
+// ✅ GOOD: Single responsibility
 class DockHeader extends StatelessWidget {
-  // Only handles displaying the header
   final User? user;
   final VoidCallback onMenuTap;
-  // ...
 }
 
 class StatusToggle extends StatelessWidget {
-  // Only handles status selection
   final UserStatus selectedStatus;
   final ValueChanged<UserStatus> onStatusChanged;
-  // ...
-}
-```
-
-**Bad Example:**
-```dart
-// BAD: Multiple responsibilities
-class NotificationDock extends StatelessWidget {
-  // Handles: header, status, alerts, footer, logic, state, etc.
-  // 500+ lines of mixed concerns
-  // ...
 }
 ```
 
@@ -384,9 +604,10 @@ void updateStatus(UserStatus status) {  // Type-safe!
 - Use global state (use Riverpod providers)
 
 #### Always:
-- Use `const` constructors when possible
+- **Use `const` constructors when possible** (compile-time constants for performance)
+- **Make fields and variables `final`** (prefer immutability)
 - Add `@override` annotations
-- Handle null safety properly
+- Handle null safety properly (use `?.` and `??` instead of `!`)
 - Use meaningful, descriptive variable names
 - Document public APIs with dartdoc comments
 - Use proper error handling (try-catch with specific exceptions)
@@ -731,6 +952,8 @@ Before marking any task complete:
 - [ ] Follows repository pattern for data access
 - [ ] Infrastructure dependencies use Adapter Pattern (IHttpClient, ISecureStorage, etc.)
 - [ ] `const` constructors used where possible
+- [ ] Compile-time constants use `const`, runtime constants use `final`
+- [ ] Effective Dart guidelines followed (type annotations, null safety)
 
 ## Common Commands Reference
 
