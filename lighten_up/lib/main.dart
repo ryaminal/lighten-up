@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lighten_up/core/theme/app_theme.dart';
+import 'package:lighten_up/core/widgets/app_scaffold.dart';
 import 'package:lighten_up/presentation/providers/auth_provider.dart';
+import 'package:lighten_up/presentation/screens/alerts/alerts_screen.dart';
 import 'package:lighten_up/presentation/screens/auth/login_screen.dart';
 import 'package:lighten_up/presentation/screens/dashboard/room_dashboard_screen.dart';
+import 'package:lighten_up/presentation/screens/messages/messages_screen.dart';
+import 'package:lighten_up/presentation/screens/reports/reports_screen.dart';
+import 'package:lighten_up/presentation/screens/settings/settings_screen.dart';
+import 'package:lighten_up/presentation/screens/staff/staff_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -37,7 +43,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/',
-        builder: (context, state) => const RoomDashboardScreen(),
+        builder: (context, state) =>
+            const AppScaffold(child: RoomDashboardScreen()),
+      ),
+      GoRoute(
+        path: '/messages',
+        builder: (context, state) => const AppScaffold(child: MessagesScreen()),
+      ),
+      GoRoute(
+        path: '/alerts',
+        builder: (context, state) => const AppScaffold(child: AlertsScreen()),
+      ),
+      GoRoute(
+        path: '/staff',
+        builder: (context, state) => const AppScaffold(child: StaffScreen()),
+      ),
+      GoRoute(
+        path: '/reports',
+        builder: (context, state) => const AppScaffold(child: ReportsScreen()),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const AppScaffold(child: SettingsScreen()),
       ),
     ],
   );

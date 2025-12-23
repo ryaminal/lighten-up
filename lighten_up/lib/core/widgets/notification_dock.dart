@@ -69,272 +69,277 @@ class _NotificationDockState extends ConsumerState<NotificationDock> {
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
-    return Container(
-      width: 320,
-      decoration: BoxDecoration(
-        color: AppColors.backgroundDark,
-        border: Border(
-          left: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+    return Material(
+      color: AppColors.backgroundDark,
+      child: Container(
+        width: 320,
+        decoration: BoxDecoration(
+          color: AppColors.backgroundDark,
+          border: Border(
+            left: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(-4, 0),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(-4, 0),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Header with logo and station info
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.spaceMd),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.2),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.local_hospital,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spaceSm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Lighten Up',
-                        style: AppTextStyles.headingSmall.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Station: ${user?.department ?? 'Main'}',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  color: AppColors.textSecondary,
-                  onPressed: () {
-                    // TODO: Show options menu
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          // User status toggle
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.spaceMd,
-              vertical: AppDimensions.spaceSm,
-            ),
-            child: Container(
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceDark,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.05),
-                  width: 1,
-                ),
-              ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header with logo and station info
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.spaceMd),
               child: Row(
                 children: [
-                  _StatusButton(
-                    label: 'Avail',
-                    status: UserStatus.online,
-                    isSelected: selectedStatus == UserStatus.online,
-                    onTap: () {
-                      setState(() => selectedStatus = UserStatus.online);
-                    },
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.2),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.local_hospital,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
-                  _StatusButton(
-                    label: 'Busy',
-                    status: UserStatus.busy,
-                    isSelected: selectedStatus == UserStatus.busy,
-                    onTap: () {
-                      setState(() => selectedStatus = UserStatus.busy);
-                    },
+                  const SizedBox(width: AppDimensions.spaceSm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Lighten Up',
+                          style: AppTextStyles.headingSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Station: ${user?.department ?? 'Main'}',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  _StatusButton(
-                    label: 'Away',
-                    status: UserStatus.away,
-                    isSelected: selectedStatus == UserStatus.away,
-                    onTap: () {
-                      setState(() => selectedStatus = UserStatus.away);
+                  IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    color: AppColors.textSecondary,
+                    onPressed: () {
+                      // TODO: Show options menu
                     },
                   ),
                 ],
               ),
             ),
-          ),
 
-          // Scrollable alert list
-          Expanded(
-            child: ListView(
+            // User status toggle
+            Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppDimensions.spaceMd,
                 vertical: AppDimensions.spaceSm,
               ),
-              children: [
-                // My Alerts section (urgent)
-                if (urgentAlerts.isNotEmpty) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'MY ALERTS',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.alertRed.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusSm,
-                          ),
-                        ),
-                        child: Text(
-                          '${urgentAlerts.length} URGENT',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.alertRed,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ),
-                    ],
+              child: Container(
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceDark,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.05),
+                    width: 1,
                   ),
-                  const SizedBox(height: AppDimensions.spaceSm),
-                  ...urgentAlerts.map(
-                    (alert) => Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: AppDimensions.spaceSm,
-                      ),
-                      child: _AlertCard(alert: alert),
+                ),
+                child: Row(
+                  children: [
+                    _StatusButton(
+                      label: 'Avail',
+                      status: UserStatus.online,
+                      isSelected: selectedStatus == UserStatus.online,
+                      onTap: () {
+                        setState(() => selectedStatus = UserStatus.online);
+                      },
                     ),
-                  ),
-                ],
-
-                // Room Status section
-                if (roomStatusAlerts.isNotEmpty) ...[
-                  if (urgentAlerts.isNotEmpty)
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                        vertical: AppDimensions.spaceMd,
-                      ),
-                      height: 1,
-                      color: Colors.white.withOpacity(0.05),
+                    _StatusButton(
+                      label: 'Busy',
+                      status: UserStatus.busy,
+                      isSelected: selectedStatus == UserStatus.busy,
+                      onTap: () {
+                        setState(() => selectedStatus = UserStatus.busy);
+                      },
                     ),
-                  Text(
-                    'ROOM STATUS',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
+                    _StatusButton(
+                      label: 'Away',
+                      status: UserStatus.away,
+                      isSelected: selectedStatus == UserStatus.away,
+                      onTap: () {
+                        setState(() => selectedStatus = UserStatus.away);
+                      },
                     ),
-                  ),
-                  const SizedBox(height: AppDimensions.spaceSm),
-                  ...roomStatusAlerts.map(
-                    (alert) => Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: AppDimensions.spaceSm,
-                      ),
-                      child: _AlertCard(alert: alert),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          // Footer with user info and logout
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.spaceMd),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: Colors.white.withOpacity(0.05),
-                  width: 1,
+                  ],
                 ),
               ),
             ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.primary,
-                  child: Text(
-                    user?.initials ?? '??',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+
+            // Scrollable alert list
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.spaceMd,
+                  vertical: AppDimensions.spaceSm,
+                ),
+                children: [
+                  // My Alerts section (urgent)
+                  if (urgentAlerts.isNotEmpty) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'MY ALERTS',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.alertRed.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusSm,
+                            ),
+                          ),
+                          child: Text(
+                            '${urgentAlerts.length} URGENT',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.alertRed,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppDimensions.spaceSm),
+                    ...urgentAlerts.map(
+                      (alert) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppDimensions.spaceSm,
+                        ),
+                        child: _AlertCard(alert: alert),
+                      ),
+                    ),
+                  ],
+
+                  // Room Status section
+                  if (roomStatusAlerts.isNotEmpty) ...[
+                    if (urgentAlerts.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          vertical: AppDimensions.spaceMd,
+                        ),
+                        height: 1,
+                        color: Colors.white.withOpacity(0.05),
+                      ),
+                    Text(
+                      'ROOM STATUS',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.spaceSm),
+                    ...roomStatusAlerts.map(
+                      (alert) => Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppDimensions.spaceSm,
+                        ),
+                        child: _AlertCard(alert: alert),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Footer with user info and logout
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.spaceMd),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.white.withOpacity(0.05),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.primary,
+                    child: Text(
+                      user?.initials ?? '??',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: AppDimensions.spaceSm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user?.fullName ?? 'User',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                  const SizedBox(width: AppDimensions.spaceSm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.fullName ?? 'User',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        user?.roleDisplayName ?? 'Role',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textSecondary,
+                        Text(
+                          user?.roleDisplayName ?? 'Role',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.logout),
-                  color: AppColors.textSecondary,
-                  tooltip: 'Logout',
-                  onPressed: () async {
-                    await ref.read(authProvider.notifier).logout();
-                  },
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.logout),
+                    color: AppColors.textSecondary,
+                    tooltip: 'Logout',
+                    onPressed: () async {
+                      await ref.read(authProvider.notifier).logout();
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

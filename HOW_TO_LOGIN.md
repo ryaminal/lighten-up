@@ -12,10 +12,10 @@ The app is currently using a **Mock API** for development. This means:
 1. **Run the app:**
    ```bash
    cd lighten_up
-   
+
    # For web (Chrome)
    flutter run -d chrome
-   
+
    # For macOS
    flutter run -d macos
    ```
@@ -23,7 +23,7 @@ The app is currently using a **Mock API** for development. This means:
 2. **Login credentials:**
    - **Email**: ANY email (e.g., `test@example.com`, `doctor@hospital.com`)
    - **Password**: ANY password (e.g., `password123`, `test`)
-   
+
    The mock interceptor accepts any credentials and returns a successful login!
 
 3. **What you'll see:**
