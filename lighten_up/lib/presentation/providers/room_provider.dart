@@ -91,7 +91,11 @@ class RoomNotifier extends _$RoomNotifier {
 
   /// Set selected zone for filtering
   void setSelectedZone(ZoneType? zone) {
-    state = state.copyWith(selectedZone: zone);
+    if (zone == null) {
+      state = state.copyWith(clearSelectedZone: true);
+    } else {
+      state = state.copyWith(selectedZone: zone);
+    }
     debugPrint('Zone filter changed to: ${zone?.displayName ?? "All Zones"}');
   }
 
