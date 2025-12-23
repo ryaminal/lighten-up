@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lighten_up/core/theme/app_theme.dart';
 import 'package:lighten_up/core/widgets/app_scaffold.dart';
 import 'package:lighten_up/presentation/providers/auth_provider.dart';
-import 'package:lighten_up/presentation/screens/alerts/alerts_screen.dart';
+import 'package:lighten_up/presentation/screens/alerts/alert_settings_screen.dart';
 import 'package:lighten_up/presentation/screens/auth/login_screen.dart';
 import 'package:lighten_up/presentation/screens/dashboard/room_dashboard_screen.dart';
 import 'package:lighten_up/presentation/screens/messages/messages_screen.dart';
@@ -52,7 +52,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/alerts',
-        builder: (context, state) => const AppScaffold(child: AlertsScreen()),
+        builder: (context, state) =>
+            const AppScaffold(child: AlertSettingsScreen()),
       ),
       GoRoute(
         path: '/staff',
