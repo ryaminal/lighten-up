@@ -5,3 +5,4 @@ library;
 
 export 'database_interface.dart';
 export 'hive_database_adapter.dart';
+export 'protobuf_box_helper.dart';
