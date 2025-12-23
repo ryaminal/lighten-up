@@ -49,16 +49,20 @@ class AlertState {
 class AlertNotifier extends _$AlertNotifier {
   @override
   AlertState build() {
-    // Initialize with empty state, then load alerts
-    _loadAlerts();
-    return const AlertState();
+    // Load mock data synchronously during initialization
+    // This avoids async lifecycle issues with Riverpod's build() method
+    // When connecting to real API, consider using AsyncNotifierProvider instead
+    final alerts = MockAlertData.getAlerts();
+
+    return AlertState(alerts: alerts, isLoading: false);
   }
 
-  /// Load alerts from data source (currently mock data)
+  /// Load alerts from data source
   Future<void> _loadAlerts() async {
-    state = state.copyWith(isLoading: true, error: null);
-
     try {
+      // Set loading state
+      state = state.copyWith(isLoading: true, error: null);
+
       // TODO: Replace with actual API call or WebSocket subscription
       await Future.delayed(const Duration(milliseconds: 300));
 

@@ -50,16 +50,35 @@ class AlertSettingsState {
 class AlertSettingsNotifier extends _$AlertSettingsNotifier {
   @override
   AlertSettingsState build() {
-    // Initialize with empty state
-    _loadWorkstations();
-    return const AlertSettingsState();
+    // Load mock data synchronously during initialization
+    // This avoids async lifecycle issues with Riverpod's build() method
+    // When connecting to real API, consider using AsyncNotifierProvider instead
+    final workstations = MockAlertSettingsData.getWorkstations();
+
+    if (workstations.isEmpty) {
+      return const AlertSettingsState(isLoading: false);
+    }
+
+    // Load settings for first workstation synchronously
+    final firstWorkstation = workstations.first;
+    final settings = MockAlertSettingsData.getSettingsForWorkstation(
+      firstWorkstation.id,
+    );
+
+    return AlertSettingsState(
+      workstations: workstations,
+      selectedWorkstationId: firstWorkstation.id,
+      selectedWorkstationSettings: settings,
+      isLoading: false,
+    );
   }
 
   /// Load all workstations
   Future<void> _loadWorkstations() async {
-    state = state.copyWith(isLoading: true, error: null);
-
     try {
+      // Set loading state
+      state = state.copyWith(isLoading: true, error: null);
+
       // TODO: Replace with actual API call
       await Future.delayed(const Duration(milliseconds: 500));
 
@@ -83,6 +102,11 @@ class AlertSettingsNotifier extends _$AlertSettingsNotifier {
         error: 'Failed to load workstations: ${e.toString()}',
       );
     }
+  }
+
+  /// Refresh workstations list
+  Future<void> refreshWorkstations() async {
+    await _loadWorkstations();
   }
 
   /// Load settings for a specific workstation

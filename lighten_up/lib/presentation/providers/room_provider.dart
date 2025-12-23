@@ -51,16 +51,21 @@ class RoomState {
 class RoomNotifier extends _$RoomNotifier {
   @override
   RoomState build() {
-    // Initialize with empty state, then load rooms
-    _loadRooms();
-    return const RoomState();
+    // Load mock data synchronously during initialization
+    // This avoids async lifecycle issues with Riverpod's build() method
+    // When connecting to real API, consider using AsyncNotifierProvider instead
+    final rooms = MockRoomData.getRooms();
+    final zones = MockRoomData.getZones();
+
+    return RoomState(rooms: rooms, zones: zones, isLoading: false);
   }
 
-  /// Load rooms from data source (currently mock data)
+  /// Load rooms from data source
   Future<void> _loadRooms() async {
-    state = state.copyWith(isLoading: true, error: null);
-
     try {
+      // Set loading state
+      state = state.copyWith(isLoading: true, error: null);
+
       // TODO: Replace with actual API call
       await Future.delayed(const Duration(milliseconds: 300));
 
