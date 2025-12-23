@@ -360,7 +360,7 @@ void main() {
             eventName: 'Test Event',
             eventDescription: 'Test Description',
             priority: AlertEventPriority.urgent,
-            soundId: 'Test Sound',
+            soundType: SoundType.sonar,
             volume: 75,
           ),
         ];
@@ -390,7 +390,7 @@ void main() {
             eventName: 'Event 1',
             eventDescription: 'Description 1',
             priority: AlertEventPriority.emergency,
-            soundId: 'Sound 1',
+            soundType: SoundType.urgentSiren,
             volume: 90,
           ),
           EventMapping(
@@ -398,7 +398,7 @@ void main() {
             eventName: 'Event 2',
             eventDescription: 'Description 2',
             priority: AlertEventPriority.normal,
-            soundId: 'Sound 2',
+            soundType: SoundType.softChime,
             volume: 50,
           ),
         ];
@@ -533,7 +533,7 @@ void main() {
             eventName: 'Custom Event',
             eventDescription: 'Custom Description',
             priority: AlertEventPriority.urgent,
-            soundId: 'Custom Sound',
+            soundType: SoundType.digital,
             volume: 80,
           ),
         ];

@@ -67,7 +67,7 @@ _$RoomImpl _$$RoomImplFromJson(Map<String, dynamic> json) => _$RoomImpl(
   status:
       $enumDecodeNullable(_$RoomStatusEnumMap, json['status']) ??
       RoomStatus.available,
-  zone: json['zone'] as String?,
+  zone: $enumDecodeNullable(_$ZoneTypeEnumMap, json['zone']),
   location: json['location'] as String?,
   description: json['description'] as String?,
   lights:
@@ -98,7 +98,7 @@ Map<String, dynamic> _$$RoomImplToJson(_$RoomImpl instance) =>
       'name': instance.name,
       'displayName': instance.displayName,
       'status': _$RoomStatusEnumMap[instance.status]!,
-      'zone': instance.zone,
+      'zone': _$ZoneTypeEnumMap[instance.zone],
       'location': instance.location,
       'description': instance.description,
       'lights': instance.lights,
@@ -118,6 +118,12 @@ const _$RoomStatusEnumMap = {
   RoomStatus.occupied: 'occupied',
   RoomStatus.cleaning: 'cleaning',
   RoomStatus.maintenance: 'maintenance',
+};
+
+const _$ZoneTypeEnumMap = {
+  ZoneType.doctorsWing: 'doctors_wing',
+  ZoneType.hygieneWing: 'hygiene_wing',
+  ZoneType.frontDesk: 'front_desk',
 };
 
 _$RoomZoneImpl _$$RoomZoneImplFromJson(Map<String, dynamic> json) =>

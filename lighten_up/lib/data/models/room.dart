@@ -50,6 +50,44 @@ enum LightPriority {
   emergency,
 }
 
+/// Zone type for filtering and categorization
+enum ZoneType {
+  @JsonValue('doctors_wing')
+  doctorsWing,
+  @JsonValue('hygiene_wing')
+  hygieneWing,
+  @JsonValue('front_desk')
+  frontDesk;
+
+  /// Get display name for UI
+  String get displayName {
+    switch (this) {
+      case ZoneType.doctorsWing:
+        return "Doctor's Wing";
+      case ZoneType.hygieneWing:
+        return 'Hygiene Wing';
+      case ZoneType.frontDesk:
+        return 'Front Desk';
+    }
+  }
+
+  /// Parse from string zone value
+  static ZoneType? fromString(String? zone) {
+    if (zone == null) return null;
+    switch (zone.toLowerCase().replaceAll(' ', '_').replaceAll("'", '')) {
+      case 'doctors_wing':
+      case 'doctor_wing':
+        return ZoneType.doctorsWing;
+      case 'hygiene_wing':
+        return ZoneType.hygieneWing;
+      case 'front_desk':
+        return ZoneType.frontDesk;
+      default:
+        return null;
+    }
+  }
+}
+
 /// Room light model
 @freezed
 class RoomLight with _$RoomLight {
@@ -128,7 +166,7 @@ class Room with _$Room {
     required String name,
     String? displayName,
     @Default(RoomStatus.available) RoomStatus status,
-    String? zone,
+    ZoneType? zone,
     String? location,
     String? description,
     @Default([]) List<RoomLight> lights,

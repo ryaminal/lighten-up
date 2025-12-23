@@ -51,7 +51,7 @@ class MockAlertSettingsData {
           eventName: 'Emergency Call',
           eventDescription: 'Code Blue, Security',
           priority: AlertEventPriority.emergency,
-          soundId: 'Urgent Siren',
+          soundType: SoundType.urgentSiren,
           volume: 90,
         ),
         EventMapping(
@@ -59,7 +59,7 @@ class MockAlertSettingsData {
           eventName: 'Routine Message',
           eventDescription: 'Internal chat, Check-in',
           priority: AlertEventPriority.normal,
-          soundId: 'Soft Chime',
+          soundType: SoundType.softChime,
           volume: 45,
         ),
         EventMapping(
@@ -67,7 +67,7 @@ class MockAlertSettingsData {
           eventName: 'Patient Arrived',
           eventDescription: 'Waiting room alert',
           priority: AlertEventPriority.urgent,
-          soundId: 'Ding Dong',
+          soundType: SoundType.dingDong,
           volume: 60,
         ),
         EventMapping(
@@ -75,7 +75,7 @@ class MockAlertSettingsData {
           eventName: 'Lab Results',
           eventDescription: 'Results ready notification',
           priority: AlertEventPriority.low,
-          soundId: 'Digital',
+          soundType: SoundType.digital,
           volume: 30,
         ),
       ],
@@ -103,7 +103,7 @@ class MockAlertSettingsData {
           eventName: 'Emergency Call',
           eventDescription: 'Code Blue, Security',
           priority: AlertEventPriority.emergency,
-          soundId: 'Urgent Siren',
+          soundType: SoundType.urgentSiren,
           volume: 85,
         ),
         EventMapping(
@@ -111,7 +111,7 @@ class MockAlertSettingsData {
           eventName: 'Routine Message',
           eventDescription: 'Internal chat, Check-in',
           priority: AlertEventPriority.normal,
-          soundId: 'Soft Chime',
+          soundType: SoundType.softChime,
           volume: 50,
         ),
       ],

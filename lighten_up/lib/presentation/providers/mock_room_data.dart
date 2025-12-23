@@ -12,7 +12,7 @@ class MockRoomData {
         id: '1',
         name: 'Exam 1',
         status: RoomStatus.occupied,
-        zone: 'Doctor\'s Wing',
+        zone: ZoneType.doctorsWing,
         currentPatientName: 'J. Doe',
         lights: [
           RoomLight(
@@ -44,7 +44,7 @@ class MockRoomData {
         id: '2',
         name: 'Exam 2',
         status: RoomStatus.available,
-        zone: 'Doctor\'s Wing',
+        zone: ZoneType.doctorsWing,
         lights: [
           RoomLight(
             id: '4',
@@ -70,7 +70,7 @@ class MockRoomData {
         id: '3',
         name: 'Hygiene 1',
         status: RoomStatus.occupied,
-        zone: 'Hygiene Wing',
+        zone: ZoneType.hygieneWing,
         lights: [
           RoomLight(
             id: '7',
@@ -86,7 +86,7 @@ class MockRoomData {
         id: '4',
         name: 'Hygiene 2',
         status: RoomStatus.available,
-        zone: 'Hygiene Wing',
+        zone: ZoneType.hygieneWing,
         lights: [
           RoomLight(
             id: '8',
@@ -100,7 +100,7 @@ class MockRoomData {
         id: '5',
         name: 'Front Desk',
         status: RoomStatus.occupied,
-        zone: 'Front Desk',
+        zone: ZoneType.frontDesk,
         lights: [
           RoomLight(
             id: '9',
@@ -113,10 +113,5 @@ class MockRoomData {
         ],
       ),
     ];
-  }
-
-  /// Get list of available zones
-  static List<String> getZones() {
-    return ['All Zones', 'Doctor\'s Wing', 'Hygiene Wing', 'Front Desk'];
   }
 }

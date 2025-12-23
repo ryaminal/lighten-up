@@ -73,17 +73,11 @@ class EventMappingRow extends StatelessWidget {
   }
 
   Widget _buildSoundDropdown() {
-    final availableSounds = [
-      'Urgent Siren',
-      'Soft Chime',
-      'Ding Dong',
-      'Digital',
-      'Sonar',
-      'None',
-    ];
+    // Use all SoundType enum values
+    const availableSounds = SoundType.values;
 
-    return DropdownButtonFormField<String>(
-      value: mapping.soundId,
+    return DropdownButtonFormField<SoundType>(
+      value: mapping.soundType,
       decoration: InputDecoration(
         filled: true,
         fillColor: AppColors.surfaceCard,
@@ -107,11 +101,11 @@ class EventMappingRow extends StatelessWidget {
       dropdownColor: AppColors.surfaceCard,
       style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
       items: availableSounds.map((sound) {
-        return DropdownMenuItem(value: sound, child: Text(sound));
+        return DropdownMenuItem(value: sound, child: Text(sound.displayName));
       }).toList(),
       onChanged: (value) {
         if (value != null) {
-          onChanged(mapping.copyWith(soundId: value));
+          onChanged(mapping.copyWith(soundType: value));
         }
       },
     );

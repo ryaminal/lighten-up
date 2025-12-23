@@ -546,7 +546,7 @@ mixin _$EventMapping {
   String get eventName => throw _privateConstructorUsedError;
   String get eventDescription => throw _privateConstructorUsedError;
   AlertEventPriority get priority => throw _privateConstructorUsedError;
-  String get soundId => throw _privateConstructorUsedError;
+  SoundType get soundType => throw _privateConstructorUsedError;
   int get volume => throw _privateConstructorUsedError;
 
   /// Serializes this EventMapping to a JSON map.
@@ -571,7 +571,7 @@ abstract class $EventMappingCopyWith<$Res> {
     String eventName,
     String eventDescription,
     AlertEventPriority priority,
-    String soundId,
+    SoundType soundType,
     int volume,
   });
 }
@@ -595,7 +595,7 @@ class _$EventMappingCopyWithImpl<$Res, $Val extends EventMapping>
     Object? eventName = null,
     Object? eventDescription = null,
     Object? priority = null,
-    Object? soundId = null,
+    Object? soundType = null,
     Object? volume = null,
   }) {
     return _then(
@@ -616,10 +616,10 @@ class _$EventMappingCopyWithImpl<$Res, $Val extends EventMapping>
                 ? _value.priority
                 : priority // ignore: cast_nullable_to_non_nullable
                       as AlertEventPriority,
-            soundId: null == soundId
-                ? _value.soundId
-                : soundId // ignore: cast_nullable_to_non_nullable
-                      as String,
+            soundType: null == soundType
+                ? _value.soundType
+                : soundType // ignore: cast_nullable_to_non_nullable
+                      as SoundType,
             volume: null == volume
                 ? _value.volume
                 : volume // ignore: cast_nullable_to_non_nullable
@@ -644,7 +644,7 @@ abstract class _$$EventMappingImplCopyWith<$Res>
     String eventName,
     String eventDescription,
     AlertEventPriority priority,
-    String soundId,
+    SoundType soundType,
     int volume,
   });
 }
@@ -667,7 +667,7 @@ class __$$EventMappingImplCopyWithImpl<$Res>
     Object? eventName = null,
     Object? eventDescription = null,
     Object? priority = null,
-    Object? soundId = null,
+    Object? soundType = null,
     Object? volume = null,
   }) {
     return _then(
@@ -688,10 +688,10 @@ class __$$EventMappingImplCopyWithImpl<$Res>
             ? _value.priority
             : priority // ignore: cast_nullable_to_non_nullable
                   as AlertEventPriority,
-        soundId: null == soundId
-            ? _value.soundId
-            : soundId // ignore: cast_nullable_to_non_nullable
-                  as String,
+        soundType: null == soundType
+            ? _value.soundType
+            : soundType // ignore: cast_nullable_to_non_nullable
+                  as SoundType,
         volume: null == volume
             ? _value.volume
             : volume // ignore: cast_nullable_to_non_nullable
@@ -709,7 +709,7 @@ class _$EventMappingImpl implements _EventMapping {
     required this.eventName,
     required this.eventDescription,
     required this.priority,
-    required this.soundId,
+    required this.soundType,
     required this.volume,
   });
 
@@ -725,13 +725,13 @@ class _$EventMappingImpl implements _EventMapping {
   @override
   final AlertEventPriority priority;
   @override
-  final String soundId;
+  final SoundType soundType;
   @override
   final int volume;
 
   @override
   String toString() {
-    return 'EventMapping(id: $id, eventName: $eventName, eventDescription: $eventDescription, priority: $priority, soundId: $soundId, volume: $volume)';
+    return 'EventMapping(id: $id, eventName: $eventName, eventDescription: $eventDescription, priority: $priority, soundType: $soundType, volume: $volume)';
   }
 
   @override
@@ -746,7 +746,8 @@ class _$EventMappingImpl implements _EventMapping {
                 other.eventDescription == eventDescription) &&
             (identical(other.priority, priority) ||
                 other.priority == priority) &&
-            (identical(other.soundId, soundId) || other.soundId == soundId) &&
+            (identical(other.soundType, soundType) ||
+                other.soundType == soundType) &&
             (identical(other.volume, volume) || other.volume == volume));
   }
 
@@ -758,7 +759,7 @@ class _$EventMappingImpl implements _EventMapping {
     eventName,
     eventDescription,
     priority,
-    soundId,
+    soundType,
     volume,
   );
 
@@ -782,7 +783,7 @@ abstract class _EventMapping implements EventMapping {
     required final String eventName,
     required final String eventDescription,
     required final AlertEventPriority priority,
-    required final String soundId,
+    required final SoundType soundType,
     required final int volume,
   }) = _$EventMappingImpl;
 
@@ -798,7 +799,7 @@ abstract class _EventMapping implements EventMapping {
   @override
   AlertEventPriority get priority;
   @override
-  String get soundId;
+  SoundType get soundType;
   @override
   int get volume;
 

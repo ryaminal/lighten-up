@@ -389,7 +389,7 @@ mixin _$Room {
   String get name => throw _privateConstructorUsedError;
   String? get displayName => throw _privateConstructorUsedError;
   RoomStatus get status => throw _privateConstructorUsedError;
-  String? get zone => throw _privateConstructorUsedError;
+  ZoneType? get zone => throw _privateConstructorUsedError;
   String? get location => throw _privateConstructorUsedError;
   String? get description => throw _privateConstructorUsedError;
   List<RoomLight> get lights => throw _privateConstructorUsedError;
@@ -427,7 +427,7 @@ abstract class $RoomCopyWith<$Res> {
     String name,
     String? displayName,
     RoomStatus status,
-    String? zone,
+    ZoneType? zone,
     String? location,
     String? description,
     List<RoomLight> lights,
@@ -497,7 +497,7 @@ class _$RoomCopyWithImpl<$Res, $Val extends Room>
             zone: freezed == zone
                 ? _value.zone
                 : zone // ignore: cast_nullable_to_non_nullable
-                      as String?,
+                      as ZoneType?,
             location: freezed == location
                 ? _value.location
                 : location // ignore: cast_nullable_to_non_nullable
@@ -565,7 +565,7 @@ abstract class _$$RoomImplCopyWith<$Res> implements $RoomCopyWith<$Res> {
     String name,
     String? displayName,
     RoomStatus status,
-    String? zone,
+    ZoneType? zone,
     String? location,
     String? description,
     List<RoomLight> lights,
@@ -632,7 +632,7 @@ class __$$RoomImplCopyWithImpl<$Res>
         zone: freezed == zone
             ? _value.zone
             : zone // ignore: cast_nullable_to_non_nullable
-                  as String?,
+                  as ZoneType?,
         location: freezed == location
             ? _value.location
             : location // ignore: cast_nullable_to_non_nullable
@@ -724,7 +724,7 @@ class _$RoomImpl extends _Room {
   @JsonKey()
   final RoomStatus status;
   @override
-  final String? zone;
+  final ZoneType? zone;
   @override
   final String? location;
   @override
@@ -853,7 +853,7 @@ abstract class _Room extends Room {
     required final String name,
     final String? displayName,
     final RoomStatus status,
-    final String? zone,
+    final ZoneType? zone,
     final String? location,
     final String? description,
     final List<RoomLight> lights,
@@ -880,7 +880,7 @@ abstract class _Room extends Room {
   @override
   RoomStatus get status;
   @override
-  String? get zone;
+  ZoneType? get zone;
   @override
   String? get location;
   @override

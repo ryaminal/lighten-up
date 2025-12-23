@@ -51,7 +51,7 @@ _$EventMappingImpl _$$EventMappingImplFromJson(Map<String, dynamic> json) =>
       eventName: json['eventName'] as String,
       eventDescription: json['eventDescription'] as String,
       priority: $enumDecode(_$AlertEventPriorityEnumMap, json['priority']),
-      soundId: json['soundId'] as String,
+      soundType: $enumDecode(_$SoundTypeEnumMap, json['soundType']),
       volume: (json['volume'] as num).toInt(),
     );
 
@@ -61,7 +61,7 @@ Map<String, dynamic> _$$EventMappingImplToJson(_$EventMappingImpl instance) =>
       'eventName': instance.eventName,
       'eventDescription': instance.eventDescription,
       'priority': _$AlertEventPriorityEnumMap[instance.priority]!,
-      'soundId': instance.soundId,
+      'soundType': _$SoundTypeEnumMap[instance.soundType]!,
       'volume': instance.volume,
     };
 
@@ -70,6 +70,15 @@ const _$AlertEventPriorityEnumMap = {
   AlertEventPriority.urgent: 'urgent',
   AlertEventPriority.normal: 'normal',
   AlertEventPriority.low: 'low',
+};
+
+const _$SoundTypeEnumMap = {
+  SoundType.urgentSiren: 'urgent_siren',
+  SoundType.softChime: 'soft_chime',
+  SoundType.dingDong: 'ding_dong',
+  SoundType.digital: 'digital',
+  SoundType.sonar: 'sonar',
+  SoundType.none: 'none',
 };
 
 _$QuietHoursImpl _$$QuietHoursImplFromJson(Map<String, dynamic> json) =>

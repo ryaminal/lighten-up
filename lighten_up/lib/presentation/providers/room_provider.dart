@@ -8,8 +8,8 @@ part 'room_provider.g.dart';
 /// State for room management
 class RoomState {
   final List<Room> rooms;
-  final List<String> zones;
-  final String? selectedZone;
+  final List<ZoneType> zones;
+  final ZoneType? selectedZone;
   final bool isLoading;
   final String? error;
 
@@ -23,15 +23,18 @@ class RoomState {
 
   RoomState copyWith({
     List<Room>? rooms,
-    List<String>? zones,
-    String? selectedZone,
+    List<ZoneType>? zones,
+    ZoneType? selectedZone,
+    bool clearSelectedZone = false,
     bool? isLoading,
     String? error,
   }) {
     return RoomState(
       rooms: rooms ?? this.rooms,
       zones: zones ?? this.zones,
-      selectedZone: selectedZone ?? this.selectedZone,
+      selectedZone: clearSelectedZone
+          ? null
+          : (selectedZone ?? this.selectedZone),
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -39,7 +42,7 @@ class RoomState {
 
   /// Get filtered rooms based on selected zone
   List<Room> get filteredRooms {
-    if (selectedZone == null || selectedZone == 'All Zones') {
+    if (selectedZone == null) {
       return rooms;
     }
     return rooms.where((room) => room.zone == selectedZone).toList();
@@ -55,7 +58,7 @@ class RoomNotifier extends _$RoomNotifier {
     // This avoids async lifecycle issues with Riverpod's build() method
     // When connecting to real API, consider using AsyncNotifierProvider instead
     final rooms = MockRoomData.getRooms();
-    final zones = MockRoomData.getZones();
+    const zones = ZoneType.values; // Use enum values instead of strings
 
     return RoomState(rooms: rooms, zones: zones, isLoading: false);
   }
@@ -70,7 +73,7 @@ class RoomNotifier extends _$RoomNotifier {
       await Future.delayed(const Duration(milliseconds: 300));
 
       final rooms = MockRoomData.getRooms();
-      final zones = MockRoomData.getZones();
+      const zones = ZoneType.values; // Use enum values instead of strings
 
       state = state.copyWith(rooms: rooms, zones: zones, isLoading: false);
     } catch (e) {
@@ -87,19 +90,19 @@ class RoomNotifier extends _$RoomNotifier {
   }
 
   /// Set selected zone for filtering
-  void setSelectedZone(String? zone) {
+  void setSelectedZone(ZoneType? zone) {
     state = state.copyWith(selectedZone: zone);
-    debugPrint('Zone filter changed to: $zone');
+    debugPrint('Zone filter changed to: ${zone?.displayName ?? "All Zones"}');
   }
 
   /// Clear zone filter (show all rooms)
   void clearZoneFilter() {
-    state = state.copyWith(selectedZone: 'All Zones');
+    state = state.copyWith(clearSelectedZone: true);
   }
 
   /// Get rooms by zone
-  List<Room> getRoomsByZone(String zone) {
-    if (zone == 'All Zones') {
+  List<Room> getRoomsByZone(ZoneType? zone) {
+    if (zone == null) {
       return state.rooms;
     }
     return state.rooms.where((room) => room.zone == zone).toList();

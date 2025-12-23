@@ -72,17 +72,20 @@ void main() {
         expect(state.rooms.length, equals(5)); // MockRoomData has 5 rooms
         expect(
           state.zones.length,
-          equals(4),
-        ); // All Zones, Doctor's Wing, Hygiene Wing, Front Desk
+          equals(3),
+        ); // Doctor's Wing, Hygiene Wing, Front Desk (All Zones is null, not in list)
       });
 
-      test('zones include "All Zones" option', () async {
+      test('zones are ZoneType enum values', () async {
         // Act
         await waitForRoomsToLoad();
 
-        // Assert
+        // Assert - Zones are now enum values, not strings
         final state = container.read(roomNotifierProvider);
-        expect(state.zones, contains('All Zones'));
+        expect(state.zones, contains(ZoneType.doctorsWing));
+        expect(state.zones, contains(ZoneType.hygieneWing));
+        expect(state.zones, contains(ZoneType.frontDesk));
+        expect(state.zones.length, equals(3)); // All ZoneType values
       });
     });
 
@@ -106,7 +109,7 @@ void main() {
       test('filteredRooms returns all rooms when "All Zones" is selected', () {
         // Arrange
         final notifier = container.read(roomNotifierProvider.notifier);
-        notifier.setSelectedZone('All Zones');
+        notifier.setSelectedZone(null); // null = "All Zones"
 
         // Act
         final state = container.read(roomNotifierProvider);
@@ -121,14 +124,17 @@ void main() {
         final notifier = container.read(roomNotifierProvider.notifier);
 
         // Act
-        notifier.setSelectedZone('Doctor\'s Wing');
+        notifier.setSelectedZone(ZoneType.doctorsWing);
 
         // Assert - Only Doctor's Wing rooms
         final state = container.read(roomNotifierProvider);
         final filtered = state.filteredRooms;
 
         expect(filtered.length, equals(2)); // Exam 1 and Exam 2
-        expect(filtered.every((room) => room.zone == 'Doctor\'s Wing'), isTrue);
+        expect(
+          filtered.every((room) => room.zone == ZoneType.doctorsWing),
+          isTrue,
+        );
       });
 
       test('setSelectedZone updates selected zone in state', () {
@@ -136,24 +142,24 @@ void main() {
         final notifier = container.read(roomNotifierProvider.notifier);
 
         // Act
-        notifier.setSelectedZone('Hygiene Wing');
+        notifier.setSelectedZone(ZoneType.hygieneWing);
 
         // Assert
         final state = container.read(roomNotifierProvider);
-        expect(state.selectedZone, equals('Hygiene Wing'));
+        expect(state.selectedZone, equals(ZoneType.hygieneWing));
       });
 
-      test('clearZoneFilter resets to "All Zones"', () {
+      test('clearZoneFilter resets to null (All Zones)', () {
         // Arrange
         final notifier = container.read(roomNotifierProvider.notifier);
-        notifier.setSelectedZone('Doctor\'s Wing');
+        notifier.setSelectedZone(ZoneType.doctorsWing);
 
         // Act
         notifier.clearZoneFilter();
 
         // Assert
         final state = container.read(roomNotifierProvider);
-        expect(state.selectedZone, equals('All Zones'));
+        expect(state.selectedZone, isNull);
       });
 
       test('getRoomsByZone returns filtered rooms', () {
@@ -161,23 +167,23 @@ void main() {
         final notifier = container.read(roomNotifierProvider.notifier);
 
         // Act
-        final hygieneRooms = notifier.getRoomsByZone('Hygiene Wing');
+        final hygieneRooms = notifier.getRoomsByZone(ZoneType.hygieneWing);
 
         // Assert - Hygiene 1 and Hygiene 2
         expect(hygieneRooms.length, equals(2));
         expect(
-          hygieneRooms.every((room) => room.zone == 'Hygiene Wing'),
+          hygieneRooms.every((room) => room.zone == ZoneType.hygieneWing),
           isTrue,
         );
       });
 
-      test('getRoomsByZone with "All Zones" returns all rooms', () {
+      test('getRoomsByZone with null returns all rooms', () {
         // Arrange
         final notifier = container.read(roomNotifierProvider.notifier);
         final state = container.read(roomNotifierProvider);
 
         // Act
-        final allRooms = notifier.getRoomsByZone('All Zones');
+        final allRooms = notifier.getRoomsByZone(null);
 
         // Assert - All rooms returned
         expect(allRooms.length, equals(state.rooms.length));
@@ -490,10 +496,13 @@ void main() {
         expect(state.rooms, isNotEmpty);
 
         // 2. User filters by Doctor's Wing
-        notifier.setSelectedZone('Doctor\'s Wing');
+        notifier.setSelectedZone(ZoneType.doctorsWing);
         state = container.read(roomNotifierProvider);
         final filteredRooms = state.filteredRooms;
-        expect(filteredRooms.every((r) => r.zone == 'Doctor\'s Wing'), isTrue);
+        expect(
+          filteredRooms.every((r) => r.zone == ZoneType.doctorsWing),
+          isTrue,
+        );
 
         // 3. User finds a room with inactive light
         final room = filteredRooms.firstWhere(
@@ -558,9 +567,9 @@ void main() {
         final initialRoomCount = state.rooms.length;
 
         // 2. Filter by zone
-        notifier.setSelectedZone('Hygiene Wing');
+        notifier.setSelectedZone(ZoneType.hygieneWing);
         state = container.read(roomNotifierProvider);
-        expect(state.selectedZone, equals('Hygiene Wing'));
+        expect(state.selectedZone, equals(ZoneType.hygieneWing));
 
         // 3. Activate a light (only if there are filtered rooms with lights)
         final filteredRooms = state.filteredRooms;
@@ -579,7 +588,7 @@ void main() {
           state.rooms.length,
           equals(initialRoomCount),
         ); // Room count unchanged
-        expect(state.selectedZone, equals('All Zones')); // Filter cleared
+        expect(state.selectedZone, isNull); // Filter cleared (null = All Zones)
         expect(state.error, isNull); // No errors
         expect(state.isLoading, isFalse); // Not loading
       });
@@ -590,8 +599,8 @@ void main() {
         // Arrange
         const originalState = RoomState(
           rooms: [],
-          zones: ['Zone1'],
-          selectedZone: 'Zone1',
+          zones: [ZoneType.doctorsWing],
+          selectedZone: ZoneType.doctorsWing,
           isLoading: false,
           error: null,
         );
@@ -619,9 +628,22 @@ void main() {
 
       test('filteredRooms correctly filters by zone', () {
         // Arrange
-        const room1 = Room(id: '1', name: 'Room 1', zone: 'ZoneA', lights: []);
-        const room2 = Room(id: '2', name: 'Room 2', zone: 'ZoneB', lights: []);
-        const state = RoomState(rooms: [room1, room2], selectedZone: 'ZoneA');
+        const room1 = Room(
+          id: '1',
+          name: 'Room 1',
+          zone: ZoneType.doctorsWing,
+          lights: [],
+        );
+        const room2 = Room(
+          id: '2',
+          name: 'Room 2',
+          zone: ZoneType.hygieneWing,
+          lights: [],
+        );
+        const state = RoomState(
+          rooms: [room1, room2],
+          selectedZone: ZoneType.doctorsWing,
+        );
 
         // Act
         final filtered = state.filteredRooms;
