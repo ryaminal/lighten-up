@@ -20,8 +20,8 @@ class NavigationSidebar extends ConsumerWidget {
       color: const Color(0xFF111a22),
       child: Container(
         width: 280,
-        decoration: BoxDecoration(
-          color: const Color(0xFF111a22),
+        decoration: const BoxDecoration(
+          color: Color(0xFF111a22),
           border: Border(
             right: BorderSide(color: AppColors.borderDark, width: 1),
           ),
@@ -32,7 +32,7 @@ class NavigationSidebar extends ConsumerWidget {
             // Header with logo and clinic info
             Container(
               padding: const EdgeInsets.all(AppDimensions.spaceMd),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 border: Border(
                   bottom: BorderSide(color: AppColors.borderDark, width: 1),
                 ),
@@ -48,7 +48,7 @@ class NavigationSidebar extends ConsumerWidget {
                         AppDimensions.radiusFull,
                       ),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.local_hospital,
                       color: AppColors.primary,
                       size: 28,
@@ -131,7 +131,7 @@ class NavigationSidebar extends ConsumerWidget {
             // Footer with settings
             Container(
               padding: const EdgeInsets.all(AppDimensions.spaceMd),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 border: Border(
                   top: BorderSide(color: AppColors.borderDark, width: 1),
                 ),

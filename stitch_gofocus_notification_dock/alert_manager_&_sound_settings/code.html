@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BlueNote Admin - Alert Manager</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922", // As per provided component style
+                        "surface-dark": "#111a22", // Darker sidebar
+                        "surface-card": "#233648", // Slightly lighter for cards
+                        "text-secondary": "#92adc9"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111a22; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #233648; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #324d67; 
+        }
+        
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #137fec;
+            margin-top: -6px;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #233648;
+            border-radius: 2px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased overflow-hidden h-screen flex">
+<!-- Sidebar Navigation (Fixed Left) -->
+<aside class="w-64 bg-surface-dark h-full border-r border-[#233648] flex flex-col shrink-0 z-20">
+<div class="p-6 pb-2">
+<div class="flex flex-col gap-1 mb-8">
+<h1 class="text-white text-xl font-bold leading-normal tracking-tight">BlueNote</h1>
+<p class="text-text-secondary text-xs font-medium uppercase tracking-wider">Admin Console</p>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[24px] group-hover:text-white transition-colors">dashboard</span>
+<p class="text-sm font-medium leading-normal">Dashboard</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary" href="#">
+<span class="material-symbols-outlined text-[24px] text-primary" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+<p class="text-sm font-bold leading-normal">Alerts &amp; Sounds</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[24px] group-hover:text-white transition-colors">computer</span>
+<p class="text-sm font-medium leading-normal">Workstations</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[24px] group-hover:text-white transition-colors">history</span>
+<p class="text-sm font-medium leading-normal">Logs</p>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:text-white hover:bg-[#233648] transition-colors group" href="#">
+<span class="material-symbols-outlined text-[24px] group-hover:text-white transition-colors">settings</span>
+<p class="text-sm font-medium leading-normal">System Settings</p>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 border-t border-[#233648]">
+<div class="flex items-center gap-3 text-text-secondary hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined">help</span>
+<span class="text-sm font-medium">Support &amp; Docs</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background-dark relative">
+<!-- Top Header -->
+<header class="h-16 border-b border-[#233648] bg-surface-dark px-8 flex items-center justify-between shrink-0 z-10">
+<div class="flex items-center gap-4">
+<!-- Breadcrumbs or simple title -->
+<div class="flex items-center text-sm text-text-secondary gap-2">
+<span>Configuration</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-white font-medium">Alert Manager</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+<span class="material-symbols-outlined text-white cursor-pointer hover:text-primary transition-colors">notifications</span>
+</div>
+<div class="h-8 w-[1px] bg-[#233648]"></div>
+<div class="flex items-center gap-3 cursor-pointer">
+<div class="text-right hidden sm:block">
+<p class="text-white text-sm font-bold leading-none">Dr. Sarah Bennett</p>
+<p class="text-text-secondary text-xs mt-1">Lead Administrator</p>
+</div>
+<div class="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10 border-2 border-[#233648]" data-alt="Profile picture of the administrator" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCZrIA3hA1KVONNGtRmNzkriX3g0e6OdPE_6XMBOXtUiUCK-lL02g30b4Uj0ku4vSWsZzHCrvJ1eKweoMMLuw-abRimk03ottv4EQRmrFOtOJU5GWTH280o3Ila75KqBLjKasTveLEIW-zNneX7V6iyqIBPb6o2p6e6NkenknpmS8fMCIkL09seca_RDMbcMjgiA4JPbZ8m_4Te7bgfC32ck-OhROrldBzaXiYfXepOwugm_2eBa9_7qJYsSi_n8ARIEFz64Y0szGI");'>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Page Content -->
+<div class="flex-1 overflow-y-auto p-8">
+<div class="max-w-[1400px] mx-auto flex flex-col gap-6">
+<!-- Page Heading & Actions -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
+<div class="flex flex-col gap-2">
+<h2 class="text-white text-3xl font-black tracking-tight">Alert Configuration</h2>
+<p class="text-text-secondary text-base">Manage audible and visual notification settings for Front Desk</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-[#324d67] text-white text-sm font-bold hover:bg-[#233648] transition-colors">
+<span class="material-symbols-outlined text-[20px]">volume_up</span>
+<span>Test Alert</span>
+</button>
+<button class="flex items-center justify-center h-10 px-6 rounded-lg bg-primary hover:bg-blue-600 text-white text-sm font-bold shadow-lg shadow-blue-500/20 transition-all">
+<span>Save Changes</span>
+</button>
+</div>
+</div>
+<!-- Tabs -->
+<div class="border-b border-[#324d67] mb-2">
+<div class="flex gap-8">
+<button class="relative pb-4 text-sm font-bold text-white tracking-wide border-b-[3px] border-primary">
+                            Selected Workstation
+                        </button>
+<button class="relative pb-4 text-sm font-bold text-text-secondary hover:text-white tracking-wide border-b-[3px] border-transparent transition-colors">
+                            Global Defaults
+                        </button>
+</div>
+</div>
+<!-- Main Grid Layout -->
+<div class="grid grid-cols-12 gap-8 items-start h-full">
+<!-- Left Column: Workstation Selector -->
+<div class="col-span-12 lg:col-span-4 xl:col-span-3 flex flex-col gap-4 sticky top-0">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">search</span>
+<input class="w-full bg-[#111a22] border border-[#324d67] rounded-lg py-2.5 pl-10 pr-4 text-sm text-white focus:ring-1 focus:ring-primary focus:border-primary placeholder:text-[#586e86]" placeholder="Search workstations..." type="text"/>
+</div>
+<div class="flex flex-col gap-3 max-h-[calc(100vh-340px)] overflow-y-auto pr-2" style="scrollbar-width: thin; scrollbar-color: #324d67 #111a22;">
+<!-- Active Item -->
+<label class="group flex items-center gap-4 rounded-lg border border-primary/50 bg-[#111a22] p-4 cursor-pointer shadow-[0_0_15px_-3px_rgba(19,127,236,0.15)] transition-all">
+<input checked="" class="h-5 w-5 border-2 border-[#324d67] bg-transparent text-transparent checked:border-primary checked:bg-primary focus:ring-offset-0 focus:ring-0" name="workstation_select" type="radio"/>
+<div class="flex grow flex-col">
+<div class="flex justify-between items-center">
+<p class="text-white text-sm font-bold">Front Desk</p>
+<div class="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+</div>
+<p class="text-text-secondary text-xs">Zone A • Active</p>
+</div>
+</label>
+<!-- Other Items -->
+<label class="group flex items-center gap-4 rounded-lg border border-[#324d67] bg-[#111a22] p-4 cursor-pointer hover:border-[#4b6a88] transition-all">
+<input class="h-5 w-5 border-2 border-[#324d67] bg-transparent text-transparent checked:border-primary checked:bg-primary focus:ring-offset-0 focus:ring-0" name="workstation_select" type="radio"/>
+<div class="flex grow flex-col">
+<div class="flex justify-between items-center">
+<p class="text-white text-sm font-medium group-hover:text-primary transition-colors">Exam Room 1</p>
+<div class="h-2 w-2 rounded-full bg-green-500"></div>
+</div>
+<p class="text-text-secondary text-xs">Zone B • Active</p>
+</div>
+</label>
+<label class="group flex items-center gap-4 rounded-lg border border-[#324d67] bg-[#111a22] p-4 cursor-pointer hover:border-[#4b6a88] transition-all">
+<input class="h-5 w-5 border-2 border-[#324d67] bg-transparent text-transparent checked:border-primary checked:bg-primary focus:ring-offset-0 focus:ring-0" name="workstation_select" type="radio"/>
+<div class="flex grow flex-col">
+<div class="flex justify-between items-center">
+<p class="text-white text-sm font-medium group-hover:text-primary transition-colors">Exam Room 2</p>
+<div class="h-2 w-2 rounded-full bg-green-500"></div>
+</div>
+<p class="text-text-secondary text-xs">Zone B • Active</p>
+</div>
+</label>
+<label class="group flex items-center gap-4 rounded-lg border border-[#324d67] bg-[#111a22] p-4 cursor-pointer hover:border-[#4b6a88] transition-all opacity-70">
+<input class="h-5 w-5 border-2 border-[#324d67] bg-transparent text-transparent checked:border-primary checked:bg-primary focus:ring-offset-0 focus:ring-0" name="workstation_select" type="radio"/>
+<div class="flex grow flex-col">
+<div class="flex justify-between items-center">
+<p class="text-white text-sm font-medium group-hover:text-primary transition-colors">Triage Station</p>
+<div class="h-2 w-2 rounded-full bg-gray-600"></div>
+</div>
+<p class="text-text-secondary text-xs">Zone A • Offline</p>
+</div>
+</label>
+<label class="group flex items-center gap-4 rounded-lg border border-[#324d67] bg-[#111a22] p-4 cursor-pointer hover:border-[#4b6a88] transition-all">
+<input class="h-5 w-5 border-2 border-[#324d67] bg-transparent text-transparent checked:border-primary checked:bg-primary focus:ring-offset-0 focus:ring-0" name="workstation_select" type="radio"/>
+<div class="flex grow flex-col">
+<div class="flex justify-between items-center">
+<p class="text-white text-sm font-medium group-hover:text-primary transition-colors">Nurse Station Main</p>
+<div class="h-2 w-2 rounded-full bg-green-500"></div>
+</div>
+<p class="text-text-secondary text-xs">Zone C • Active</p>
+</div>
+</label>
+</div>
+</div>
+<!-- Right Column: Settings Panel -->
+<div class="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col gap-6">
+<!-- Section 1: Visual Interruptions -->
+<div class="rounded-xl border border-[#324d67] bg-[#1e293b] p-6">
+<h3 class="text-white font-bold text-lg mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">visibility</span>
+                                Visual Interruptions
+                            </h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Card 1 -->
+<div class="bg-[#111a22] p-4 rounded-lg border border-[#324d67] flex flex-col justify-between gap-4 hover:border-primary/40 transition-colors">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-[#233648] rounded text-white">
+<span class="material-symbols-outlined text-[20px]">web_asset</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-[#324d67] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div>
+<p class="text-white font-medium text-sm">Pop-up Window</p>
+<p class="text-text-secondary text-xs mt-1">Show alert dialogue on top of other windows.</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-[#111a22] p-4 rounded-lg border border-[#324d67] flex flex-col justify-between gap-4 hover:border-primary/40 transition-colors">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-[#233648] rounded text-white">
+<span class="material-symbols-outlined text-[20px]">flourescent</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-[#324d67] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div>
+<p class="text-white font-medium text-sm">Flash Screen</p>
+<p class="text-text-secondary text-xs mt-1">Screen borders flash color of alert urgency.</p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-[#111a22] p-4 rounded-lg border border-[#324d67] flex flex-col justify-between gap-4 hover:border-primary/40 transition-colors">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-[#233648] rounded text-white">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-[#324d67] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div>
+<p class="text-white font-medium text-sm">Force Focus</p>
+<p class="text-text-secondary text-xs mt-1">Steal input focus from other apps (Use caution).</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 2: Sound Palette -->
+<div class="rounded-xl border border-[#324d67] bg-[#1e293b] p-6">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-white font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">piano</span>
+                                    Sound Palette
+                                </h3>
+<p class="text-xs text-text-secondary bg-[#111a22] px-2 py-1 rounded">Click to preview</p>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
+<button class="group flex flex-col items-center justify-center p-3 gap-2 bg-[#111a22] hover:bg-[#233648] rounded-lg border border-[#324d67] hover:border-primary transition-all">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-primary">notifications</span>
+<span class="text-xs font-medium text-text-secondary group-hover:text-white">Chime</span>
+</button>
+<button class="group flex flex-col items-center justify-center p-3 gap-2 bg-[#111a22] hover:bg-[#233648] rounded-lg border border-[#324d67] hover:border-primary transition-all">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-primary">notifications_active</span>
+<span class="text-xs font-medium text-text-secondary group-hover:text-white">Sonar</span>
+</button>
+<button class="group flex flex-col items-center justify-center p-3 gap-2 bg-[#111a22] hover:bg-[#233648] rounded-lg border border-[#324d67] hover:border-primary transition-all ring-1 ring-primary/20 bg-primary/5">
+<span class="material-symbols-outlined text-primary">campaign</span>
+<span class="text-xs font-medium text-white">Urgent</span>
+</button>
+<button class="group flex flex-col items-center justify-center p-3 gap-2 bg-[#111a22] hover:bg-[#233648] rounded-lg border border-[#324d67] hover:border-primary transition-all">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-primary">doorbell</span>
+<span class="text-xs font-medium text-text-secondary group-hover:text-white">Ding Dong</span>
+</button>
+<button class="group flex flex-col items-center justify-center p-3 gap-2 bg-[#111a22] hover:bg-[#233648] rounded-lg border border-[#324d67] hover:border-primary transition-all">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-primary">smartphone</span>
+<span class="text-xs font-medium text-text-secondary group-hover:text-white">Digital</span>
+</button>
+<button class="group flex flex-col items-center justify-center p-3 gap-2 bg-[#111a22] hover:bg-[#233648] rounded-lg border border-[#324d67] hover:border-primary transition-all">
+<span class="material-symbols-outlined text-text-secondary group-hover:text-primary">piano_off</span>
+<span class="text-xs font-medium text-text-secondary group-hover:text-white">Mute</span>
+</button>
+</div>
+</div>
+<!-- Section 3: Event Mapping -->
+<div class="rounded-xl border border-[#324d67] bg-[#1e293b] p-6 flex-grow">
+<h3 class="text-white font-bold text-lg mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">tune</span>
+                                Event Configuration
+                            </h3>
+<div class="flex flex-col gap-1">
+<!-- Header Row -->
+<div class="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-bold text-text-secondary uppercase tracking-wider">
+<div class="col-span-4">Event Trigger</div>
+<div class="col-span-4">Assigned Sound</div>
+<div class="col-span-4">Volume</div>
+</div>
+<!-- Row 1 -->
+<div class="grid grid-cols-12 gap-4 items-center bg-[#111a22] p-4 rounded-lg border border-[#324d67] mb-2">
+<div class="col-span-4 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-red-500"></div>
+<div>
+<p class="text-white text-sm font-bold">Emergency Call</p>
+<p class="text-text-secondary text-xs">Code Blue, Security</p>
+</div>
+</div>
+<div class="col-span-4">
+<div class="relative">
+<select class="w-full bg-[#233648] text-white text-sm border border-[#324d67] rounded px-3 py-2 pr-8 appearance-none focus:ring-1 focus:ring-primary focus:border-primary">
+<option>Urgent Siren</option>
+<option>Chime</option>
+<option>Sonar</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[18px]">arrow_drop_down</span>
+</div>
+</div>
+<div class="col-span-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">volume_mute</span>
+<input class="flex-grow" max="100" min="0" type="range" value="90"/>
+<span class="text-white text-xs font-mono w-6">90%</span>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-12 gap-4 items-center bg-[#111a22] p-4 rounded-lg border border-[#324d67] mb-2">
+<div class="col-span-4 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-blue-500"></div>
+<div>
+<p class="text-white text-sm font-bold">Routine Message</p>
+<p class="text-text-secondary text-xs">Internal chat, Check-in</p>
+</div>
+</div>
+<div class="col-span-4">
+<div class="relative">
+<select class="w-full bg-[#233648] text-white text-sm border border-[#324d67] rounded px-3 py-2 pr-8 appearance-none focus:ring-1 focus:ring-primary focus:border-primary">
+<option>Soft Chime</option>
+<option>Ding Dong</option>
+<option>Digital</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[18px]">arrow_drop_down</span>
+</div>
+</div>
+<div class="col-span-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">volume_down</span>
+<input class="flex-grow" max="100" min="0" type="range" value="45"/>
+<span class="text-white text-xs font-mono w-6">45%</span>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="grid grid-cols-12 gap-4 items-center bg-[#111a22] p-4 rounded-lg border border-[#324d67] mb-2">
+<div class="col-span-4 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-orange-500"></div>
+<div>
+<p class="text-white text-sm font-bold">Patient Arrived</p>
+<p class="text-text-secondary text-xs">Waiting room alert</p>
+</div>
+</div>
+<div class="col-span-4">
+<div class="relative">
+<select class="w-full bg-[#233648] text-white text-sm border border-[#324d67] rounded px-3 py-2 pr-8 appearance-none focus:ring-1 focus:ring-primary focus:border-primary">
+<option>Ding Dong</option>
+<option>Sonar</option>
+<option>Digital</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[18px]">arrow_drop_down</span>
+</div>
+</div>
+<div class="col-span-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">volume_down</span>
+<input class="flex-grow" max="100" min="0" type="range" value="60"/>
+<span class="text-white text-xs font-mono w-6">60%</span>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="grid grid-cols-12 gap-4 items-center bg-[#111a22] p-4 rounded-lg border border-[#324d67]">
+<div class="col-span-4 flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-purple-500"></div>
+<div>
+<p class="text-white text-sm font-bold">Lab Results</p>
+<p class="text-text-secondary text-xs">Results ready notification</p>
+</div>
+</div>
+<div class="col-span-4">
+<div class="relative">
+<select class="w-full bg-[#233648] text-white text-sm border border-[#324d67] rounded px-3 py-2 pr-8 appearance-none focus:ring-1 focus:ring-primary focus:border-primary">
+<option>Digital</option>
+<option>Chime</option>
+<option>None</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none text-[18px]">arrow_drop_down</span>
+</div>
+</div>
+<div class="col-span-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">volume_down</span>
+<input class="flex-grow" max="100" min="0" type="range" value="30"/>
+<span class="text-white text-xs font-mono w-6">30%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 4: Quiet Hours -->
+<div class="rounded-xl border border-[#324d67] bg-[#1e293b] p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="bg-[#111a22] p-3 rounded-full border border-[#324d67]">
+<span class="material-symbols-outlined text-text-secondary">bedtime</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-sm">Quiet Hours (Auto-Mute)</h3>
+<p class="text-text-secondary text-xs">Automatically mute non-emergency alerts during these hours.</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="relative">
+<input class="bg-[#111a22] text-white border border-[#324d67] rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary" type="time" value="22:00"/>
+</div>
+<span class="text-text-secondary text-sm">to</span>
+<div class="relative">
+<input class="bg-[#111a22] text-white border border-[#324d67] rounded px-3 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-primary" type="time" value="06:00"/>
+</div>
+<label class="ml-4 relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-[#324d67] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

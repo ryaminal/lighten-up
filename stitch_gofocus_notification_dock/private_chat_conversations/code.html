@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BlueNote - Secure Intra-office Chat</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#111a22", // Matching the component's bg
+                        "surface-dark": "#233648",    // Matching the component's secondary bg
+                        "text-muted": "#92adc9",      // Matching component text
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill-1 {
+            font-variation-settings: 'FILL' 1;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-white font-display h-screen w-full overflow-hidden flex selection:bg-primary/30">
+<!-- 1. Main Navigation Sidebar (Leftmost) -->
+<aside class="w-[80px] lg:w-[260px] bg-[#111a22] border-r border-[#233648] flex flex-col shrink-0 transition-all duration-300">
+<!-- Branding -->
+<div class="h-20 flex items-center px-0 lg:px-6 justify-center lg:justify-start gap-3 border-b border-[#233648]/50">
+<div class="bg-center bg-no-repeat bg-cover rounded-xl size-10 shrink-0 shadow-lg shadow-blue-500/20" data-alt="BlueNote logo abstract icon" style="background-image: linear-gradient(135deg, #137fec 0%, #0b4e96 100%);">
+<div class="w-full h-full flex items-center justify-center text-white font-bold text-xl">B</div>
+</div>
+<div class="hidden lg:flex flex-col">
+<h1 class="text-white text-base font-bold tracking-tight">BlueNote</h1>
+<p class="text-text-muted text-xs font-medium">Secure Comms</p>
+</div>
+</div>
+<!-- Navigation Menu -->
+<nav class="flex-1 flex flex-col gap-2 p-3 lg:px-4 lg:py-6 overflow-y-auto no-scrollbar">
+<a class="flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-lg text-text-muted hover:bg-surface-dark hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">dashboard</span>
+<span class="hidden lg:block text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-lg bg-surface-dark text-white transition-colors shadow-sm" href="#">
+<span class="material-symbols-outlined fill-1 text-primary">chat_bubble</span>
+<span class="hidden lg:block text-sm font-medium">Chats</span>
+<span class="hidden lg:flex ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-lg text-text-muted hover:bg-surface-dark hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">group</span>
+<span class="hidden lg:block text-sm font-medium">Staff Directory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 lg:py-2.5 rounded-lg text-text-muted hover:bg-surface-dark hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors">notifications</span>
+<span class="hidden lg:block text-sm font-medium">Alerts</span>
+</a>
+</nav>
+<!-- User Profile -->
+<div class="p-3 lg:p-4 border-t border-[#233648]">
+<a class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-dark transition-colors" href="#">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-9 shrink-0 ring-2 ring-[#233648]" data-alt="User profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD6Dn86h9btFMUI0EjFbXBQJmt53YUAecbq8Zw8LbvyMLP1d0zvuNfJrF5ntBg5q3S4bCRz_TJR-rKygcX3G7BeTtlO2sMrVDlKcABxCrVNzlAPJHaRM_ZPfoJj7s-q1_RjADvdqgE9evT1VbcrXA24U56dP1o3Nuxgx4GBsH-oFufpg-f0Gkp2R3t-Q4pNBULm00NfwQ5c_IHNqb-mdVUBupC2KSgFQ_5Nk_UNhAlWEI2O27sUMKD15ZToFvd_o17oCVa0FTwuIJ4");'></div>
+<div class="hidden lg:flex flex-col overflow-hidden">
+<p class="text-white text-sm font-medium truncate">Dr. Richardson</p>
+<p class="text-text-muted text-xs truncate">Cardiology</p>
+</div>
+<span class="hidden lg:block material-symbols-outlined text-text-muted ml-auto text-lg">settings</span>
+</a>
+</div>
+</aside>
+<!-- 2. Conversations List Panel (Middle) -->
+<section class="w-[320px] lg:w-[360px] bg-[#111a22] border-r border-[#233648] flex flex-col shrink-0">
+<!-- Search Header -->
+<div class="p-4 pb-2">
+<h2 class="text-xl font-bold text-white mb-4 px-1">Inbox</h2>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-text-muted group-focus-within:text-primary transition-colors">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2.5 border-none rounded-lg bg-surface-dark text-white placeholder-text-muted focus:ring-1 focus:ring-primary text-sm transition-shadow" placeholder="Search staff, rooms..." type="text"/>
+</div>
+</div>
+<!-- Filter Tabs -->
+<div class="px-4 mt-2">
+<div class="flex border-b border-[#324d67] gap-6">
+<button class="relative py-3 text-sm font-medium text-white transition-colors">
+                    All
+                    <span class="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full"></span>
+</button>
+<button class="relative py-3 text-sm font-medium text-text-muted hover:text-white transition-colors">
+                    Urgent
+                    <span class="ml-1 bg-red-500/20 text-red-400 text-[10px] px-1.5 py-0.5 rounded-full">1</span>
+</button>
+<button class="relative py-3 text-sm font-medium text-text-muted hover:text-white transition-colors">
+                    Archived
+                </button>
+</div>
+</div>
+<!-- List Items -->
+<div class="flex-1 overflow-y-auto overflow-x-hidden hover:overflow-y-auto custom-scrollbar">
+<!-- Active Chat Item -->
+<div class="relative p-4 cursor-pointer bg-surface-dark border-l-[3px] border-primary transition-colors group">
+<div class="flex justify-between items-start gap-3">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-12 shadow-sm" data-alt="Profile of Dr. Smith" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDzdBfv7edtE1WoS6Jr3df6NvrktdgSk7hszUEdQxuj_DypvF65C0VCVL-T-Uf4Y-p49P1Pvb1JkLGdsIlVWqGflTK9lO-O4QQCN5zAJd5ngmpn4rGhSVSNW5tcXo27gJ1zVI_ntz85DDBxFKiZBicxIEL3kSGhgs-XnGfj9QL8auFYZvNNzC-UQJJzwksSln-aEiswhQXuMJZdk0YSHIGIIptNDBqkPodSiJdia4LFvuHQg_QnlYRgHpTUVYvQIwuZ7kW9vHBo0yw");'></div>
+<span class="absolute bottom-0 right-0 size-3 bg-green-500 border-2 border-surface-dark rounded-full"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<h3 class="text-sm font-semibold text-white truncate">Dr. Smith (Exam 1)</h3>
+<span class="text-xs text-text-muted whitespace-nowrap">2m</span>
+</div>
+<p class="text-sm text-white font-medium line-clamp-1">Patient is ready for intake...</p>
+</div>
+</div>
+</div>
+<!-- Unread Urgent Item -->
+<div class="relative p-4 cursor-pointer hover:bg-surface-dark/50 transition-colors border-l-[3px] border-transparent hover:border-surface-dark/50 group">
+<div class="flex justify-between items-start gap-3">
+<div class="relative shrink-0">
+<div class="bg-indigo-600 rounded-full size-12 flex items-center justify-center text-white font-bold text-sm shadow-sm">FD</div>
+<span class="absolute bottom-0 right-0 size-3 bg-yellow-500 border-2 border-[#111a22] rounded-full"></span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<h3 class="text-sm font-semibold text-white truncate">Front Desk</h3>
+<span class="text-xs text-primary font-bold whitespace-nowrap">Now</span>
+</div>
+<p class="text-sm text-white font-semibold line-clamp-1">URGENT: Family on line 1</p>
+</div>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 size-2.5 bg-primary rounded-full"></div>
+</div>
+</div>
+<!-- Regular Item -->
+<div class="relative p-4 cursor-pointer hover:bg-surface-dark/50 transition-colors border-l-[3px] border-transparent hover:border-surface-dark/50 group">
+<div class="flex justify-between items-start gap-3">
+<div class="relative shrink-0">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-12 shadow-sm opacity-80" data-alt="Profile of Nurse Joy" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAITBpbucEbOL5esr8o6AU7qo-qTqHiIqnzvjqF124C5azPq_tvmoBaq9eBq6OQcSRDger49rCV7x2MkQT4sQugY-XsOUbWC-dlGnI8b43wuS7GVS8fw7cBqXoIYyGKKkPOMMYNzxLXWBt-6WN6yB-kmLc_AieD1MnTYnBsK-EaX8lPfiMcMlc3ndzgSuqfXmvrB0Vq4yJ-lw0RpoLU8Vm4VdIwRHklfoIzxCE3ABUXrvP7i-_CL3mNfE7qTyL1BPk45iAW0pYSm48");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<h3 class="text-sm font-medium text-white/90 truncate">Nurse Joy (Station 2)</h3>
+<span class="text-xs text-text-muted whitespace-nowrap">1h</span>
+</div>
+<p class="text-sm text-text-muted line-clamp-1">Labs came back for room 3.</p>
+</div>
+</div>
+</div>
+<!-- Regular Item -->
+<div class="relative p-4 cursor-pointer hover:bg-surface-dark/50 transition-colors border-l-[3px] border-transparent hover:border-surface-dark/50 group">
+<div class="flex justify-between items-start gap-3">
+<div class="relative shrink-0">
+<div class="bg-emerald-700 rounded-full size-12 flex items-center justify-center text-white font-bold text-sm shadow-sm">PH</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-baseline mb-0.5">
+<h3 class="text-sm font-medium text-white/90 truncate">Pharmacy</h3>
+<span class="text-xs text-text-muted whitespace-nowrap">3h</span>
+</div>
+<p class="text-sm text-text-muted line-clamp-1">Refill request #9921 approved.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Active Chat Window (Right) -->
+<main class="flex-1 flex flex-col bg-[#0d141c] relative min-w-0">
+<!-- Chat Header -->
+<header class="h-20 bg-[#111a22] border-b border-[#233648] flex items-center justify-between px-6 shrink-0 z-10">
+<div class="flex items-center gap-4">
+<div class="relative">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-surface-dark" data-alt="Profile of Dr. Smith" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCHwLLTqTY1WVUaCtQpAec9DwXLq9pJO0RzirklgJD9EjhD4D76vUIodYQMMa08qkX6Zn_jGutQ2NMJ0Uh3oBC-L_CKmPYrG68y0VSZvuAnP4kejEEfXJ_phYy4ReOQ4Iy4KnokCYRO-yRaDqAgvKt3fSzjQo9TnNf943nokoUcBWKb79zqGalk0OE1RbHhWMJkXH2npzLPzp5eb8axOo-y4dECdww_KdabiM0AywanpF_HK4v05nCyP8dYhPa42gn4rGV43V9mIKc");'></div>
+<span class="absolute bottom-0 right-0 size-2.5 bg-green-500 border-2 border-[#111a22] rounded-full"></span>
+</div>
+<div>
+<h2 class="text-base font-bold text-white flex items-center gap-2">
+                        Dr. Smith 
+                        <span class="bg-surface-dark text-text-muted text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded">Exam 1</span>
+</h2>
+<p class="text-xs text-green-400 font-medium flex items-center gap-1">
+                        Online
+                    </p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center gap-1.5 bg-[#1a2736] border border-[#233648] px-3 py-1.5 rounded-full">
+<span class="material-symbols-outlined text-green-500 text-[16px]">lock</span>
+<span class="text-[11px] font-semibold text-text-muted uppercase tracking-wide">Encrypted Connection</span>
+</div>
+<div class="h-6 w-px bg-[#233648] mx-2 hidden md:block"></div>
+<button class="size-9 flex items-center justify-center rounded-lg text-text-muted hover:bg-surface-dark hover:text-white transition-colors" title="Start Video Call">
+<span class="material-symbols-outlined">videocam</span>
+</button>
+<button class="size-9 flex items-center justify-center rounded-lg text-text-muted hover:bg-surface-dark hover:text-white transition-colors" title="More Options">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Message Stream -->
+<div class="flex-1 overflow-y-auto p-6 space-y-8 flex flex-col bg-gradient-to-b from-[#0d141c] to-[#111a22]">
+<!-- Date Separator -->
+<div class="flex justify-center my-4">
+<div class="bg-[#1a2736] border border-[#233648] px-4 py-1 rounded-full shadow-sm">
+<span class="text-xs text-text-muted font-medium">Today, October 24</span>
+</div>
+</div>
+<!-- System Message -->
+<div class="flex justify-center">
+<span class="text-[11px] text-[#587593] flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">verified_user</span>
+                    Secure HIPAA-compliant session started at 09:42 AM
+                </span>
+</div>
+<!-- Incoming Message -->
+<div class="flex gap-4 max-w-2xl group">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8 shrink-0 mt-1 opacity-80" data-alt="Dr Smith avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBeCvvNI5i8ONw29LLTurjFJmZfIBfogjYP0_oEjelkvukWXYqAw3rJ_TcVMIqSNigOtj3TZmy47SfGAPoTBJ2HrtH-kRphQpKxFqphBGIDAfWOntVE8ogTu2x-z0F-5bdikzq8M02enR56ERQkKifWA_7LPpJVbxHgcrRxibj-q4404q8g2zYtfD48wyWI1NR6138btpW5KPd6bfOHZxe5AyalfnQopIOSJpCM6dCBiRu3cVpdZLpB16AiplJrLNpcZ9EsJ7VWbN8");'></div>
+<div class="flex flex-col gap-1">
+<div class="flex items-baseline gap-2 pl-1">
+<span class="text-xs font-bold text-white">Dr. Smith</span>
+<span class="text-[10px] text-[#587593]">09:45 AM</span>
+</div>
+<div class="bg-[#233648] p-3.5 rounded-2xl rounded-tl-none text-[15px] text-white/90 leading-relaxed shadow-sm border border-[#2d445a]">
+                        Can you send the nurse to Room 4? The patient is asking for water and vitals check.
+                    </div>
+</div>
+</div>
+<!-- Outgoing Message -->
+<div class="flex gap-4 max-w-2xl ml-auto flex-row-reverse group">
+<div class="bg-indigo-600 rounded-full size-8 shrink-0 mt-1 flex items-center justify-center text-white text-xs font-bold shadow-sm">ME</div>
+<div class="flex flex-col gap-1 items-end">
+<div class="flex items-baseline gap-2 pr-1 flex-row-reverse">
+<span class="text-xs font-bold text-white">Me</span>
+<span class="text-[10px] text-[#587593]">09:46 AM</span>
+</div>
+<div class="bg-primary p-3.5 rounded-2xl rounded-tr-none text-[15px] text-white leading-relaxed shadow-md shadow-blue-900/20">
+                        On my way. I'll bring the kit.
+                    </div>
+<span class="text-[10px] font-medium text-primary flex items-center gap-0.5">
+                        Read <span class="material-symbols-outlined text-[12px]">done_all</span>
+</span>
+</div>
+</div>
+<!-- Incoming Message with Typing Indicator placeholder logic if we had JS, here just static -->
+<div class="flex gap-4 max-w-2xl group">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8 shrink-0 mt-1 opacity-80" data-alt="Dr Smith avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAo7TNXU-Qv1k4jHSVNcDxrnDFErQ8MEoPMTcTkU80zj929hKLOwvCXEWoBtObJvn8pkUuKlFZHNwak1rhmjaxYs3GIQ_x3fOIXbQ7R298XL_0pETqNoDf-jZixmnCr-Oz3MrI5gNGek6Evv5Wn47AzckS3QFjS24dR5y6Kzg5r-mTrwtwDzM_I4x_3YflBMcrLH7w_rFmbu7xUnpP7UlaKV2cDuN-LTgnj0AKSA1TiNpgc-gtx4dS-lBwno1fnrGDLyXtAkRNlEe0");'></div>
+<div class="flex flex-col gap-1">
+<div class="flex items-baseline gap-2 pl-1">
+<span class="text-xs font-bold text-white">Dr. Smith</span>
+<span class="text-[10px] text-[#587593]">09:47 AM</span>
+</div>
+<div class="bg-[#233648] p-3.5 rounded-2xl rounded-tl-none text-[15px] text-white/90 leading-relaxed shadow-sm border border-[#2d445a]">
+                        Patient is ready for intake...
+                    </div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-6 pt-2 bg-[#111a22] border-t border-[#233648] shrink-0">
+<!-- Quick Actions (Pre-canned) -->
+<div class="flex gap-2 mb-4 overflow-x-auto pb-1 no-scrollbar mask-gradient">
+<button class="shrink-0 px-3 py-1.5 bg-[#233648] hover:bg-[#324d67] border border-[#2d445a] hover:border-[#3e5a75] rounded-full text-xs font-medium text-text-muted hover:text-white transition-all">
+                    Patient Ready
+                </button>
+<button class="shrink-0 px-3 py-1.5 bg-[#233648] hover:bg-[#324d67] border border-[#2d445a] hover:border-[#3e5a75] rounded-full text-xs font-medium text-text-muted hover:text-white transition-all">
+                    Vitals Needed
+                </button>
+<button class="shrink-0 px-3 py-1.5 bg-[#233648] hover:bg-[#324d67] border border-[#2d445a] hover:border-[#3e5a75] rounded-full text-xs font-medium text-text-muted hover:text-white transition-all">
+                    Doctor Needed
+                </button>
+<button class="shrink-0 px-3 py-1.5 bg-[#233648] hover:bg-[#324d67] border border-[#2d445a] hover:border-[#3e5a75] rounded-full text-xs font-medium text-text-muted hover:text-white transition-all">
+                    Call Front Desk
+                </button>
+</div>
+<!-- Input Box -->
+<div class="flex gap-3 items-end">
+<div class="flex-1 bg-[#1a2736] focus-within:bg-[#233648] border border-[#233648] focus-within:border-primary/50 rounded-xl p-2 min-h-[56px] flex items-center gap-2 transition-colors shadow-inner">
+<button class="p-2 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors" title="Attach File">
+<span class="material-symbols-outlined">add_circle</span>
+</button>
+<textarea class="bg-transparent border-none focus:ring-0 w-full text-white text-[15px] placeholder-text-muted p-0 resize-none h-[24px] max-h-[100px] leading-6" placeholder="Type a secure message..." rows="1"></textarea>
+<button class="p-2 rounded-lg text-text-muted hover:text-white hover:bg-white/5 transition-colors" title="Insert Emoji">
+<span class="material-symbols-outlined">sentiment_satisfied</span>
+</button>
+</div>
+<button class="size-[56px] bg-primary hover:bg-blue-600 rounded-xl flex items-center justify-center text-white transition-colors shadow-lg shadow-blue-500/20 group">
+<span class="material-symbols-outlined group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">send</span>
+</button>
+</div>
+<div class="mt-3 flex justify-between items-center px-1">
+<p class="text-[11px] text-[#587593]">Press <kbd class="font-sans bg-[#233648] px-1 rounded text-[#92adc9]">Enter</kbd> to send</p>
+<div class="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
+<div class="w-8 h-4 bg-[#233648] rounded-full relative">
+<div class="absolute left-1 top-0.5 size-3 bg-[#587593] rounded-full"></div>
+</div>
+<span class="text-[11px] text-[#587593]">Privacy Blur</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>
