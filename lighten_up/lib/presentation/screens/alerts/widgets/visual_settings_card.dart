@@ -106,6 +106,7 @@ class _VisualSettingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(minWidth: 140),
       padding: const EdgeInsets.all(AppDimensions.spaceMd),
       decoration: BoxDecoration(
         color: AppColors.surfaceDark,

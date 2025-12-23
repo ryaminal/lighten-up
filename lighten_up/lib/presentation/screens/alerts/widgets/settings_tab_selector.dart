@@ -27,16 +27,20 @@ class SettingsTabSelector extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _TabButton(
-            label: 'Selected Workstation',
-            isActive: isSelectedTab,
-            onTap: onSelectedWorkstationTap,
+          Expanded(
+            child: _TabButton(
+              label: 'Selected Workstation',
+              isActive: isSelectedTab,
+              onTap: onSelectedWorkstationTap,
+            ),
           ),
           const SizedBox(width: AppDimensions.spaceSm),
-          _TabButton(
-            label: 'Global Defaults',
-            isActive: !isSelectedTab,
-            onTap: onGlobalDefaultsTap,
+          Expanded(
+            child: _TabButton(
+              label: 'Global Defaults',
+              isActive: !isSelectedTab,
+              onTap: onGlobalDefaultsTap,
+            ),
           ),
         ],
       ),
