@@ -1,0 +1,15 @@
+version: v2
+managed:
+  enabled: true
+plugins:
+  # Generate Dart protobuf classes
+  - remote: buf.build/protocolbuffers/dart
+    out: ../lib/gen
+    opt:
+      - generate_kythe_info
+    include_wkt: true
+    include_imports: true
+  
+  # Generate ConnectRPC Dart clients
+  - remote: buf.build/connectrpc/dart
+    out: ../lib/gen

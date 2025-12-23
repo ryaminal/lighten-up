@@ -1,0 +1,106 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Generated Protocol Buffer files (DO NOT COMMIT)
+lib/gen/**/*.pb.dart
+lib/gen/**/*.pbenum.dart
+lib/gen/**/*.pbjson.dart
+lib/gen/**/*.pbserver.dart
+lib/gen/**/*.connect.client.dart
+lib/gen/**/*.connect.spec.dart
+
+# Keep the gen directory structure but ignore generated files
+!lib/gen/.gitkeep
+
+# Buf lock file (can be committed or ignored based on preference)
+proto/.buf.lock
+
+# SQLite databases (local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Code coverage
+coverage/
+lcov.info
+
+# Test artifacts
+test/.test_coverage.dart
+*.test_cache/
+
+# Platform-specific build files
+*.app/
+*.framework/
+*.xcframework/
+*.dSYM/
+
+# macOS
+.DS_Store
+macos/Pods/
+macos/Flutter/ephemeral/
+
+# Linux
+linux/flutter/ephemeral/
+
+# Windows
+windows/flutter/ephemeral/
+
+# Web
+web/flutter_service_worker.js
+
+# Generated Dart files from code generation (if using build_runner)
+*.g.dart
+*.freezed.dart
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# Server logs
+server.log
+*.log.gz
+
