@@ -149,7 +149,7 @@ class MockHttpClient implements IHttpClient {
       milliseconds: 1000,
     ); // Longer delay for downloads
 
-    return HttpResponse(
+    return const HttpResponse(
       data: {'message': 'File downloaded successfully'},
       statusCode: 200,
       headers: {},
@@ -279,6 +279,7 @@ class MockHttpClient implements IHttpClient {
       'data': {
         'access_token': 'mock_access_token_${now.millisecondsSinceEpoch}',
         'refresh_token': 'mock_refresh_token_${now.millisecondsSinceEpoch}',
+        'user': _getMockUser(),
         'expires_in': 3600,
       },
     };

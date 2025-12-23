@@ -8,6 +8,8 @@ import 'package:lighten_up/core/utils/logger.dart';
 /// Simulates real-time events and state changes
 class MockRealtimeClient implements IRealtimeClient {
   WebSocketState _state = WebSocketState.disconnected;
+  // Token stored for potential future authentication features
+  // ignore: unused_field
   String? _accessToken;
 
   final _stateController = StreamController<WebSocketState>.broadcast();
