@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lighten_up/core/constants/app_colors.dart';
 import 'package:lighten_up/core/constants/app_dimensions.dart';
 import 'package:lighten_up/core/constants/app_text_styles.dart';
+import 'package:lighten_up/core/utils/extensions.dart';
 import 'package:lighten_up/data/models/alert_settings.dart';
 
 /// Quiet hours configuration card
@@ -148,6 +149,6 @@ class _TimeField extends StatelessWidget {
   }
 
   String _formatTime(TimeOfDay time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    return time.to24HourString();
   }
 }

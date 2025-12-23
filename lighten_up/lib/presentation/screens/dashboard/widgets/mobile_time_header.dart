@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lighten_up/core/constants/app_dimensions.dart';
 import 'package:lighten_up/core/constants/app_text_styles.dart';
+import 'package:lighten_up/core/utils/extensions.dart';
 
 /// Large time display for mobile screens
 class MobileTimeHeader extends StatelessWidget {
@@ -10,8 +11,7 @@ class MobileTimeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeString =
-        '${currentTime.hour.toString().padLeft(2, '0')}:${currentTime.minute.toString().padLeft(2, '0')}';
+    final timeString = currentTime.to24HourString();
 
     return Container(
       padding: const EdgeInsets.all(AppDimensions.spaceLg),

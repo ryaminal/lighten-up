@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:lighten_up/core/utils/extensions.dart';
 import 'package:lighten_up/data/models/user.dart';
 
 part 'staff.freezed.dart';
@@ -77,17 +78,7 @@ class StaffSchedule with _$StaffSchedule {
 
   /// Display shift time range (e.g., "8:00 AM - 4:00 PM")
   String get shiftTimeDisplay {
-    final startHour = shiftStart.hour;
-    final startMin = shiftStart.minute.toString().padLeft(2, '0');
-    final startPeriod = startHour >= 12 ? 'PM' : 'AM';
-    final displayStartHour = startHour > 12 ? startHour - 12 : startHour;
-
-    final endHour = shiftEnd.hour;
-    final endMin = shiftEnd.minute.toString().padLeft(2, '0');
-    final endPeriod = endHour >= 12 ? 'PM' : 'AM';
-    final displayEndHour = endHour > 12 ? endHour - 12 : endHour;
-
-    return '$displayStartHour:$startMin $startPeriod - $displayEndHour:$endMin $endPeriod';
+    return '${shiftStart.to12HourString()} - ${shiftEnd.to12HourString()}';
   }
 
   /// Shift type display name

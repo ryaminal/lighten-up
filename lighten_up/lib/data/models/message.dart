@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:lighten_up/core/utils/extensions.dart';
 import 'package:lighten_up/data/models/user.dart';
 
 part 'message.freezed.dart';
@@ -90,7 +91,7 @@ class Message with _$Message {
         now.month == messageDate.month &&
         now.day == messageDate.day) {
       // Today - show time only
-      return '${messageDate.hour.toString().padLeft(2, '0')}:${messageDate.minute.toString().padLeft(2, '0')}';
+      return messageDate.to24HourString();
     } else if (now.difference(messageDate).inDays < 7) {
       // This week - show day name
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:lighten_up/core/utils/extensions.dart';
 
 part 'room.freezed.dart';
 part 'room.g.dart';
@@ -87,9 +88,7 @@ class RoomLight with _$RoomLight {
   String get timerDisplay {
     final duration = activeDuration;
     if (duration == null) return '00:00';
-    final minutes = duration.inMinutes.toString().padLeft(2, '0');
-    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    return '$minutes:$seconds';
+    return duration.toTimerDisplay();
   }
 
   /// Get color for light based on priority
