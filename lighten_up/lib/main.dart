@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lighten_up/core/theme/app_theme.dart';
 import 'package:lighten_up/presentation/providers/auth_provider.dart';
 import 'package:lighten_up/presentation/screens/auth/login_screen.dart';
-import 'package:lighten_up/presentation/screens/dashboard/dashboard_screen.dart';
+import 'package:lighten_up/presentation/screens/dashboard/room_dashboard_screen.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -35,7 +35,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const RoomDashboardScreen(),
+      ),
     ],
   );
 });
