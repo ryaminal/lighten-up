@@ -1,0 +1,81 @@
+name: lighten_up
+description: "Medical office communication and notification system"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI
+  cupertino_icons: ^1.0.8
+  
+  # State Management
+  flutter_riverpod: ^2.4.0
+  riverpod_annotation: ^2.3.0
+  
+  # Navigation
+  go_router: ^13.0.0
+  
+  # UI Components & Animations
+  flutter_animate: ^4.5.0
+  cached_network_image: ^3.3.0
+  
+  # Charts
+  fl_chart: ^0.66.0
+  
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  
+  # Network
+  dio: ^5.4.0
+  web_socket_channel: ^2.4.0
+  
+  # Utilities
+  intl: ^0.18.1
+  equatable: ^2.0.5
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.8.1
+  logger: ^2.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  
+  # Code Generation
+  build_runner: ^2.4.7
+  freezed: ^2.4.6
+  json_serializable: ^6.7.1
+  riverpod_generator: ^2.3.0
+  
+  # Testing
+  mockito: ^5.4.4
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/sounds/
+  
+  # TODO: Add Inter font files to assets/fonts/Inter/ directory
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter/Inter-Regular.ttf
+  #       - asset: assets/fonts/Inter/Inter-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Inter/Inter-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Inter/Inter-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Inter/Inter-Black.ttf
+  #         weight: 900
