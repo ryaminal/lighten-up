@@ -41,6 +41,9 @@ dependencies:
   http: ^1.6.0
   protobuf: ^4.2.0
   connectrpc: ^1.0.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.0
 
 dev_dependencies:
   flutter_test:
