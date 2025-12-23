@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lighten_up/data/models/alert_settings.dart';
 import 'package:lighten_up/data/models/workstation.dart';
@@ -214,8 +215,8 @@ void main() {
         // Assert
         final settings = state.selectedWorkstationSettings!;
         expect(settings.quietHours, isNotNull);
-        expect(settings.quietHours!.startTime, isNotEmpty);
-        expect(settings.quietHours!.endTime, isNotEmpty);
+        expect(settings.quietHours!.startTime, isA<TimeOfDay>());
+        expect(settings.quietHours!.endTime, isA<TimeOfDay>());
         expect(settings.quietHours!.enabled, isA<bool>());
       });
 
@@ -422,9 +423,9 @@ void main() {
         final initialState = container.read(alertSettingsNotifierProvider);
         final initialVisual = initialState.selectedWorkstationSettings!.visual;
 
-        const newQuietHours = QuietHours(
-          startTime: '20:00',
-          endTime: '08:00',
+        final newQuietHours = QuietHours(
+          startTime: const TimeOfDay(hour: 20, minute: 0),
+          endTime: const TimeOfDay(hour: 8, minute: 0),
           enabled: true,
         );
 
@@ -447,9 +448,9 @@ void main() {
         // Arrange
         final notifier = container.read(alertSettingsNotifierProvider.notifier);
 
-        const disabledQuietHours = QuietHours(
-          startTime: '22:00',
-          endTime: '06:00',
+        final disabledQuietHours = QuietHours(
+          startTime: const TimeOfDay(hour: 22, minute: 0),
+          endTime: const TimeOfDay(hour: 6, minute: 0),
           enabled: false,
         );
 
@@ -468,9 +469,9 @@ void main() {
         // Arrange
         final notifier = container.read(alertSettingsNotifierProvider.notifier);
 
-        const newQuietHours = QuietHours(
-          startTime: '23:00',
-          endTime: '07:00',
+        final newQuietHours = QuietHours(
+          startTime: const TimeOfDay(hour: 23, minute: 0),
+          endTime: const TimeOfDay(hour: 7, minute: 0),
           enabled: true,
         );
 
@@ -481,11 +482,11 @@ void main() {
         final updatedState = container.read(alertSettingsNotifierProvider);
         expect(
           updatedState.selectedWorkstationSettings!.quietHours!.startTime,
-          equals('23:00'),
+          equals(const TimeOfDay(hour: 23, minute: 0)),
         );
         expect(
           updatedState.selectedWorkstationSettings!.quietHours!.endTime,
-          equals('07:00'),
+          equals(const TimeOfDay(hour: 7, minute: 0)),
         );
       });
     });
@@ -539,9 +540,9 @@ void main() {
         ];
         notifier.updateEventMappings(newMappings);
 
-        const newQuietHours = QuietHours(
-          startTime: '21:00',
-          endTime: '07:00',
+        final newQuietHours = QuietHours(
+          startTime: const TimeOfDay(hour: 21, minute: 0),
+          endTime: const TimeOfDay(hour: 7, minute: 0),
           enabled: true,
         );
         notifier.updateQuietHours(newQuietHours);

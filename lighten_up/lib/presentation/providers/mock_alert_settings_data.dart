@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:lighten_up/data/models/alert_settings.dart';
 import 'package:lighten_up/data/models/workstation.dart';
 
@@ -79,9 +80,9 @@ class MockAlertSettingsData {
           volume: 30,
         ),
       ],
-      quietHours: const QuietHours(
-        startTime: '22:00',
-        endTime: '06:00',
+      quietHours: QuietHours(
+        startTime: const TimeOfDay(hour: 22, minute: 0),
+        endTime: const TimeOfDay(hour: 6, minute: 0),
         enabled: false,
       ),
     );
@@ -89,15 +90,15 @@ class MockAlertSettingsData {
 
   /// Get mock global settings
   static AlertSettings getGlobalSettings() {
-    return const AlertSettings(
+    return AlertSettings(
       id: 'global-settings',
       workstationId: 'global',
-      visual: VisualSettings(
+      visual: const VisualSettings(
         popupWindow: true,
         flashScreen: false,
         forceFocus: false,
       ),
-      eventMappings: [
+      eventMappings: const [
         EventMapping(
           id: '1',
           eventName: 'Emergency Call',
@@ -116,8 +117,8 @@ class MockAlertSettingsData {
         ),
       ],
       quietHours: QuietHours(
-        startTime: '22:00',
-        endTime: '06:00',
+        startTime: const TimeOfDay(hour: 22, minute: 0),
+        endTime: const TimeOfDay(hour: 6, minute: 0),
         enabled: true,
       ),
     );

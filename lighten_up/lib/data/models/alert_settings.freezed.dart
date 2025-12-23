@@ -817,8 +817,10 @@ QuietHours _$QuietHoursFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$QuietHours {
-  String get startTime => throw _privateConstructorUsedError; // HH:mm format
-  String get endTime => throw _privateConstructorUsedError; // HH:mm format
+  @TimeOfDayConverter()
+  TimeOfDay get startTime => throw _privateConstructorUsedError;
+  @TimeOfDayConverter()
+  TimeOfDay get endTime => throw _privateConstructorUsedError;
   bool get enabled => throw _privateConstructorUsedError;
 
   /// Serializes this QuietHours to a JSON map.
@@ -838,7 +840,11 @@ abstract class $QuietHoursCopyWith<$Res> {
     $Res Function(QuietHours) then,
   ) = _$QuietHoursCopyWithImpl<$Res, QuietHours>;
   @useResult
-  $Res call({String startTime, String endTime, bool enabled});
+  $Res call({
+    @TimeOfDayConverter() TimeOfDay startTime,
+    @TimeOfDayConverter() TimeOfDay endTime,
+    bool enabled,
+  });
 }
 
 /// @nodoc
@@ -865,11 +871,11 @@ class _$QuietHoursCopyWithImpl<$Res, $Val extends QuietHours>
             startTime: null == startTime
                 ? _value.startTime
                 : startTime // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as TimeOfDay,
             endTime: null == endTime
                 ? _value.endTime
                 : endTime // ignore: cast_nullable_to_non_nullable
-                      as String,
+                      as TimeOfDay,
             enabled: null == enabled
                 ? _value.enabled
                 : enabled // ignore: cast_nullable_to_non_nullable
@@ -889,7 +895,11 @@ abstract class _$$QuietHoursImplCopyWith<$Res>
   ) = __$$QuietHoursImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({String startTime, String endTime, bool enabled});
+  $Res call({
+    @TimeOfDayConverter() TimeOfDay startTime,
+    @TimeOfDayConverter() TimeOfDay endTime,
+    bool enabled,
+  });
 }
 
 /// @nodoc
@@ -915,11 +925,11 @@ class __$$QuietHoursImplCopyWithImpl<$Res>
         startTime: null == startTime
             ? _value.startTime
             : startTime // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as TimeOfDay,
         endTime: null == endTime
             ? _value.endTime
             : endTime // ignore: cast_nullable_to_non_nullable
-                  as String,
+                  as TimeOfDay,
         enabled: null == enabled
             ? _value.enabled
             : enabled // ignore: cast_nullable_to_non_nullable
@@ -933,8 +943,8 @@ class __$$QuietHoursImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$QuietHoursImpl implements _QuietHours {
   const _$QuietHoursImpl({
-    required this.startTime,
-    required this.endTime,
+    @TimeOfDayConverter() required this.startTime,
+    @TimeOfDayConverter() required this.endTime,
     this.enabled = false,
   });
 
@@ -942,11 +952,11 @@ class _$QuietHoursImpl implements _QuietHours {
       _$$QuietHoursImplFromJson(json);
 
   @override
-  final String startTime;
-  // HH:mm format
+  @TimeOfDayConverter()
+  final TimeOfDay startTime;
   @override
-  final String endTime;
-  // HH:mm format
+  @TimeOfDayConverter()
+  final TimeOfDay endTime;
   @override
   @JsonKey()
   final bool enabled;
@@ -987,8 +997,8 @@ class _$QuietHoursImpl implements _QuietHours {
 
 abstract class _QuietHours implements QuietHours {
   const factory _QuietHours({
-    required final String startTime,
-    required final String endTime,
+    @TimeOfDayConverter() required final TimeOfDay startTime,
+    @TimeOfDayConverter() required final TimeOfDay endTime,
     final bool enabled,
   }) = _$QuietHoursImpl;
 
@@ -996,9 +1006,11 @@ abstract class _QuietHours implements QuietHours {
       _$QuietHoursImpl.fromJson;
 
   @override
-  String get startTime; // HH:mm format
+  @TimeOfDayConverter()
+  TimeOfDay get startTime;
   @override
-  String get endTime; // HH:mm format
+  @TimeOfDayConverter()
+  TimeOfDay get endTime;
   @override
   bool get enabled;
 

@@ -16,7 +16,11 @@ class QuietHoursCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final hours =
         quietHours ??
-        const QuietHours(startTime: '22:00', endTime: '06:00', enabled: false);
+        QuietHours(
+          startTime: const TimeOfDay(hour: 22, minute: 0),
+          endTime: const TimeOfDay(hour: 6, minute: 0),
+          enabled: false,
+        );
 
     return Container(
       padding: const EdgeInsets.all(AppDimensions.spaceLg),
@@ -105,8 +109,8 @@ class QuietHoursCard extends StatelessWidget {
 }
 
 class _TimeField extends StatelessWidget {
-  final String time;
-  final ValueChanged<String> onTimeChanged;
+  final TimeOfDay time;
+  final ValueChanged<TimeOfDay> onTimeChanged;
 
   const _TimeField({required this.time, required this.onTimeChanged});
 
@@ -115,7 +119,7 @@ class _TimeField extends StatelessWidget {
     return SizedBox(
       width: 100,
       child: TextField(
-        controller: TextEditingController(text: time),
+        controller: TextEditingController(text: time.to24HourString()),
         style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
         decoration: InputDecoration(
           filled: true,
@@ -133,22 +137,13 @@ class _TimeField extends StatelessWidget {
         onTap: () async {
           final TimeOfDay? picked = await showTimePicker(
             context: context,
-            initialTime: _parseTime(time),
+            initialTime: time,
           );
           if (picked != null) {
-            onTimeChanged(_formatTime(picked));
+            onTimeChanged(picked);
           }
         },
       ),
     );
-  }
-
-  TimeOfDay _parseTime(String time) {
-    final parts = time.split(':');
-    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
-  }
-
-  String _formatTime(TimeOfDay time) {
-    return time.to24HourString();
   }
 }

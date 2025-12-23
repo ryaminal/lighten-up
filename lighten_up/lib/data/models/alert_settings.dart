@@ -1,7 +1,26 @@
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'alert_settings.freezed.dart';
 part 'alert_settings.g.dart';
+
+/// JSON converter for TimeOfDay serialization
+class TimeOfDayConverter implements JsonConverter<TimeOfDay, String> {
+  const TimeOfDayConverter();
+
+  @override
+  TimeOfDay fromJson(String json) {
+    final parts = json.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  @override
+  String toJson(TimeOfDay object) {
+    final hour = object.hour.toString().padLeft(2, '0');
+    final minute = object.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+}
 
 @freezed
 class AlertSettings with _$AlertSettings {
@@ -48,8 +67,8 @@ class EventMapping with _$EventMapping {
 @freezed
 class QuietHours with _$QuietHours {
   const factory QuietHours({
-    required String startTime, // HH:mm format
-    required String endTime, // HH:mm format
+    @TimeOfDayConverter() required TimeOfDay startTime,
+    @TimeOfDayConverter() required TimeOfDay endTime,
     @Default(false) bool enabled,
   }) = _QuietHours;
 

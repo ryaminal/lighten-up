@@ -83,15 +83,17 @@ const _$SoundTypeEnumMap = {
 
 _$QuietHoursImpl _$$QuietHoursImplFromJson(Map<String, dynamic> json) =>
     _$QuietHoursImpl(
-      startTime: json['startTime'] as String,
-      endTime: json['endTime'] as String,
+      startTime: const TimeOfDayConverter().fromJson(
+        json['startTime'] as String,
+      ),
+      endTime: const TimeOfDayConverter().fromJson(json['endTime'] as String),
       enabled: json['enabled'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$$QuietHoursImplToJson(_$QuietHoursImpl instance) =>
     <String, dynamic>{
-      'startTime': instance.startTime,
-      'endTime': instance.endTime,
+      'startTime': const TimeOfDayConverter().toJson(instance.startTime),
+      'endTime': const TimeOfDayConverter().toJson(instance.endTime),
       'enabled': instance.enabled,
     };
 
