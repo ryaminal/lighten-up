@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lighten_up/core/constants/app_colors.dart';
 import 'package:lighten_up/core/constants/app_dimensions.dart';
 import 'package:lighten_up/core/constants/app_text_styles.dart';
-import 'package:lighten_up/data/models/alert_settings.dart';
-import 'package:lighten_up/data/models/workstation.dart';
+import 'package:lighten_up/presentation/providers/alert_settings_provider.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/event_mapping_table.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/quiet_hours_card.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/sound_palette_card.dart';
@@ -12,7 +11,7 @@ import 'package:lighten_up/presentation/screens/alerts/widgets/visual_settings_c
 import 'package:lighten_up/presentation/screens/alerts/widgets/workstation_selector.dart';
 
 /// Alert configuration screen - orchestrates alert settings components
-/// This is the main screen that combines all modular widgets
+/// Uses AlertSettingsProvider for state management
 class AlertSettingsScreen extends ConsumerStatefulWidget {
   const AlertSettingsScreen({super.key});
 
@@ -22,121 +21,40 @@ class AlertSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
-  String? selectedWorkstationId;
   bool isSelectedTab = true; // true = Selected Workstation, false = Global
-
-  // Mock data - will be replaced with provider data
-  final List<Workstation> mockWorkstations = [
-    const Workstation(
-      id: '1',
-      name: 'Front Desk',
-      zone: 'Zone A',
-      status: WorkstationStatus.active,
-    ),
-    const Workstation(
-      id: '2',
-      name: 'Exam Room 1',
-      zone: 'Zone B',
-      status: WorkstationStatus.active,
-    ),
-    const Workstation(
-      id: '3',
-      name: 'Exam Room 2',
-      zone: 'Zone B',
-      status: WorkstationStatus.active,
-    ),
-    const Workstation(
-      id: '4',
-      name: 'Triage Station',
-      zone: 'Zone A',
-      status: WorkstationStatus.offline,
-    ),
-    const Workstation(
-      id: '5',
-      name: 'Nurse Station Main',
-      zone: 'Zone C',
-      status: WorkstationStatus.active,
-    ),
-  ];
-
-  late AlertSettings mockSettings;
-
-  @override
-  void initState() {
-    super.initState();
-    selectedWorkstationId = mockWorkstations.first.id;
-    mockSettings = AlertSettings(
-      id: '1',
-      workstationId: selectedWorkstationId!,
-      visual: const VisualSettings(
-        popupWindow: true,
-        flashScreen: true,
-        forceFocus: false,
-      ),
-      eventMappings: [
-        const EventMapping(
-          id: '1',
-          eventName: 'Emergency Call',
-          eventDescription: 'Code Blue, Security',
-          priority: AlertEventPriority.emergency,
-          soundId: 'Urgent Siren',
-          volume: 90,
-        ),
-        const EventMapping(
-          id: '2',
-          eventName: 'Routine Message',
-          eventDescription: 'Internal chat, Check-in',
-          priority: AlertEventPriority.normal,
-          soundId: 'Soft Chime',
-          volume: 45,
-        ),
-        const EventMapping(
-          id: '3',
-          eventName: 'Patient Arrived',
-          eventDescription: 'Waiting room alert',
-          priority: AlertEventPriority.urgent,
-          soundId: 'Ding Dong',
-          volume: 60,
-        ),
-        const EventMapping(
-          id: '4',
-          eventName: 'Lab Results',
-          eventDescription: 'Results ready notification',
-          priority: AlertEventPriority.low,
-          soundId: 'Digital',
-          volume: 30,
-        ),
-      ],
-      quietHours: const QuietHours(
-        startTime: '22:00',
-        endTime: '06:00',
-        enabled: false,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
+    final alertState = ref.watch(alertSettingsNotifierProvider);
+    final notifier = ref.read(alertSettingsNotifierProvider.notifier);
+
+    final currentSettings = isSelectedTab
+        ? alertState.selectedWorkstationSettings
+        : alertState.globalSettings;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       body: Column(
         children: [
-          _buildHeader(),
-          _buildTabs(),
+          _buildHeader(alertState, notifier),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 WorkstationSelector(
-                  workstations: mockWorkstations,
-                  selectedWorkstationId: selectedWorkstationId,
+                  workstations: alertState.workstations,
+                  selectedWorkstationId: alertState.selectedWorkstationId,
                   onWorkstationSelected: (id) {
-                    setState(() {
-                      selectedWorkstationId = id;
-                    });
+                    if (id != null) {
+                      notifier.loadSettingsForWorkstation(id);
+                    }
                   },
                 ),
-                Expanded(child: _buildSettingsPanel()),
+                Expanded(
+                  child: currentSettings == null
+                      ? _buildLoadingOrEmpty(alertState)
+                      : _buildSettingsPanel(currentSettings, notifier),
+                ),
               ],
             ),
           ),
@@ -145,16 +63,16 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(
+    AlertSettingsState alertState,
+    AlertSettingsNotifier notifier,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.spaceLg),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDark,
+        color: AppColors.surfaceCard,
         border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withValues(alpha: 0.1),
-            width: 1,
-          ),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -163,16 +81,22 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Alert Configuration',
-                  style: AppTextStyles.headingLarge.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.settings, color: AppColors.primary, size: 28),
+                    const SizedBox(width: AppDimensions.spaceSm),
+                    Text(
+                      'Alert Settings',
+                      style: AppTextStyles.headingLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Manage audible and visual notification settings for ${_getSelectedWorkstationName()}',
+                  'Manage audible and visual notification settings for ${_getSelectedWorkstationName(alertState)}',
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -185,113 +109,150 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
             onPressed: _testAlert,
             icon: const Icon(Icons.volume_up, size: 20),
             label: const Text('Test Alert'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
-            ),
+            style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
           ),
           const SizedBox(width: AppDimensions.spaceSm),
           ElevatedButton(
-            onPressed: _saveChanges,
+            onPressed: alertState.isLoading
+                ? null
+                : () => _saveChanges(alertState, notifier),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Save Changes'),
+            child: alertState.isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text('Save Changes'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTabs() {
+  Widget _buildTabSelector() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spaceLg),
+      padding: const EdgeInsets.all(AppDimensions.spaceSm),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withValues(alpha: 0.1),
-            width: 1,
-          ),
-        ),
+        color: AppColors.surfaceDark,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTab('Selected Workstation', true),
-          const SizedBox(width: AppDimensions.spaceLg),
-          _buildTab('Global Defaults', false),
+          _buildTabButton('Selected Workstation', isSelectedTab, () {
+            setState(() {
+              isSelectedTab = true;
+            });
+          }),
+          const SizedBox(width: AppDimensions.spaceSm),
+          _buildTabButton('Global Defaults', !isSelectedTab, () {
+            setState(() {
+              isSelectedTab = false;
+            });
+            final notifier = ref.read(alertSettingsNotifierProvider.notifier);
+            notifier.loadGlobalSettings();
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildTab(String label, bool isSelected) {
-    final bool active = isSelected == isSelectedTab;
+  Widget _buildTabButton(String label, bool isActive, VoidCallback onTap) {
     return InkWell(
-      onTap: () {
-        setState(() {
-          isSelectedTab = isSelected;
-        });
-      },
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.spaceMd),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spaceMd,
+          vertical: AppDimensions.spaceSm,
+        ),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: active ? AppColors.primary : Colors.transparent,
-              width: 3,
-            ),
-          ),
+          color: isActive ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
         ),
         child: Text(
           label,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: active ? Colors.white : AppColors.textSecondary,
-            fontWeight: FontWeight.bold,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: isActive ? Colors.white : AppColors.textSecondary,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSettingsPanel() {
+  Widget _buildLoadingOrEmpty(AlertSettingsState alertState) {
+    if (alertState.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (alertState.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            const SizedBox(height: AppDimensions.spaceMd),
+            Text(
+              alertState.error!,
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Center(
+      child: Text(
+        'No settings available',
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsPanel(dynamic settings, AlertSettingsNotifier notifier) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppDimensions.spaceLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _buildTabSelector(),
+          const SizedBox(height: AppDimensions.spaceLg),
           VisualSettingsCard(
-            settings: mockSettings.visual,
+            settings: settings.visual,
             onChanged: (visual) {
-              setState(() {
-                mockSettings = mockSettings.copyWith(visual: visual);
-              });
+              notifier.updateVisualSettings(visual);
             },
           ),
           const SizedBox(height: AppDimensions.spaceMd),
           SoundPaletteCard(
             selectedSoundId: 'urgent',
             onSoundSelected: (soundId) {
-              // TODO: Handle sound selection
               debugPrint('Sound selected: $soundId');
             },
           ),
           const SizedBox(height: AppDimensions.spaceMd),
           EventMappingTable(
-            mappings: mockSettings.eventMappings,
+            mappings: settings.eventMappings,
             onChanged: (mappings) {
-              setState(() {
-                mockSettings = mockSettings.copyWith(eventMappings: mappings);
-              });
+              notifier.updateEventMappings(mappings);
             },
           ),
           const SizedBox(height: AppDimensions.spaceMd),
           QuietHoursCard(
-            quietHours: mockSettings.quietHours,
+            quietHours: settings.quietHours,
             onChanged: (quietHours) {
-              setState(() {
-                mockSettings = mockSettings.copyWith(quietHours: quietHours);
-              });
+              notifier.updateQuietHours(quietHours);
             },
           ),
         ],
@@ -299,16 +260,20 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
     );
   }
 
-  String _getSelectedWorkstationName() {
-    final workstation = mockWorkstations.firstWhere(
-      (ws) => ws.id == selectedWorkstationId,
-      orElse: () => mockWorkstations.first,
+  String _getSelectedWorkstationName(AlertSettingsState alertState) {
+    if (alertState.selectedWorkstationId == null) {
+      return 'workstation';
+    }
+    final workstation = alertState.workstations.firstWhere(
+      (ws) => ws.id == alertState.selectedWorkstationId,
+      orElse: () => alertState.workstations.first,
     );
     return workstation.name;
   }
 
   void _testAlert() {
     // TODO: Implement test alert functionality
+    debugPrint('Test Alert clicked');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Test alert would play here'),
@@ -317,13 +282,37 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
     );
   }
 
-  void _saveChanges() {
-    // TODO: Implement save functionality via provider
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Settings saved successfully'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  Future<void> _saveChanges(
+    AlertSettingsState alertState,
+    AlertSettingsNotifier notifier,
+  ) async {
+    final currentSettings = isSelectedTab
+        ? alertState.selectedWorkstationSettings
+        : alertState.globalSettings;
+
+    if (currentSettings == null) return;
+
+    try {
+      await notifier.saveSettings(currentSettings);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Settings saved successfully'),
+            backgroundColor: AppColors.alertGreen,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save settings: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }
