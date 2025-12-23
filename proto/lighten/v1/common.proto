@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package lighten.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Common timestamp type
+message Timestamp {
+  google.protobuf.Timestamp value = 1;
+}
+
+// User role enumeration
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_RECEPTIONIST = 1;
+  USER_ROLE_DOCTOR = 2;
+  USER_ROLE_NURSE = 3;
+  USER_ROLE_TECHNICIAN = 4;
+  USER_ROLE_ADMIN = 5;
+}
+
+// Light priority levels
+enum LightPriority {
+  LIGHT_PRIORITY_UNSPECIFIED = 0;
+  LIGHT_PRIORITY_NORMAL = 1;
+  LIGHT_PRIORITY_HIGH = 2;
+  LIGHT_PRIORITY_URGENT = 3;
+}
+
+// Light state
+enum LightState {
+  LIGHT_STATE_UNSPECIFIED = 0;
+  LIGHT_STATE_OFF = 1;
+  LIGHT_STATE_ON = 2;
+}
+
+// Light color (based on age)
+enum LightColor {
+  LIGHT_COLOR_UNSPECIFIED = 0;
+  LIGHT_COLOR_GRAY = 1;    // Off
+  LIGHT_COLOR_GREEN = 2;   // Fresh (<5min)
+  LIGHT_COLOR_YELLOW = 3;  // Aging (5-10min)
+  LIGHT_COLOR_RED = 4;     // Overdue (>10min)
+}

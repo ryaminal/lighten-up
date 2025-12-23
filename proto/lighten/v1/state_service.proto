@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package lighten.v1;
+
+import "lighten/v1/common.proto";
+import "lighten/v1/models.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// State synchronization service
+service StateService {
+  // Connect client and receive full state
+  rpc EstablishConnection(ConnectRequest) returns (ConnectResponse);
+
+  // Disconnect client
+  rpc Disconnect(DisconnectRequest) returns (google.protobuf.Empty);
+
+  // Request state sync
+  rpc SyncState(SyncStateRequest) returns (SyncStateResponse);
+
+  // Heartbeat to keep connection alive
+  rpc Heartbeat(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  // Stream state updates (server -> client push)
+  rpc StreamStateUpdates(google.protobuf.Empty) returns (stream StateUpdate);
+}
+
+// Connect request
+message ConnectRequest {
+  string client_id = 1;
+  string user_name = 2;
+  UserRole role = 3;
+  string version = 4;  // Client version
+}
+
+message ConnectResponse {
+  string server_id = 1;
+  string server_version = 2;
+  int32 connected_clients = 3;
+  StateSnapshot current_state = 4;
+}
+
+// Disconnect request
+message DisconnectRequest {
+  string client_id = 1;
+  string reason = 2;
+}
+
+// Sync state request
+message SyncStateRequest {
+  string client_id = 1;
+  optional int64 last_known_version = 2;  // Timestamp (unix epoch millis)
+}
+
+message SyncStateResponse {
+  StateSnapshot full_state = 1;
+  bool is_full_sync = 2;  // true if full state, false if delta
+}
+
+// State update stream message
+message StateUpdate {
+  int64 version = 1;  // Timestamp (unix epoch millis)
+  repeated StateChange changes = 2;
+
+  message StateChange {
+    ChangeType type = 1;
+    oneof change {
+      Light light = 2;
+      User user = 3;
+      Activity activity = 4;
+    }
+
+    enum ChangeType {
+      CHANGE_TYPE_UNSPECIFIED = 0;
+      CHANGE_TYPE_LIGHT_ADDED = 1;
+      CHANGE_TYPE_LIGHT_UPDATED = 2;
+      CHANGE_TYPE_LIGHT_REMOVED = 3;
+      CHANGE_TYPE_USER_JOINED = 4;
+      CHANGE_TYPE_USER_LEFT = 5;
+      CHANGE_TYPE_USER_UPDATED = 6;
+      CHANGE_TYPE_ACTIVITY_ADDED = 7;
+    }
+  }
+}

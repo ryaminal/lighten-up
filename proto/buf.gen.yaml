@@ -7,7 +7,11 @@ plugins:
     out: ../lib/gen
     opt:
       - generate_kythe_info
+    include_imports: true
+    include_wkt: true
   
   # Generate ConnectRPC Dart clients
   - remote: buf.build/connectrpc/dart
     out: ../lib/gen
+    include_imports: true
+    include_wkt: true

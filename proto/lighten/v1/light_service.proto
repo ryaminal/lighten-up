@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package lighten.v1;
+
+import "lighten/v1/models.proto";
+import "lighten/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+// Light management service
+service LightService {
+  // Activate a light
+  rpc ActivateLight(ActivateLightRequest) returns (ActivateLightResponse);
+
+  // Deactivate a light
+  rpc DeactivateLight(DeactivateLightRequest) returns (DeactivateLightResponse);
+
+  // Update light properties
+  rpc UpdateLight(UpdateLightRequest) returns (UpdateLightResponse);
+
+  // Add comment to light
+  rpc AddLightComment(AddLightCommentRequest) returns (AddLightCommentResponse);
+
+  // Stream light updates (server -> client push)
+  rpc StreamLightUpdates(google.protobuf.Empty) returns (stream LightUpdate);
+
+  // Get light history
+  rpc GetLightHistory(GetLightHistoryRequest) returns (GetLightHistoryResponse);
+}
+
+// Activate light request
+message ActivateLightRequest {
+  string light_id = 1;
+  string user_id = 2;
+  optional string comment = 3;
+  LightPriority priority = 4;
+  repeated string tags = 5;
+}
+
+message ActivateLightResponse {
+  Light light = 1;
+  Activity activity = 2;
+}
+
+// Deactivate light request
+message DeactivateLightRequest {
+  string light_id = 1;
+  string user_id = 2;
+  optional string comment = 3;
+}
+
+message DeactivateLightResponse {
+  Light light = 1;
+  Activity activity = 2;
+  int64 resolution_time_ms = 3;  // Time light was active (ms)
+}
+
+// Update light request
+message UpdateLightRequest {
+  string light_id = 1;
+  string user_id = 2;
+  optional string comment = 3;
+  optional LightPriority priority = 4;
+  repeated string tags = 5;
+}
+
+message UpdateLightResponse {
+  Light light = 1;
+  Activity activity = 2;
+}
+
+// Add comment request
+message AddLightCommentRequest {
+  string light_id = 1;
+  string user_id = 2;
+  string comment = 3;
+}
+
+message AddLightCommentResponse {
+  Activity activity = 1;
+}
+
+// Light update stream message
+message LightUpdate {
+  UpdateType type = 1;
+  Light light = 2;
+  Activity activity = 3;
+
+  enum UpdateType {
+    UPDATE_TYPE_UNSPECIFIED = 0;
+    UPDATE_TYPE_ACTIVATED = 1;
+    UPDATE_TYPE_DEACTIVATED = 2;
+    UPDATE_TYPE_UPDATED = 3;
+    UPDATE_TYPE_COMMENTED = 4;
+  }
+}
+
+// Get history request
+message GetLightHistoryRequest {
+  string light_id = 1;
+  optional int32 limit = 2;  // Max activities to return
+}
+
+message GetLightHistoryResponse {
+  repeated Activity activities = 1;
+}

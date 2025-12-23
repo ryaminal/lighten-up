@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package lighten.v1;
+
+import "lighten/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+
+// User model
+message User {
+  string id = 1;
+  string name = 2;
+  UserRole role = 3;
+  bool online = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
+
+// Light model
+message Light {
+  string id = 1;
+  string name = 2;
+  LightState state = 3;
+  LightColor color = 4;
+  LightPriority priority = 5;
+  repeated string tags = 6;
+  optional string comment = 7;
+  google.protobuf.Timestamp created_at = 8;
+  optional google.protobuf.Timestamp activated_at = 9;
+  optional google.protobuf.Timestamp deactivated_at = 10;
+  string created_by_user_id = 11;
+  optional string activated_by_user_id = 12;
+
+  // Age thresholds in seconds
+  int32 yellow_threshold_seconds = 13;  // Default 300 (5min)
+  int32 red_threshold_seconds = 14;     // Default 600 (10min)
+}
+
+// Activity/Event model
+message Activity {
+  string id = 1;
+  string light_id = 2;
+  string user_id = 3;
+  ActivityType type = 4;
+  optional string comment = 5;
+  google.protobuf.Timestamp timestamp = 6;
+
+  enum ActivityType {
+    ACTIVITY_TYPE_UNSPECIFIED = 0;
+    ACTIVITY_TYPE_CREATED = 1;
+    ACTIVITY_TYPE_ACTIVATED = 2;
+    ACTIVITY_TYPE_DEACTIVATED = 3;
+    ACTIVITY_TYPE_UPDATED = 4;
+    ACTIVITY_TYPE_COMMENTED = 5;
+  }
+}
+
+// State snapshot
+message StateSnapshot {
+  google.protobuf.Timestamp timestamp = 1;
+  repeated Light lights = 2;
+  repeated User users = 3;
+  int64 version = 4;  // Timestamp as version (unix epoch millis)
+}
