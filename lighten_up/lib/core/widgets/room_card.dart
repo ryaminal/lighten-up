@@ -22,7 +22,6 @@ class RoomCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
         children: [
           // Header with room name and status
           Container(
@@ -58,21 +57,25 @@ class RoomCard extends StatelessWidget {
             ),
           ),
 
-          // Lights list
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.spaceSm),
-            child: Column(
-              children: room.lights.map((light) {
-                return Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: AppDimensions.space2xs,
-                  ),
-                  child: _LightButton(
-                    light: light,
-                    onTap: onLightTap != null ? () => onLightTap!(light) : null,
-                  ),
-                );
-              }).toList(),
+          // Lights list - use Expanded to allow scrolling if needed
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppDimensions.spaceSm),
+              child: Column(
+                children: room.lights.map((light) {
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: AppDimensions.space2xs,
+                    ),
+                    child: _LightButton(
+                      light: light,
+                      onTap: onLightTap != null
+                          ? () => onLightTap!(light)
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ],

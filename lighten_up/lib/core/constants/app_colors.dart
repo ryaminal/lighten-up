@@ -23,10 +23,12 @@ class AppColors {
 
   // Alert/Status Colors
   static const Color alertRed = Color(0xFFEF4444);
+  static const Color alertOrange = Color(0xFFF97316);
   static const Color alertAmber = Color(0xFFF59E0B);
   static const Color alertGreen = Color(0xFF10B981);
   static const Color alertBlue = Color(0xFF3B82F6);
   static const Color alertPurple = Color(0xFFA855F7);
+  static const Color successGreen = Color(0xFF22C55E);
 
   // Border Colors
   static const Color borderDark = Color(0xFF233648);
