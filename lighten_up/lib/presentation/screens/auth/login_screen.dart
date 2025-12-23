@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lighten_up/core/constants/app_colors.dart';
 import 'package:lighten_up/core/constants/app_text_styles.dart';
 import 'package:lighten_up/core/constants/app_dimensions.dart';
+import 'package:lighten_up/core/utils/extensions.dart';
 import 'package:lighten_up/core/utils/validators.dart';
 import 'package:lighten_up/core/widgets/app_button.dart';
 import 'package:lighten_up/core/widgets/app_card.dart';
@@ -47,12 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       // Error is already handled in the provider and shown in the UI
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        context.showError('Login failed: ${e.toString()}');
       }
     }
   }

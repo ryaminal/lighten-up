@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lighten_up/core/constants/app_colors.dart';
 import 'package:lighten_up/core/constants/app_dimensions.dart';
 import 'package:lighten_up/core/constants/app_text_styles.dart';
+import 'package:lighten_up/core/utils/extensions.dart';
 import 'package:lighten_up/presentation/providers/alert_settings_provider.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/alert_settings_header.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/event_mapping_table.dart';
@@ -169,12 +170,7 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
   void _testAlert() {
     // TODO: Implement test alert functionality
     debugPrint('Test Alert clicked');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Test alert would play here'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    context.showInfo('Test alert would play here');
   }
 
   Future<void> _saveChanges(
@@ -190,23 +186,11 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
     try {
       await notifier.saveSettings(currentSettings);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Settings saved successfully'),
-            backgroundColor: AppColors.alertGreen,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        context.showSuccess('Settings saved successfully');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save settings: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        context.showError('Failed to save settings: ${e.toString()}');
       }
     }
   }

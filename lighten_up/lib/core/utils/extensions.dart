@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lighten_up/core/constants/app_colors.dart';
 
 extension StringExtensions on String {
   String capitalize() {
@@ -107,5 +108,40 @@ extension TimeOfDayExtensions on TimeOfDay {
         : hour;
     final period = hour >= 12 ? 'PM' : 'AM';
     return '$hour12:${minute.toString().padLeft(2, '0')} $period';
+  }
+}
+
+/// BuildContext extensions for common UI operations
+extension ContextExtensions on BuildContext {
+  /// Show error SnackBar with red background
+  void showError(String message) {
+    ScaffoldMessenger.of(this).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  /// Show success SnackBar with green background
+  void showSuccess(String message) {
+    ScaffoldMessenger.of(this).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.alertGreen,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  /// Show info SnackBar with default background
+  void showInfo(String message, {Duration? duration}) {
+    ScaffoldMessenger.of(this).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: duration ?? const Duration(seconds: 2),
+      ),
+    );
   }
 }
