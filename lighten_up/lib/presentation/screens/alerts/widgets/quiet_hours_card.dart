@@ -16,9 +16,9 @@ class QuietHoursCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final hours =
         quietHours ??
-        QuietHours(
-          startTime: const TimeOfDay(hour: 22, minute: 0),
-          endTime: const TimeOfDay(hour: 6, minute: 0),
+        const QuietHours(
+          startTime: TimeOfDay(hour: 22, minute: 0),
+          endTime: TimeOfDay(hour: 6, minute: 0),
           enabled: false,
         );
 

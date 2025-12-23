@@ -80,9 +80,9 @@ class MockAlertSettingsData {
           volume: 30,
         ),
       ],
-      quietHours: QuietHours(
-        startTime: const TimeOfDay(hour: 22, minute: 0),
-        endTime: const TimeOfDay(hour: 6, minute: 0),
+      quietHours: const QuietHours(
+        startTime: TimeOfDay(hour: 22, minute: 0),
+        endTime: TimeOfDay(hour: 6, minute: 0),
         enabled: false,
       ),
     );
@@ -90,15 +90,15 @@ class MockAlertSettingsData {
 
   /// Get mock global settings
   static AlertSettings getGlobalSettings() {
-    return AlertSettings(
+    return const AlertSettings(
       id: 'global-settings',
       workstationId: 'global',
-      visual: const VisualSettings(
+      visual: VisualSettings(
         popupWindow: true,
         flashScreen: false,
         forceFocus: false,
       ),
-      eventMappings: const [
+      eventMappings: [
         EventMapping(
           id: '1',
           eventName: 'Emergency Call',
@@ -117,8 +117,8 @@ class MockAlertSettingsData {
         ),
       ],
       quietHours: QuietHours(
-        startTime: const TimeOfDay(hour: 22, minute: 0),
-        endTime: const TimeOfDay(hour: 6, minute: 0),
+        startTime: TimeOfDay(hour: 22, minute: 0),
+        endTime: TimeOfDay(hour: 6, minute: 0),
         enabled: true,
       ),
     );

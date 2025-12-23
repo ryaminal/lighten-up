@@ -423,9 +423,9 @@ void main() {
         final initialState = container.read(alertSettingsNotifierProvider);
         final initialVisual = initialState.selectedWorkstationSettings!.visual;
 
-        final newQuietHours = QuietHours(
-          startTime: const TimeOfDay(hour: 20, minute: 0),
-          endTime: const TimeOfDay(hour: 8, minute: 0),
+        const newQuietHours = QuietHours(
+          startTime: TimeOfDay(hour: 20, minute: 0),
+          endTime: TimeOfDay(hour: 8, minute: 0),
           enabled: true,
         );
 
@@ -448,9 +448,9 @@ void main() {
         // Arrange
         final notifier = container.read(alertSettingsNotifierProvider.notifier);
 
-        final disabledQuietHours = QuietHours(
-          startTime: const TimeOfDay(hour: 22, minute: 0),
-          endTime: const TimeOfDay(hour: 6, minute: 0),
+        const disabledQuietHours = QuietHours(
+          startTime: TimeOfDay(hour: 22, minute: 0),
+          endTime: TimeOfDay(hour: 6, minute: 0),
           enabled: false,
         );
 
@@ -469,9 +469,9 @@ void main() {
         // Arrange
         final notifier = container.read(alertSettingsNotifierProvider.notifier);
 
-        final newQuietHours = QuietHours(
-          startTime: const TimeOfDay(hour: 23, minute: 0),
-          endTime: const TimeOfDay(hour: 7, minute: 0),
+        const newQuietHours = QuietHours(
+          startTime: TimeOfDay(hour: 23, minute: 0),
+          endTime: TimeOfDay(hour: 7, minute: 0),
           enabled: true,
         );
 
@@ -540,9 +540,9 @@ void main() {
         ];
         notifier.updateEventMappings(newMappings);
 
-        final newQuietHours = QuietHours(
-          startTime: const TimeOfDay(hour: 21, minute: 0),
-          endTime: const TimeOfDay(hour: 7, minute: 0),
+        const newQuietHours = QuietHours(
+          startTime: TimeOfDay(hour: 21, minute: 0),
+          endTime: TimeOfDay(hour: 7, minute: 0),
           enabled: true,
         );
         notifier.updateQuietHours(newQuietHours);
