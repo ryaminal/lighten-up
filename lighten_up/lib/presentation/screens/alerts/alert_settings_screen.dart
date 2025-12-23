@@ -4,8 +4,10 @@ import 'package:lighten_up/core/constants/app_colors.dart';
 import 'package:lighten_up/core/constants/app_dimensions.dart';
 import 'package:lighten_up/core/constants/app_text_styles.dart';
 import 'package:lighten_up/presentation/providers/alert_settings_provider.dart';
+import 'package:lighten_up/presentation/screens/alerts/widgets/alert_settings_header.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/event_mapping_table.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/quiet_hours_card.dart';
+import 'package:lighten_up/presentation/screens/alerts/widgets/settings_tab_selector.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/sound_palette_card.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/visual_settings_card.dart';
 import 'package:lighten_up/presentation/screens/alerts/widgets/workstation_selector.dart';
@@ -36,7 +38,12 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
       backgroundColor: AppColors.backgroundDark,
       body: Column(
         children: [
-          _buildHeader(alertState, notifier),
+          AlertSettingsHeader(
+            workstationName: _getSelectedWorkstationName(alertState),
+            isLoading: alertState.isLoading,
+            onTestAlert: _testAlert,
+            onSaveChanges: () => _saveChanges(alertState, notifier),
+          ),
           Expanded(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,131 +70,6 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
     );
   }
 
-  Widget _buildHeader(
-    AlertSettingsState alertState,
-    AlertSettingsNotifier notifier,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.spaceLg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
-        border: Border(
-          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.settings, color: AppColors.primary, size: 28),
-                    const SizedBox(width: AppDimensions.spaceSm),
-                    Text(
-                      'Alert Settings',
-                      style: AppTextStyles.headingLarge.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Manage audible and visual notification settings for ${_getSelectedWorkstationName(alertState)}',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppDimensions.spaceMd),
-          OutlinedButton.icon(
-            onPressed: _testAlert,
-            icon: const Icon(Icons.volume_up, size: 20),
-            label: const Text('Test Alert'),
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
-          ),
-          const SizedBox(width: AppDimensions.spaceSm),
-          ElevatedButton(
-            onPressed: alertState.isLoading
-                ? null
-                : () => _saveChanges(alertState, notifier),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: alertState.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Text('Save Changes'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabSelector() {
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.spaceSm),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceDark,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildTabButton('Selected Workstation', isSelectedTab, () {
-            setState(() {
-              isSelectedTab = true;
-            });
-          }),
-          const SizedBox(width: AppDimensions.spaceSm),
-          _buildTabButton('Global Defaults', !isSelectedTab, () {
-            setState(() {
-              isSelectedTab = false;
-            });
-            final notifier = ref.read(alertSettingsNotifierProvider.notifier);
-            notifier.loadGlobalSettings();
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabButton(String label, bool isActive, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.spaceMd,
-          vertical: AppDimensions.spaceSm,
-        ),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: isActive ? Colors.white : AppColors.textSecondary,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildLoadingOrEmpty(AlertSettingsState alertState) {
     if (alertState.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -198,7 +80,7 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: AppDimensions.spaceMd),
             Text(
               alertState.error!,
@@ -226,7 +108,20 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildTabSelector(),
+          SettingsTabSelector(
+            isSelectedTab: isSelectedTab,
+            onSelectedWorkstationTap: () {
+              setState(() {
+                isSelectedTab = true;
+              });
+            },
+            onGlobalDefaultsTap: () {
+              setState(() {
+                isSelectedTab = false;
+              });
+              notifier.loadGlobalSettings();
+            },
+          ),
           const SizedBox(height: AppDimensions.spaceLg),
           VisualSettingsCard(
             settings: settings.visual,
@@ -296,10 +191,10 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
       await notifier.saveSettings(currentSettings);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Settings saved successfully'),
+          const SnackBar(
+            content: Text('Settings saved successfully'),
             backgroundColor: AppColors.alertGreen,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }
