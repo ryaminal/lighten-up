@@ -2,12 +2,13 @@ use crate::adapters::DatabaseAdapter;
 use crate::adapters::network::NetworkAdapter;
 use crate::app_state::AppState;
 use crate::database::StoreDatabase;
-use crate::domain::PeerId;
+use crate::domain::{Event, PeerId};
 use crate::encryption::ChaCha20Encryption;
 use crate::network::MdnsNetwork;
 use crate::services::{LightService, PeerService};
 use std::sync::Arc;
 use tauri::AppHandle;
+use tokio::sync::broadcast;
 
 type AppNetwork = MdnsNetwork<ChaCha20Encryption>;
 
@@ -52,8 +53,8 @@ pub async fn create_services(
     my_name: &str,
     database: Arc<StoreDatabase>,
     network: Arc<AppNetwork>,
-) -> Result<AppState<StoreDatabase, AppNetwork>, String> {
-    let (event_tx, _) = tokio::sync::broadcast::channel(100);
+) -> Result<(AppState<StoreDatabase, AppNetwork>, broadcast::Receiver<Event>), String> {
+    let (event_tx, event_rx) = tokio::sync::broadcast::channel(100);
 
     let light_service = Arc::new(
         LightService::new(
@@ -61,6 +62,7 @@ pub async fn create_services(
             my_name.to_string(),
             database.clone(),
             network.clone(),
+            event_tx.clone(),
         )
         .await
         .map_err(|e| format!("Failed to create LightService: {:?}", e))?,
@@ -77,5 +79,5 @@ pub async fn create_services(
         .map_err(|e| format!("Failed to create PeerService: {:?}", e))?,
     );
 
-    Ok(AppState::new(light_service, peer_service))
+    Ok((AppState::new(light_service, peer_service), event_rx))
 }

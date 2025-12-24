@@ -17,15 +17,14 @@ pub async fn initialize_services(app: &AppHandle) -> Result<AppServices, String>
     let database = initialization::initialize_database(app).await?;
     let encryption = initialization::create_encryption(&passphrase)?;
     let network = initialization::create_network(my_peer_id.clone(), encryption).await?;
-    let services =
+    let (services, event_rx) =
         initialization::create_services(&my_peer_id, &my_name, database, network).await?;
-    start_background_tasks(app, &services).await;
+    start_background_tasks(app, &services, event_rx).await;
     Ok(services)
 }
 
-async fn start_background_tasks(app: &AppHandle, services: &AppServices) {
+async fn start_background_tasks(app: &AppHandle, services: &AppServices, mut event_rx: tokio::sync::broadcast::Receiver<Event>) {
     let app_handle_clone = app.clone();
-    let mut event_rx = services.light_service.subscribe();
     tauri::async_runtime::spawn(async move {
         while let Ok(event) = event_rx.recv().await {
             forward_event(&app_handle_clone, &event);

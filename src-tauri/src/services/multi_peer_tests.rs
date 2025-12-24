@@ -6,6 +6,7 @@ use crate::services::light_service::LightService;
 use crate::services::test_utils::MockDatabaseAdapter;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::broadcast;
 use tokio::time::{sleep, timeout};
 
 /// Integration test: Two peers discover each other and synchronize state
@@ -32,12 +33,17 @@ async fn test_two_peers_discover_and_sync() {
     network1.start().await.expect("Failed to start network1");
     network2.start().await.expect("Failed to start network2");
 
+    // Create event channels
+    let (event_tx1, _) = broadcast::channel(100);
+    let (event_tx2, _) = broadcast::channel(100);
+
     // Create light services
     let service1 = LightService::new(
         peer1_id.clone(),
         peer1_name,
         database1.clone(),
         network1.clone(),
+        event_tx1,
     )
     .await
     .expect("Failed to create service1");
@@ -47,6 +53,7 @@ async fn test_two_peers_discover_and_sync() {
         peer2_name,
         database2.clone(),
         network2.clone(),
+        event_tx2,
     )
     .await
     .expect("Failed to create service2");
@@ -127,10 +134,11 @@ async fn test_three_peer_network() {
         let encryption = ChaCha20Encryption::from_passphrase(passphrase).unwrap();
         let network = Arc::new(MdnsNetwork::new(peer_id.clone(), encryption));
         let database = Arc::new(MockDatabaseAdapter::new());
+        let (event_tx, _) = broadcast::channel(100);
 
         network.start().await.expect("Failed to start network");
 
-        let service = LightService::new(peer_id, name.to_string(), database, network.clone())
+        let service = LightService::new(peer_id, name.to_string(), database, network.clone(), event_tx)
             .await
             .expect("Failed to create service");
 
@@ -188,14 +196,17 @@ async fn test_multi_peer_rapid_changes() {
     network1.start().await.unwrap();
     network2.start().await.unwrap();
 
+    let (event_tx1, _) = broadcast::channel(100);
+    let (event_tx2, _) = broadcast::channel(100);
+
     let service1 = Arc::new(
-        LightService::new(peer1_id, "Stress1".to_string(), database1, network1.clone())
+        LightService::new(peer1_id, "Stress1".to_string(), database1, network1.clone(), event_tx1)
             .await
             .unwrap(),
     );
 
     let service2 = Arc::new(
-        LightService::new(peer2_id, "Stress2".to_string(), database2, network2.clone())
+        LightService::new(peer2_id, "Stress2".to_string(), database2, network2.clone(), event_tx2)
             .await
             .unwrap(),
     );

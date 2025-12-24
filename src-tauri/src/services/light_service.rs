@@ -20,9 +20,8 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
         my_name: String,
         database: Arc<D>,
         network: Arc<N>,
+        event_tx: broadcast::Sender<Event>,
     ) -> Result<Self> {
-        let (event_tx, _) = broadcast::channel(100);
-
         let my_peer = Self::load_or_create_peer(&my_peer_id, &my_name, &database).await?;
         let state = Arc::new(RwLock::new(ServiceState::new(my_peer.light_state)));
 

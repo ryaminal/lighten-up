@@ -3,6 +3,7 @@ use crate::domain::{LightColor, PeerId};
 use crate::services::light_service::LightService;
 use crate::services::test_utils::{MockDatabaseAdapter, MockNetworkAdapter};
 use std::sync::Arc;
+use tokio::sync::broadcast;
 
 #[tokio::test]
 async fn test_set_light_color_end_to_end() {
@@ -11,6 +12,7 @@ async fn test_set_light_color_end_to_end() {
     let peer_name = "Test User".to_string();
     let database = Arc::new(MockDatabaseAdapter::new());
     let network = Arc::new(MockNetworkAdapter::new());
+    let (event_tx, _) = broadcast::channel(100);
 
     // Create light service
     let service = LightService::new(
@@ -18,6 +20,7 @@ async fn test_set_light_color_end_to_end() {
         peer_name.clone(),
         database.clone(),
         network.clone(),
+        event_tx,
     )
     .await
     .unwrap();
@@ -67,6 +70,7 @@ async fn test_concurrent_light_color_changes() {
     let peer_id = PeerId::new("concurrent-test-peer");
     let database = Arc::new(MockDatabaseAdapter::new());
     let network = Arc::new(MockNetworkAdapter::new());
+    let (event_tx, _) = broadcast::channel(100);
 
     let service = Arc::new(
         LightService::new(
@@ -74,6 +78,7 @@ async fn test_concurrent_light_color_changes() {
             "Test".to_string(),
             database.clone(),
             network.clone(),
+            event_tx,
         )
         .await
         .unwrap(),
@@ -116,12 +121,14 @@ async fn test_light_service_state_persistence() {
     let peer_id = PeerId::new("persistence-test");
     let database = Arc::new(MockDatabaseAdapter::new());
     let network = Arc::new(MockNetworkAdapter::new());
+    let (event_tx, _) = broadcast::channel(100);
 
     let service = LightService::new(
         peer_id.clone(),
         "Test".to_string(),
         database.clone(),
         network.clone(),
+        event_tx.clone(),
     )
     .await
     .unwrap();
@@ -139,6 +146,7 @@ async fn test_light_service_state_persistence() {
         "Test".to_string(),
         database.clone(),
         network.clone(),
+        event_tx,
     )
     .await
     .unwrap();
