@@ -76,13 +76,13 @@ async fn handle_peer_announcement<D: DatabaseAdapter>(
     peers_guard.insert(peer_id.clone(), peer.clone());
     drop(peers_guard);
 
-    if is_new {
-        log::info!(
-            "[EVENT] Emitting peer-discovered event for {}",
-            peer_id.as_str()
-        );
-        let _ = event_tx.send(Event::PeerDiscovered { peer });
-    }
+    // Always emit event so frontend gets updated last_seen
+    log::info!(
+        "[EVENT] Emitting peer-discovered event for {} (is_new: {})",
+        peer_id.as_str(),
+        is_new
+    );
+    let _ = event_tx.send(Event::PeerDiscovered { peer });
 
     Ok(())
 }
