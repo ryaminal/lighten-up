@@ -1,18 +1,12 @@
-#!/bin/bash
-# Test the UI with comprehensive logging
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "=== Lighten Up UI Test ==="
-echo ""
-echo "State locations:"
-echo "  Database: /tmp/lighten-up.db"
-echo "  Store:    ~/.local/share/com.cadams.lighten-up/store.json"
-echo "  Logs:     ~/.local/share/com.cadams.lighten-up/logs/"
-echo ""
-echo "To clear state before testing, run: ./scripts/clear-state.sh"
-echo ""
-echo "Starting application..."
-echo "==================================="
-echo ""
+set +e
+pnpm tauri build
+set -e
 
-# Run the app
-./src-tauri/target/release/lighten-up "$@"
+rm -rf /tmp/lighten-up-*
+
+./src-tauri/target/release/lighten-up --id alice --name "Alice" --data-dir /tmp/lighten-up-alice &
+./src-tauri/target/release/lighten-up --id bob --name "Bob" --data-dir /tmp/lighten-up-alice &
+./src-tauri/target/release/lighten-up --id charlie --name "Charlie" --data-dir /tmp/lighten-up-alice &

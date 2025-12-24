@@ -1,5 +1,7 @@
 use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter, Result};
-use crate::domain::{Event, LightColor, LightState, PeerId, PeerInfo, VectorClock};
+use crate::domain::{
+    Event, LightColor, LightState, PeerId, PeerInfo, VectorClock, current_timestamp_secs,
+};
 use crate::services::state::ServiceState;
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
@@ -67,7 +69,7 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
 
     /// Set light color and broadcast to peers
     pub async fn set_light_color(&self, color: LightColor) -> Result<()> {
-        let timestamp = current_timestamp();
+        let timestamp = current_timestamp_secs();
         let new_state = self.update_and_persist(color, timestamp).await?;
 
         let message = Message::StateUpdate {
@@ -100,11 +102,4 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
 
         Ok(new_state)
     }
-}
-
-fn current_timestamp() -> u64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs()
 }

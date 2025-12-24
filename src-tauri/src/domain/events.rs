@@ -1,4 +1,4 @@
-use crate::domain::{light_state::LightState, peer_id::PeerId};
+use crate::domain::{current_timestamp_secs, light_state::LightState, peer_id::PeerId};
 use serde::{Deserialize, Serialize};
 
 /// Represents information about a peer
@@ -31,13 +31,6 @@ impl PeerInfo {
         let now = current_timestamp_secs();
         now.saturating_sub(self.last_seen) > timeout_secs
     }
-}
-
-fn current_timestamp_secs() -> u64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs()
 }
 
 /// Events that can occur in the system
@@ -79,11 +72,7 @@ mod tests {
         assert!(!peer.is_stale(60));
 
         // Set last_seen to 120 seconds ago
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        peer.last_seen = now - 120;
+        peer.last_seen = current_timestamp_secs() - 120;
 
         // Should be stale with 60 second timeout
         assert!(peer.is_stale(60));

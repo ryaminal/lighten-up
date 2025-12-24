@@ -1,5 +1,5 @@
 use crate::adapters::DatabaseAdapter;
-use crate::domain::{Event, PeerId, PeerInfo};
+use crate::domain::{Event, PeerId, PeerInfo, current_timestamp_secs};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast, watch};
@@ -68,11 +68,7 @@ fn find_stale_peers(peers: &HashMap<PeerId, PeerInfo>) -> Vec<PeerId> {
 }
 
 fn log_stale_peer(peer: &PeerInfo, id: &PeerId) {
-    let elapsed = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs()
-        .saturating_sub(peer.last_seen);
+    let elapsed = current_timestamp_secs().saturating_sub(peer.last_seen);
 
     log::warn!(
         "[CLEANUP] Removing stale peer {} ({}) - last seen {}s ago",

@@ -54,7 +54,10 @@ impl DatabaseAdapter for StoreDatabase {
 
     async fn save_my_peer(&self, peer: &PeerInfo) -> Result<()> {
         let store = self.store.write().await;
-        store.set("my_peer", serde_json::to_value(peer).unwrap());
+        store.set(
+            "my_peer",
+            serde_json::to_value(peer).expect("PeerInfo should always serialize to JSON"),
+        );
         store
             .save()
             .map_err(|e| AdapterError::Database(format!("Failed to save my peer: {}", e)))?;
@@ -93,11 +96,14 @@ impl DatabaseAdapter for StoreDatabase {
         // Update peer
         peers.insert(
             peer.id.as_str().to_string(),
-            serde_json::to_value(peer).unwrap(),
+            serde_json::to_value(peer).expect("PeerInfo should always serialize to JSON"),
         );
 
         // Save back
-        store.set("peers", serde_json::to_value(peers).unwrap());
+        store.set(
+            "peers",
+            serde_json::to_value(peers).expect("HashMap should always serialize to JSON"),
+        );
         store
             .save()
             .map_err(|e| AdapterError::Database(format!("Failed to save peer: {}", e)))?;
@@ -145,7 +151,10 @@ impl DatabaseAdapter for StoreDatabase {
 
         peers.remove(peer_id.as_str());
 
-        store.set("peers", serde_json::to_value(peers).unwrap());
+        store.set(
+            "peers",
+            serde_json::to_value(peers).expect("HashMap should always serialize to JSON"),
+        );
         store
             .save()
             .map_err(|e| AdapterError::Database(format!("Failed to delete peer: {}", e)))?;
