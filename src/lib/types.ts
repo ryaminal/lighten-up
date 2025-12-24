@@ -8,7 +8,7 @@ export interface VectorClock {
 
 export interface LightState {
   color: LightColor;
-  clock: VectorClock;
+  vector_clock: VectorClock;
   timestamp: number;
 }
 

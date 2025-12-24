@@ -9,24 +9,38 @@ use tokio::sync::mpsc;
 /// TCP transport with encryption
 pub struct Transport<E: EncryptionAdapter + Send + Sync + 'static> {
     encryption: Arc<E>,
-    incoming_rx: mpsc::UnboundedReceiver<(PeerId, Message)>,
     incoming_tx: mpsc::UnboundedSender<(PeerId, Message)>,
 }
 
+/// Receiver for incoming messages (separated to avoid mutex contention)
+pub struct TransportReceiver {
+    incoming_rx: mpsc::UnboundedReceiver<(PeerId, Message)>,
+}
+
+impl TransportReceiver {
+    /// Receive incoming message
+    pub async fn receive(&mut self) -> Option<(PeerId, Message)> {
+        self.incoming_rx.recv().await
+    }
+}
+
 impl<E: EncryptionAdapter + Send + Sync + 'static> Transport<E> {
-    /// Create a new transport
-    pub fn new(encryption: Arc<E>) -> Self {
+    /// Create a new transport, returning both the transport and receiver
+    pub fn new(encryption: Arc<E>) -> (Self, TransportReceiver) {
         let (incoming_tx, incoming_rx) = mpsc::unbounded_channel();
 
-        Self {
+        let transport = Self {
             encryption,
-            incoming_rx,
             incoming_tx,
-        }
+        };
+        
+        let receiver = TransportReceiver { incoming_rx };
+
+        (transport, receiver)
     }
 
     /// Start listening on a random port
-    pub async fn listen(&mut self) -> Result<u16> {
+    pub async fn listen(&self) -> Result<u16> {
         let listener = TcpListener::bind("0.0.0.0:0")
             .await
             .map_err(|e| AdapterError::Network(format!("Failed to bind listener: {}", e)))?;
@@ -68,11 +82,6 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> Transport<E> {
                 }
             }
         });
-    }
-
-    /// Receive incoming message
-    pub async fn receive(&mut self) -> Option<(PeerId, Message)> {
-        self.incoming_rx.recv().await
     }
 
     /// Connect to a peer

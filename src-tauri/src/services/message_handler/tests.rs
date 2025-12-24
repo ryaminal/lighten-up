@@ -1,10 +1,10 @@
 use super::*;
-use crate::database::SqliteDatabase;
 use crate::domain::{LightColor, VectorClock};
+use crate::services::test_utils::MockDatabaseAdapter;
 
 #[tokio::test]
 async fn test_handle_peer_announcement_new_peer() {
-    let db = Arc::new(SqliteDatabase::in_memory().unwrap());
+    let db = Arc::new(MockDatabaseAdapter::new());
     db.initialize().await.unwrap();
 
     let peers = Arc::new(RwLock::new(HashMap::new()));
@@ -37,7 +37,7 @@ async fn test_handle_peer_announcement_new_peer() {
 
 #[tokio::test]
 async fn test_handle_state_update_crdt_merge() {
-    let db = Arc::new(SqliteDatabase::in_memory().unwrap());
+    let db = Arc::new(MockDatabaseAdapter::new());
     db.initialize().await.unwrap();
 
     let peer_id = PeerId::new("test-peer");
@@ -84,7 +84,7 @@ async fn test_handle_state_update_crdt_merge() {
 
 #[tokio::test]
 async fn test_handle_peer_leaving() {
-    let db = Arc::new(SqliteDatabase::in_memory().unwrap());
+    let db = Arc::new(MockDatabaseAdapter::new());
     db.initialize().await.unwrap();
 
     let peer_id = PeerId::new("test-peer");

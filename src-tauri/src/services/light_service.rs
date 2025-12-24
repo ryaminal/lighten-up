@@ -75,7 +75,12 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
             peer_id: self.my_peer_id.clone(),
             state: new_state,
         };
-        self.network.broadcast(message).await
+        
+        let result = self.network.broadcast(message).await;
+        if let Err(e) = &result {
+            log::warn!("Failed to broadcast: {:?}", e);
+        }
+        result
     }
 
     async fn update_and_persist(&self, color: LightColor, timestamp: u64) -> Result<LightState> {
@@ -86,9 +91,13 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
         let peer_info = PeerInfo::new(self.my_peer_id.clone(), my_name, new_state.clone());
         self.database.save_my_peer(&peer_info).await?;
 
-        let _ = self.event_tx.send(Event::MyStateChanged {
+        let send_result = self.event_tx.send(Event::MyStateChanged {
             state: new_state.clone(),
         });
+        
+        if send_result.is_err() {
+            log::warn!("No event listeners");
+        }
 
         Ok(new_state)
     }

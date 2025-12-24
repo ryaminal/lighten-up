@@ -12,17 +12,26 @@
     Off: 'bg-gray-400',
   };
 
-  let isChanging = false;
+  let isChanging = $state(false);
 
   async function handleColorChange(color: LightColor) {
-    if (isChanging) return;
+    console.log('handleColorChange called with:', color);
+    if (isChanging) {
+      console.log('Already changing, ignoring');
+      return;
+    }
     isChanging = true;
+    console.log('Set isChanging = true, current value:', isChanging);
     try {
+      console.log('Calling setLightColor...');
       await setLightColor(color);
+      console.log('setLightColor returned successfully');
     } catch (error) {
       console.error('Failed to set color:', error);
     } finally {
+      console.log('In finally block - Setting isChanging = false');
       isChanging = false;
+      console.log('isChanging is now:', isChanging);
     }
   }
 </script>

@@ -12,6 +12,12 @@ pub fn load_config(app: &AppHandle) -> Result<(PeerId, String, String), String> 
 }
 
 fn get_or_create_peer_id(store: &tauri_plugin_store::Store<tauri::Wry>) -> Result<PeerId, String> {
+    // Check for environment variable override first (for testing)
+    if let Ok(id) = std::env::var("LIGHTEN_UP_PEER_ID") {
+        log::info!("Using peer ID from environment: {}", id);
+        return Ok(PeerId::new(&id));
+    }
+
     if let Some(peer_id_str) = store.get("peer_id") {
         let peer_id = peer_id_str.as_str().ok_or("Invalid peer_id format")?;
         log::info!("Loaded existing peer ID: {}", peer_id);
@@ -26,9 +32,7 @@ fn get_or_create_peer_id(store: &tauri_plugin_store::Store<tauri::Wry>) -> Resul
 }
 
 fn get_hostname() -> Result<String, String> {
-    let hostname = tauri_plugin_os::hostname();
-    log::info!("Using hostname: {}", hostname);
-    Ok(hostname)
+    Ok(tauri_plugin_os::hostname())
 }
 
 fn get_or_create_passphrase(

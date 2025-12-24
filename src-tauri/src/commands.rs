@@ -2,7 +2,7 @@ use crate::domain::{LightColor, PeerInfo};
 use tauri::State;
 
 type AppServices = crate::app_state::AppState<
-    crate::database::SqliteDatabase,
+    crate::database::StoreDatabase,
     crate::network::MdnsNetwork<crate::encryption::ChaCha20Encryption>,
 >;
 
@@ -11,12 +11,15 @@ type AppServices = crate::app_state::AppState<
 pub async fn set_light_color(
     state: State<'_, AppServices>,
     color: LightColor,
-) -> Result<(), String> {
+) -> Result<String, String> {
+    log::info!("🎨 Command: set_light_color({:?})", color);
     state
         .light_service
         .set_light_color(color)
         .await
-        .map_err(|e| format!("Failed to set light color: {:?}", e))
+        .map_err(|e| format!("Failed to set light color: {:?}", e))?;
+    log::info!("✅ Command completed, returning 'success'");
+    Ok("success".to_string())
 }
 
 /// Get my current light state

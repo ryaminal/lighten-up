@@ -31,5 +31,22 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "cli": {
+      "description": "Lighten Up - P2P office status communication",
+      "args": [
+        {
+          "name": "id",
+          "description": "Override peer ID for testing",
+          "takesValue": true
+        },
+        {
+          "name": "name",
+          "description": "Override peer name",
+          "takesValue": true
+        }
+      ]
+    }
   }
 }
