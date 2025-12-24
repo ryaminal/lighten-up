@@ -22,6 +22,12 @@ pub enum AdapterError {
     InvalidData(String),
 }
 
+impl From<rusqlite::Error> for AdapterError {
+    fn from(err: rusqlite::Error) -> Self {
+        AdapterError::Database(err.to_string())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
