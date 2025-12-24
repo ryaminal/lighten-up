@@ -7,6 +7,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 /// Handle mDNS service discovery events
+#[allow(dead_code)]
 pub async fn handle_event(
     event: ServiceEvent,
     peers: &Arc<Mutex<HashMap<String, PeerConnection>>>,
@@ -30,6 +31,7 @@ pub async fn handle_event(
     }
 }
 
+#[allow(dead_code)]
 fn extract_peer_info(info: &ResolvedService, my_peer_id: &PeerId) -> Option<PeerConnection> {
     let peer_id_str = info.get_fullname().split('.').next()?;
     let peer_id = PeerId::new(peer_id_str);
@@ -44,6 +46,7 @@ fn extract_peer_info(info: &ResolvedService, my_peer_id: &PeerId) -> Option<Peer
     Some(PeerConnection::new(peer_id, addr))
 }
 
+#[allow(dead_code)]
 fn extract_peer_id(fullname: &str) -> Option<PeerId> {
     let peer_id_str = fullname.split('.').next()?;
     Some(PeerId::new(peer_id_str))

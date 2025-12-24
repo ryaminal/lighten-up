@@ -33,7 +33,7 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> Transport<E> {
             encryption,
             incoming_tx,
         };
-        
+
         let receiver = TransportReceiver { incoming_rx };
 
         (transport, receiver)

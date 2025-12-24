@@ -8,9 +8,12 @@ use std::net::{IpAddr, Ipv4Addr};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+// mDNS discovery is not fully integrated yet
+#[allow(dead_code)]
 const SERVICE_TYPE: &str = "_lightenup._tcp.local.";
 
 /// mDNS service discovery manager
+#[allow(dead_code)]
 pub struct Discovery {
     daemon: ServiceDaemon,
     my_peer_id: PeerId,
@@ -33,6 +36,7 @@ impl Discovery {
     }
 
     /// Register our service
+    #[allow(dead_code)]
     pub fn register(&self) -> Result<()> {
         let service_name = format!("{}.{}", self.my_peer_id.as_str(), SERVICE_TYPE);
         let host_name = format!("{}.local.", self.my_peer_id.as_str());
@@ -55,6 +59,7 @@ impl Discovery {
     }
 
     /// Start browsing for peers
+    #[allow(dead_code)]
     pub fn browse(&self) -> Result<()> {
         let receiver = self
             .daemon

@@ -75,7 +75,7 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
             peer_id: self.my_peer_id.clone(),
             state: new_state,
         };
-        
+
         let result = self.network.broadcast(message).await;
         if let Err(e) = &result {
             log::warn!("Failed to broadcast: {:?}", e);
@@ -94,7 +94,7 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
         let send_result = self.event_tx.send(Event::MyStateChanged {
             state: new_state.clone(),
         });
-        
+
         if send_result.is_err() {
             log::warn!("No event listeners");
         }

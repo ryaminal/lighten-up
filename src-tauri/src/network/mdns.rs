@@ -59,7 +59,7 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> NetworkAdapter for MdnsNetwor
             let peers = disc.get_peers().await;
             log::info!("🌐 broadcast: found {} peers", peers.len());
             drop(discovery); // Release discovery lock
-            
+
             log::info!("🌐 broadcast: sending to all peers");
             for peer in peers {
                 log::info!("🌐 broadcast: sending to peer {:?}", peer.peer_id);
