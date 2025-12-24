@@ -27,10 +27,10 @@
     <div class="peers">
       {#each $peers as peer (peer.id)}
         <div class="peer-card">
-          <div class="light-indicator {colorStyles[peer.state.color]}"></div>
+          <div class="light-indicator {colorStyles[peer.light_state.color]}"></div>
           <div class="peer-info">
             <p class="peer-name">{peer.name}</p>
-            <p class="peer-status">{colorNames[peer.state.color]}</p>
+            <p class="peer-status">{colorNames[peer.light_state.color]}</p>
           </div>
         </div>
       {/each}

@@ -25,7 +25,9 @@ export function addPeer(peer: PeerInfo) {
 }
 
 export function updatePeerState(peerId: string, state: LightState) {
-  peers.update((current) => current.map((p) => (p.id === peerId ? { ...p, state } : p)));
+  peers.update((current) =>
+    current.map((p) => (p.id === peerId ? { ...p, light_state: state } : p))
+  );
 }
 
 export function removePeer(peerId: string) {

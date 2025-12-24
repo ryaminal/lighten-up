@@ -23,10 +23,10 @@
   <div class="my-status">
     <h2>My Status</h2>
     <div class="status-info">
-      <div class="light-indicator {colorStyles[$myState.state.color]}"></div>
+      <div class="light-indicator {colorStyles[$myState.light_state.color]}"></div>
       <div class="details">
         <p class="name">{$myState.name}</p>
-        <p class="color">Status: {colorNames[$myState.state.color]}</p>
+        <p class="color">Status: {colorNames[$myState.light_state.color]}</p>
       </div>
     </div>
   </div>

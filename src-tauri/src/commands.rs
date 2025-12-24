@@ -1,4 +1,4 @@
-use crate::domain::{LightColor, LightState, PeerInfo};
+use crate::domain::{LightColor, PeerInfo};
 use tauri::State;
 
 type AppServices = crate::app_state::AppState<
@@ -21,8 +21,12 @@ pub async fn set_light_color(
 
 /// Get my current light state
 #[tauri::command]
-pub async fn get_my_state(state: State<'_, AppServices>) -> Result<LightState, String> {
-    Ok(state.light_service.get_my_state().await)
+pub async fn get_my_state(state: State<'_, AppServices>) -> Result<PeerInfo, String> {
+    state
+        .light_service
+        .get_my_peer_info()
+        .await
+        .map_err(|e| format!("Failed to get my state: {:?}", e))
 }
 
 /// Get all known peers

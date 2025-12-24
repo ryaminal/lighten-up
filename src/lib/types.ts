@@ -15,11 +15,8 @@ export interface LightState {
 export interface PeerInfo {
   id: string;
   name: string;
-  state: LightState;
+  light_state: LightState;
 }
 
-export interface MyState {
-  peer_id: string;
-  name: string;
-  state: LightState;
-}
+// Alias for clarity - my state is just PeerInfo
+export type MyState = PeerInfo;

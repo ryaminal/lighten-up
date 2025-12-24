@@ -61,6 +61,11 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
         self.state.read().await.my_state.clone()
     }
 
+    /// Get full peer info including name
+    pub async fn get_my_peer_info(&self) -> Result<PeerInfo> {
+        self.database.get_my_peer().await
+    }
+
     /// Set light color and broadcast to peers
     pub async fn set_light_color(&self, color: LightColor) -> Result<()> {
         let timestamp = current_timestamp();
