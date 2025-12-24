@@ -1,5 +1,6 @@
 pub mod adapters;
 pub mod domain;
+pub mod encryption;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
