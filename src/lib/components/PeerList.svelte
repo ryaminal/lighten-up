@@ -1,6 +1,7 @@
 <script lang="ts">
   import { peers } from '$lib/stores';
   import type { LightColor } from '$lib/types';
+  import { onMount, onDestroy } from 'svelte';
 
   const colorStyles: Record<LightColor, string> = {
     Red: 'bg-red-500',
@@ -17,12 +18,40 @@
     Blue: 'Blue',
     Off: 'Off',
   };
+
+  let now = Date.now() / 1000;
+  let interval: number;
+
+  onMount(() => {
+    interval = setInterval(() => {
+      now = Date.now() / 1000;
+    }, 1000);
+  });
+
+  onDestroy(() => {
+    if (interval) clearInterval(interval);
+  });
+
+  function formatLastSeen(lastSeenSecs: number): string {
+    const elapsed = Math.floor(now - lastSeenSecs);
+    if (elapsed < 5) return 'just now';
+    if (elapsed < 60) return `${elapsed}s ago`;
+    const minutes = Math.floor(elapsed / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
+  }
 </script>
 
 <div class="peer-list">
-  <h2>Team Members</h2>
+  <div class="header">
+    <h2>Team Members</h2>
+    {#if $peers.length > 0}
+      <span class="peer-count">{$peers.length} online</span>
+    {/if}
+  </div>
   {#if $peers.length === 0}
-    <p class="no-peers">No peers discovered yet...</p>
+    <p class="no-peers">Searching for peers...</p>
   {:else}
     <div class="peers">
       {#each $peers as peer (peer.id)}
@@ -31,6 +60,7 @@
           <div class="peer-info">
             <p class="peer-name">{peer.name}</p>
             <p class="peer-status">{colorNames[peer.light_state.color]}</p>
+            <p class="peer-last-seen">{formatLastSeen(peer.last_seen)}</p>
           </div>
         </div>
       {/each}
@@ -46,9 +76,22 @@
     background: #f9f9f9;
   }
 
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
   h2 {
-    margin: 0 0 1rem 0;
+    margin: 0;
     font-size: 1.5rem;
+  }
+
+  .peer-count {
+    font-size: 0.9rem;
+    color: #10b981;
+    font-weight: 600;
   }
 
   .no-peers {
@@ -93,5 +136,11 @@
     margin: 0.25rem 0 0 0;
     font-size: 0.9rem;
     color: #666;
+  }
+
+  .peer-last-seen {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.8rem;
+    color: #999;
   }
 </style>

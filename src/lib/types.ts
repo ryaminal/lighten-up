@@ -16,6 +16,7 @@ export interface PeerInfo {
   id: string;
   name: string;
   light_state: LightState;
+  last_seen: number; // Unix timestamp in seconds
 }
 
 // Alias for clarity - my state is just PeerInfo
