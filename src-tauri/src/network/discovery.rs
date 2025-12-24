@@ -75,10 +75,19 @@ impl Discovery {
         let peers = self.peers.clone();
         let my_peer_id = self.my_peer_id.clone();
 
-        tokio::spawn(async move {
+        // Use spawn_blocking since mdns-sd receiver is synchronous
+        std::thread::spawn(move || {
+            log::info!("🔍 mDNS browser thread started");
             while let Ok(event) = receiver.recv() {
-                discovery_handler::handle_event(event, &peers, &my_peer_id).await;
+                log::debug!("📡 Received mDNS event: {:?}", event);
+                // Spawn async task to handle the event
+                let peers_clone = peers.clone();
+                let my_peer_id_clone = my_peer_id.clone();
+                tokio::spawn(async move {
+                    discovery_handler::handle_event(event, &peers_clone, &my_peer_id_clone).await;
+                });
             }
+            log::warn!("🔍 mDNS browser thread ended");
         });
 
         Ok(())
