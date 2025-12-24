@@ -32,6 +32,12 @@ fn get_or_create_peer_id(store: &tauri_plugin_store::Store<tauri::Wry>) -> Resul
 }
 
 fn get_hostname() -> Result<String, String> {
+    // Check for environment variable override first (for testing)
+    if let Ok(name) = std::env::var("LIGHTEN_UP_PEER_NAME") {
+        log::info!("Using peer name from environment: {}", name);
+        return Ok(name);
+    }
+    
     Ok(tauri_plugin_os::hostname())
 }
 
