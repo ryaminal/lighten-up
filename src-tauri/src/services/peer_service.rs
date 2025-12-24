@@ -68,11 +68,11 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
                                     &peers,
                                     &event_tx,
                                 ).await {
-                                    eprintln!("Error handling message: {:?}", e);
+                                    log::error!("Error handling message: {:?}", e);
                                 }
                             }
                             Err(e) => {
-                                eprintln!("Error receiving message: {:?}", e);
+                                log::error!("Error receiving message: {:?}", e);
                             }
                         }
                     }
