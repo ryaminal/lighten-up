@@ -9,6 +9,9 @@ pub mod test_utils;
 #[cfg(test)]
 mod light_service_tests;
 
+#[cfg(test)]
+mod multi_peer_tests;
+
 pub use light_service::LightService;
 pub use peer_service::PeerService;
 pub use state::ServiceState;

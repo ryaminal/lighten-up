@@ -74,10 +74,7 @@ export async function setLightColor(color: LightColor): Promise<void> {
     const startTime = Date.now();
     const result = await invoke('set_light_color', { color });
     const elapsed = Date.now() - startTime;
-    console.log(
-      `set_light_color command completed successfully in ${elapsed}ms, result:`,
-      result
-    );
+    console.log(`set_light_color command completed successfully in ${elapsed}ms, result:`, result);
   } catch (e) {
     console.error('set_light_color command failed:', e);
     const message = e instanceof Error ? e.message : 'Unknown error';

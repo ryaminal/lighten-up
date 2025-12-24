@@ -1,4 +1,4 @@
-use crate::adapters::{DatabaseAdapter, NetworkAdapter};
+use crate::adapters::DatabaseAdapter;
 use crate::domain::{LightColor, PeerId};
 use crate::services::light_service::LightService;
 use crate::services::test_utils::{MockDatabaseAdapter, MockNetworkAdapter};
