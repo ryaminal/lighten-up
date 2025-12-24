@@ -9,7 +9,7 @@ use crate::network::MdnsNetwork;
 use tauri::{AppHandle, Emitter};
 
 type AppNetwork = MdnsNetwork<ChaCha20Encryption>;
-type AppServices = AppState<StoreDatabase, AppNetwork>;
+pub type AppServices = AppState<StoreDatabase, AppNetwork>;
 
 /// Initialize and setup the application services
 pub async fn initialize_services(app: &AppHandle) -> Result<AppServices, String> {

@@ -85,5 +85,13 @@ pub async fn create_services(
         .map_err(|e| format!("Failed to create PeerService: {:?}", e))?,
     );
 
-    Ok((AppState::new(light_service, peer_service), event_rx))
+    Ok((
+        AppState::new(
+            light_service,
+            peer_service,
+            network,
+            my_peer_id.clone(),
+        ),
+        event_rx,
+    ))
 }
