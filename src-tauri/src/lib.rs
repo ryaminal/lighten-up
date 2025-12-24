@@ -2,6 +2,7 @@ pub mod adapters;
 pub mod database;
 pub mod domain;
 pub mod encryption;
+pub mod network;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
