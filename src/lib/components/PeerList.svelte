@@ -1,7 +1,6 @@
 <script lang="ts">
   import { peers } from '$lib/stores';
   import type { LightColor } from '$lib/types';
-  import { onMount, onDestroy } from 'svelte';
 
   const colorStyles: Record<LightColor, string> = {
     Red: 'bg-red-500',
@@ -18,29 +17,6 @@
     Blue: 'Blue',
     Off: 'Off',
   };
-
-  let now = Date.now() / 1000;
-  let interval: number;
-
-  onMount(() => {
-    interval = setInterval(() => {
-      now = Date.now() / 1000;
-    }, 1000);
-  });
-
-  onDestroy(() => {
-    if (interval) clearInterval(interval);
-  });
-
-  function formatLastSeen(lastSeenSecs: number): string {
-    const elapsed = Math.floor(now - lastSeenSecs);
-    if (elapsed < 5) return 'just now';
-    if (elapsed < 60) return `${elapsed}s ago`;
-    const minutes = Math.floor(elapsed / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
-  }
 </script>
 
 <div class="peer-list">
@@ -60,7 +36,6 @@
           <div class="peer-info">
             <p class="peer-name">{peer.name}</p>
             <p class="peer-status">{colorNames[peer.light_state.color]}</p>
-            <p class="peer-last-seen">{formatLastSeen(peer.last_seen)}</p>
           </div>
         </div>
       {/each}
@@ -136,11 +111,5 @@
     margin: 0.25rem 0 0 0;
     font-size: 0.9rem;
     color: #666;
-  }
-
-  .peer-last-seen {
-    margin: 0.25rem 0 0 0;
-    font-size: 0.8rem;
-    color: #999;
   }
 </style>

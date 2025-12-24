@@ -84,7 +84,7 @@ fn main() {
     };
 
     // Spawn thread to handle events
-    let browse_thread = thread::spawn(move || {
+    let _browse_thread = thread::spawn(move || {
         println!("🧵 Browse thread started");
         let mut event_count = 0;
         loop {
