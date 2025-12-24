@@ -74,13 +74,28 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> Transport<E> {
         encryption: Arc<E>,
     ) {
         tokio::spawn(async move {
-            while let Ok((peer_id, message)) =
-                message_io::read_message(&mut stream, &*encryption).await
-            {
-                if tx.send((peer_id, message)).is_err() {
-                    break;
+            let peer_addr = stream.peer_addr().ok();
+            log::info!("📨 New connection from {:?}", peer_addr);
+            loop {
+                match message_io::read_message(&mut stream, &*encryption).await {
+                    Ok((peer_id, message)) => {
+                        log::info!(
+                            "📥 Received message from {}: {:?}",
+                            peer_id.as_str(),
+                            message
+                        );
+                        if tx.send((peer_id, message)).is_err() {
+                            log::warn!("Failed to send message to channel");
+                            break;
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("❌ Error reading message from {:?}: {:?}", peer_addr, e);
+                        break;
+                    }
                 }
             }
+            log::info!("🔌 Connection closed from {:?}", peer_addr);
         });
     }
 
@@ -93,6 +108,7 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> Transport<E> {
 
     /// Send message to a peer
     pub async fn send(&self, addr: SocketAddr, message: &Message) -> Result<()> {
+        log::info!("📤 Sending message to {}: {:?}", addr, message);
         let mut stream = self.connect(addr).await?;
         message_io::write_message(&mut stream, message, &*self.encryption).await
     }

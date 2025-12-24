@@ -1,4 +1,4 @@
-use crate::adapters::{DatabaseAdapter, NetworkAdapter, Result};
+use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter, Result};
 use crate::domain::{Event, PeerId, PeerInfo};
 use crate::services::message_handler;
 use std::collections::HashMap;
@@ -79,6 +79,61 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
                 }
             }
         });
+
+        // Start periodic announcement loop
+        self.start_announcement_loop();
+
+        Ok(())
+    }
+
+    /// Start a background task that periodically announces our presence
+    fn start_announcement_loop(&self) {
+        let network = self.network.clone();
+        let database = self.database.clone();
+        let mut shutdown_rx = self.shutdown_tx.subscribe();
+
+        tokio::spawn(async move {
+            // Initial delay to allow mDNS discovery
+            log::info!("⏰ Waiting 2 seconds before first announcement");
+            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+
+            // Send first announcement
+            if let Ok(my_peer) = database.get_my_peer().await {
+                let message = Message::PeerAnnouncement { peer: my_peer };
+                log::info!("📢 Sending initial peer announcement");
+                if let Err(e) = network.broadcast(message).await {
+                    log::warn!("Failed to broadcast initial announcement: {:?}", e);
+                }
+            }
+
+            // Then send periodic announcements
+            loop {
+                tokio::select! {
+                    _ = shutdown_rx.changed() => {
+                        log::info!("🛑 Stopping announcement loop");
+                        break;
+                    }
+                    _ = tokio::time::sleep(tokio::time::Duration::from_secs(30)) => {
+                        if let Ok(my_peer) = database.get_my_peer().await {
+                            let message = Message::PeerAnnouncement { peer: my_peer };
+                            log::info!("📢 Sending periodic peer announcement");
+                            if let Err(e) = network.broadcast(message).await {
+                                log::warn!("Failed to broadcast periodic announcement: {:?}", e);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /// Announce our presence to all peers on the network
+    pub async fn announce(&self) -> Result<()> {
+        let my_peer = self.database.get_my_peer().await?;
+        let message = Message::PeerAnnouncement { peer: my_peer };
+
+        log::info!("📢 Broadcasting peer announcement");
+        self.network.broadcast(message).await?;
 
         Ok(())
     }

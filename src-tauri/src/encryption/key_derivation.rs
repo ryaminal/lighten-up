@@ -8,7 +8,10 @@ pub const KEY_SIZE: usize = 32;
 pub fn derive_key_from_passphrase(passphrase: &str) -> Result<[u8; KEY_SIZE]> {
     use argon2::password_hash::SaltString;
 
-    let salt = SaltString::generate(&mut OsRng);
+    // Use a fixed salt for development so all peers can communicate
+    // In production, this should be derived from a shared secret or exchanged securely
+    let salt = SaltString::from_b64("lightenup1234567")
+        .map_err(|e| AdapterError::Encryption(format!("Failed to create salt: {}", e)))?;
     let argon2 = Argon2::default();
 
     let password_hash = argon2
