@@ -18,8 +18,9 @@ impl StoreDatabase {
     pub fn new(app: &AppHandle) -> Result<Self> {
         let store = if let Ok(data_dir) = std::env::var("LIGHTEN_UP_DATA_DIR") {
             let path = PathBuf::from(&data_dir).join("lighten-up-data.json");
-            std::fs::create_dir_all(&data_dir)
-                .map_err(|e| AdapterError::Database(format!("Failed to create data directory: {}", e)))?;
+            std::fs::create_dir_all(&data_dir).map_err(|e| {
+                AdapterError::Database(format!("Failed to create data directory: {}", e))
+            })?;
             app.store_builder(path)
                 .build()
                 .map_err(|e| AdapterError::Database(format!("Failed to open store: {}", e)))?

@@ -53,7 +53,13 @@ pub async fn create_services(
     my_name: &str,
     database: Arc<StoreDatabase>,
     network: Arc<AppNetwork>,
-) -> Result<(AppState<StoreDatabase, AppNetwork>, broadcast::Receiver<Event>), String> {
+) -> Result<
+    (
+        AppState<StoreDatabase, AppNetwork>,
+        broadcast::Receiver<Event>,
+    ),
+    String,
+> {
     let (event_tx, event_rx) = tokio::sync::broadcast::channel(100);
 
     let light_service = Arc::new(

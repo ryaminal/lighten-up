@@ -17,7 +17,11 @@ pub async fn handle_event(
         ServiceEvent::ServiceResolved(info) => {
             log::info!("🔍 Service resolved: {}", info.get_fullname());
             if let Some(peer_conn) = extract_peer_info(&info, my_peer_id) {
-                log::info!("✅ Adding peer: {} at {}", peer_conn.peer_id.as_str(), peer_conn.addr);
+                log::info!(
+                    "✅ Adding peer: {} at {}",
+                    peer_conn.peer_id.as_str(),
+                    peer_conn.addr
+                );
                 peers
                     .lock()
                     .await

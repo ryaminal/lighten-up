@@ -19,7 +19,8 @@ fn get_store(app: &AppHandle, filename: &str) -> Result<Arc<Store<tauri::Wry>>, 
         let path = PathBuf::from(&data_dir).join(filename);
         log::info!("Using custom data directory: {}", data_dir);
         // Ensure directory exists
-        std::fs::create_dir_all(&data_dir).map_err(|e| format!("Failed to create data directory: {}", e))?;
+        std::fs::create_dir_all(&data_dir)
+            .map_err(|e| format!("Failed to create data directory: {}", e))?;
         app.store_builder(path).build().map_err(|e| e.to_string())
     } else {
         app.store(filename).map_err(|e| e.to_string())
@@ -52,7 +53,7 @@ fn get_hostname() -> Result<String, String> {
         log::info!("Using peer name from environment: {}", name);
         return Ok(name);
     }
-    
+
     Ok(tauri_plugin_os::hostname())
 }
 

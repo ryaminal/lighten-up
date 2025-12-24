@@ -37,15 +37,14 @@ impl Discovery {
         // Instance name is just the peer ID (e.g., "alice")
         let instance_name = self.my_peer_id.as_str();
         let host_name = format!("{}.local.", self.my_peer_id.as_str());
-        
+
         // Get local IP - use empty string to let mdns-sd handle it
-        let my_addrs = if_addrs::get_if_addrs()
-            .ok()
-            .and_then(|addrs| {
-                addrs.into_iter()
-                    .find(|addr| !addr.is_loopback() && addr.ip().is_ipv4())
-                    .map(|addr| addr.ip())
-            });
+        let my_addrs = if_addrs::get_if_addrs().ok().and_then(|addrs| {
+            addrs
+                .into_iter()
+                .find(|addr| !addr.is_loopback() && addr.ip().is_ipv4())
+                .map(|addr| addr.ip())
+        });
 
         let service_info = ServiceInfo::new(
             SERVICE_TYPE,
@@ -56,9 +55,15 @@ impl Discovery {
             None,
         )
         .map_err(|e| AdapterError::Network(format!("Failed to create service info: {}", e)))?;
-        
-        log::info!("Registering mDNS service: instance='{}', type='{}', host='{}', addr={:?}, port={}", 
-            instance_name, SERVICE_TYPE, host_name, my_addrs, self.my_port);
+
+        log::info!(
+            "Registering mDNS service: instance='{}', type='{}', host='{}', addr={:?}, port={}",
+            instance_name,
+            SERVICE_TYPE,
+            host_name,
+            my_addrs,
+            self.my_port
+        );
 
         self.daemon
             .register(service_info)
@@ -77,15 +82,18 @@ impl Discovery {
         let peers = self.peers.clone();
         let my_peer_id = self.my_peer_id.clone();
 
-        // Use spawn_blocking since mdns-sd receiver is synchronous
+        // Get handle to current Tokio runtime to use from the spawned thread
+        let runtime_handle = tokio::runtime::Handle::current();
+
+        // Use std::thread::spawn since mdns-sd receiver is synchronous
         std::thread::spawn(move || {
             log::info!("🔍 mDNS browser thread started");
             while let Ok(event) = receiver.recv() {
                 log::debug!("📡 Received mDNS event: {:?}", event);
-                // Spawn async task to handle the event
+                // Spawn async task to handle the event using the runtime handle
                 let peers_clone = peers.clone();
                 let my_peer_id_clone = my_peer_id.clone();
-                tokio::spawn(async move {
+                runtime_handle.spawn(async move {
                     discovery_handler::handle_event(event, &peers_clone, &my_peer_id_clone).await;
                 });
             }

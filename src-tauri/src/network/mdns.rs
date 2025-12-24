@@ -36,15 +36,15 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> NetworkAdapter for MdnsNetwor
     async fn start(&self) -> Result<()> {
         let port = self.transport.listen().await?;
         let discovery = Discovery::new(self.my_peer_id.clone(), port)?;
-        
+
         // Register our service so other peers can discover us
         discovery.register()?;
         log::info!("📡 Registered mDNS service on port {}", port);
-        
+
         // Start browsing for other peers
         discovery.browse()?;
         log::info!("🔍 Started browsing for peers");
-        
+
         *self.discovery.lock().await = Some(discovery);
         Ok(())
     }

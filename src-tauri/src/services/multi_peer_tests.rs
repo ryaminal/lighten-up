@@ -138,9 +138,15 @@ async fn test_three_peer_network() {
 
         network.start().await.expect("Failed to start network");
 
-        let service = LightService::new(peer_id, name.to_string(), database, network.clone(), event_tx)
-            .await
-            .expect("Failed to create service");
+        let service = LightService::new(
+            peer_id,
+            name.to_string(),
+            database,
+            network.clone(),
+            event_tx,
+        )
+        .await
+        .expect("Failed to create service");
 
         services.push(service);
         networks.push(network);
@@ -200,15 +206,27 @@ async fn test_multi_peer_rapid_changes() {
     let (event_tx2, _) = broadcast::channel(100);
 
     let service1 = Arc::new(
-        LightService::new(peer1_id, "Stress1".to_string(), database1, network1.clone(), event_tx1)
-            .await
-            .unwrap(),
+        LightService::new(
+            peer1_id,
+            "Stress1".to_string(),
+            database1,
+            network1.clone(),
+            event_tx1,
+        )
+        .await
+        .unwrap(),
     );
 
     let service2 = Arc::new(
-        LightService::new(peer2_id, "Stress2".to_string(), database2, network2.clone(), event_tx2)
-            .await
-            .unwrap(),
+        LightService::new(
+            peer2_id,
+            "Stress2".to_string(),
+            database2,
+            network2.clone(),
+            event_tx2,
+        )
+        .await
+        .unwrap(),
     );
 
     // Both peers rapidly change colors concurrently
