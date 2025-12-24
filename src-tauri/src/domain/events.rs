@@ -59,12 +59,12 @@ mod tests {
         let peer_id = PeerId::new("test".to_string());
         let light_state = LightState::new(LightColor::Green, VectorClock::new(), 1000);
         let mut peer = PeerInfo::new(peer_id, "Test".to_string(), light_state);
-        
+
         let original_last_seen = peer.last_seen;
-        
+
         // Wait for at least 1 second
         std::thread::sleep(std::time::Duration::from_secs(1));
-        
+
         peer.touch();
         assert!(peer.last_seen > original_last_seen);
     }
@@ -74,20 +74,20 @@ mod tests {
         let peer_id = PeerId::new("test".to_string());
         let light_state = LightState::new(LightColor::Green, VectorClock::new(), 1000);
         let mut peer = PeerInfo::new(peer_id, "Test".to_string(), light_state);
-        
+
         // Fresh peer should not be stale
         assert!(!peer.is_stale(60));
-        
+
         // Set last_seen to 120 seconds ago
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_secs();
         peer.last_seen = now - 120;
-        
+
         // Should be stale with 60 second timeout
         assert!(peer.is_stale(60));
-        
+
         // Should not be stale with 200 second timeout
         assert!(!peer.is_stale(200));
     }

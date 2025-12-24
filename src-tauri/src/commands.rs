@@ -12,13 +12,13 @@ pub async fn set_light_color(
     state: State<'_, AppServices>,
     color: LightColor,
 ) -> Result<String, String> {
-    log::info!("🎨 Command: set_light_color({:?})", color);
+    log::info!("[CMD] Command: set_light_color({:?})", color);
     state
         .light_service
         .set_light_color(color)
         .await
         .map_err(|e| format!("Failed to set light color: {:?}", e))?;
-    log::info!("✅ Command completed, returning 'success'");
+    log::info!("[OK] Command completed, returning 'success'");
     Ok("success".to_string())
 }
 

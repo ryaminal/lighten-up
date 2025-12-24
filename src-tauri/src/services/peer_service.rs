@@ -104,11 +104,11 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
         tokio::spawn(async move {
             // Wait briefly for network/mDNS to be ready
             tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-            
+
             // Send initial announcement - peers will respond to this
             if let Ok(my_peer) = database.get_my_peer().await {
                 let message = Message::PeerAnnouncement { peer: my_peer };
-                log::info!("📢 Broadcasting initial peer announcement");
+                log::info!("[ANNOUNCE] Broadcasting initial peer announcement");
                 if let Err(e) = network.broadcast(message).await {
                     log::debug!("Initial broadcast failed (no peers yet?): {:?}", e);
                 }
@@ -118,10 +118,10 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
             let delays = vec![2, 5, 10, 30]; // seconds
             for delay in delays {
                 tokio::time::sleep(tokio::time::Duration::from_secs(delay)).await;
-                
+
                 if let Ok(my_peer) = database.get_my_peer().await {
                     let message = Message::PeerAnnouncement { peer: my_peer };
-                    log::info!("📢 Broadcasting peer announcement");
+                    log::info!("[ANNOUNCE] Broadcasting peer announcement");
                     if let Err(e) = network.broadcast(message).await {
                         log::debug!("Broadcast failed: {:?}", e);
                     }
@@ -132,13 +132,13 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
             loop {
                 tokio::select! {
                     _ = shutdown_rx.changed() => {
-                        log::info!("🛑 Stopping announcement loop");
+                        log::info!("[STOP] Stopping announcement loop");
                         break;
                     }
                     _ = tokio::time::sleep(tokio::time::Duration::from_secs(30)) => {
                         if let Ok(my_peer) = database.get_my_peer().await {
                             let message = Message::PeerAnnouncement { peer: my_peer };
-                            log::info!("📢 Broadcasting periodic peer announcement");
+                            log::info!("[ANNOUNCE] Broadcasting periodic peer announcement");
                             if let Err(e) = network.broadcast(message).await {
                                 log::debug!("Periodic broadcast failed: {:?}", e);
                             }
@@ -154,7 +154,7 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
         let my_peer = self.database.get_my_peer().await?;
         let message = Message::PeerAnnouncement { peer: my_peer };
 
-        log::info!("📢 Broadcasting peer announcement");
+        log::info!("[ANNOUNCE] Broadcasting peer announcement");
         self.network.broadcast(message).await?;
 
         Ok(())
@@ -187,7 +187,7 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
             loop {
                 tokio::select! {
                     _ = shutdown_rx.changed() => {
-                        log::info!("🧹 Stopping stale peer cleanup task");
+                        log::info!("[CLEANUP] Stopping stale peer cleanup task");
                         break;
                     }
                     _ = tokio::time::sleep(tokio::time::Duration::from_secs(CLEANUP_INTERVAL_SECS)) => {
@@ -197,8 +197,11 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
             }
         });
 
-        log::info!("🧹 Started stale peer cleanup task (timeout: {}s, interval: {}s)", 
-                   PEER_TIMEOUT_SECS, CLEANUP_INTERVAL_SECS);
+        log::info!(
+            "[CLEANUP] Started stale peer cleanup task (timeout: {}s, interval: {}s)",
+            PEER_TIMEOUT_SECS,
+            CLEANUP_INTERVAL_SECS
+        );
     }
 
     /// Check for and remove stale peers
@@ -213,7 +216,7 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
             .filter(|(_, peer)| peer.is_stale(PEER_TIMEOUT_SECS))
             .map(|(id, peer)| {
                 log::warn!(
-                    "🧹 Removing stale peer {} ({}) - last seen {}s ago",
+                    "[CLEANUP] Removing stale peer {} ({}) - last seen {}s ago",
                     peer.name,
                     id.as_str(),
                     std::time::SystemTime::now()

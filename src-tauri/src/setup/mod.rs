@@ -46,24 +46,24 @@ async fn start_background_tasks(
 fn forward_event(app: &AppHandle, event: &Event) {
     let result = match event {
         Event::MyStateChanged { state } => {
-            log::info!("📤 Event: my-state-changed");
+            log::info!("[EVENT] Event: my-state-changed");
             app.emit("my-state-changed", state)
         }
         Event::PeerDiscovered { peer } => {
-            log::info!("📤 Event: peer-discovered");
+            log::info!("[EVENT] Event: peer-discovered");
             app.emit("peer-discovered", peer)
         }
         Event::PeerStateChanged { peer_id, state } => {
-            log::info!("📤 Event: peer-state-changed");
+            log::info!("[EVENT] Event: peer-state-changed");
             app.emit("peer-state-changed", (peer_id, state))
         }
         Event::PeerLeft { peer_id } => {
-            log::info!("📤 Event: peer-left");
+            log::info!("[EVENT] Event: peer-left");
             app.emit("peer-left", peer_id)
         }
     };
 
     if let Err(e) = result {
-        log::error!("❌ Failed to emit event: {:?}", e);
+        log::error!("[ERROR] Failed to emit event: {:?}", e);
     }
 }

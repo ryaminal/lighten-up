@@ -39,11 +39,11 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> NetworkAdapter for MdnsNetwor
 
         // Register our service so other peers can discover us
         discovery.register()?;
-        log::info!("📡 Registered mDNS service on port {}", port);
+        log::info!("[MDNS] Registered mDNS service on port {}", port);
 
         // Start browsing for other peers
         discovery.browse()?;
-        log::info!("🔍 Started browsing for peers");
+        log::info!("[DISC] Started browsing for peers");
 
         *self.discovery.lock().await = Some(discovery);
         Ok(())
@@ -54,36 +54,43 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> NetworkAdapter for MdnsNetwor
         if let Some(disc) = discovery.as_ref() {
             let peers = disc.get_peers().await;
             if let Some(peer) = peers.iter().find(|p| &p.peer_id == peer_id) {
-                log::debug!("📧 Sending directly to peer {} at {}", peer_id.as_str(), peer.addr);
+                log::debug!(
+                    "[SEND] Sending directly to peer {} at {}",
+                    peer_id.as_str(),
+                    peer.addr
+                );
                 self.transport.send(peer.addr, &message).await?;
             } else {
-                log::warn!("⚠️  Peer {} not found in discovery, cannot send", peer_id.as_str());
+                log::warn!(
+                    "[WARN] Peer {} not found in discovery, cannot send",
+                    peer_id.as_str()
+                );
             }
         } else {
-            log::warn!("⚠️  Discovery not initialized, cannot send to peer");
+            log::warn!("[WARN] Discovery not initialized, cannot send to peer");
         }
         Ok(())
     }
 
     async fn broadcast(&self, message: Message) -> Result<()> {
-        log::info!("🌐 broadcast: acquiring discovery lock");
+        log::info!("[NETWORK] broadcast: acquiring discovery lock");
         let discovery = self.discovery.lock().await;
-        log::info!("🌐 broadcast: got discovery lock");
+        log::info!("[NETWORK] broadcast: got discovery lock");
         if let Some(disc) = discovery.as_ref() {
             let peers = disc.get_peers().await;
-            log::info!("🌐 broadcast: found {} peers", peers.len());
+            log::info!("[NETWORK] broadcast: found {} peers", peers.len());
             drop(discovery); // Release discovery lock
 
-            log::info!("🌐 broadcast: sending to all peers");
+            log::info!("[NETWORK] broadcast: sending to all peers");
             for peer in peers {
-                log::info!("🌐 broadcast: sending to peer {:?}", peer.peer_id);
+                log::info!("[NETWORK] broadcast: sending to peer {:?}", peer.peer_id);
                 let _ = self.transport.send(peer.addr, &message).await;
             }
-            log::info!("🌐 broadcast: done sending to all peers");
+            log::info!("[NETWORK] broadcast: done sending to all peers");
         } else {
-            log::info!("🌐 broadcast: no discovery service");
+            log::info!("[NETWORK] broadcast: no discovery service");
         }
-        log::info!("🌐 broadcast: returning");
+        log::info!("[NETWORK] broadcast: returning");
         Ok(())
     }
 

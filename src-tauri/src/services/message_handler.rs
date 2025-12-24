@@ -58,12 +58,12 @@ async fn handle_peer_announcement<D: DatabaseAdapter>(
     event_tx: &broadcast::Sender<Event>,
 ) -> Result<()> {
     let peer_id = peer.id.clone();
-    
+
     let mut peers_guard = peers.write().await;
     let is_new = !peers_guard.contains_key(&peer_id);
 
     log::info!(
-        "👋 Received peer announcement from {} ({}), is_new: {}",
+        "[PEER] Received peer announcement from {} ({}), is_new: {}",
         peer.name,
         peer_id.as_str(),
         is_new
@@ -77,7 +77,10 @@ async fn handle_peer_announcement<D: DatabaseAdapter>(
     drop(peers_guard);
 
     if is_new {
-        log::info!("📤 Emitting peer-discovered event for {}", peer_id.as_str());
+        log::info!(
+            "[EVENT] Emitting peer-discovered event for {}",
+            peer_id.as_str()
+        );
         let _ = event_tx.send(Event::PeerDiscovered { peer });
     }
 

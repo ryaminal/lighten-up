@@ -84,7 +84,7 @@ pub fn run() {
                 log::info!("Window close requested, initiating graceful shutdown");
                 let app_handle = window.app_handle();
                 let services = app_handle.state::<setup::AppServices>();
-                
+
                 tauri::async_runtime::block_on(async {
                     if let Err(e) = services.shutdown().await {
                         log::error!("Error during shutdown: {}", e);

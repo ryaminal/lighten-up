@@ -87,9 +87,9 @@ impl Discovery {
 
         // Use std::thread::spawn since mdns-sd receiver is synchronous
         std::thread::spawn(move || {
-            log::info!("🔍 mDNS browser thread started");
+            log::info!("[DISC] mDNS browser thread started");
             while let Ok(event) = receiver.recv() {
-                log::debug!("📡 Received mDNS event: {:?}", event);
+                log::debug!("[MDNS] Received mDNS event: {:?}", event);
                 // Spawn async task to handle the event using the runtime handle
                 let peers_clone = peers.clone();
                 let my_peer_id_clone = my_peer_id.clone();
@@ -97,7 +97,7 @@ impl Discovery {
                     discovery_handler::handle_event(event, &peers_clone, &my_peer_id_clone).await;
                 });
             }
-            log::warn!("🔍 mDNS browser thread ended");
+            log::warn!("[DISC] mDNS browser thread ended");
         });
 
         Ok(())

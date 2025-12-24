@@ -1,4 +1,4 @@
-use crate::adapters::{DatabaseAdapter, NetworkAdapter, Message};
+use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter};
 use crate::domain::PeerId;
 use crate::services::{LightService, PeerService};
 use std::sync::Arc;

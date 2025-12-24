@@ -86,12 +86,7 @@ pub async fn create_services(
     );
 
     Ok((
-        AppState::new(
-            light_service,
-            peer_service,
-            network,
-            my_peer_id.clone(),
-        ),
+        AppState::new(light_service, peer_service, network, my_peer_id.clone()),
         event_rx,
     ))
 }
