@@ -27,9 +27,10 @@ pub async fn handle_message<D: DatabaseAdapter>(
         Message::PeerLeaving { peer_id } => {
             handle_peer_leaving(peer_id, database, peers, event_tx).await
         }
-        Message::Heartbeat { .. } => Ok(()),
-        Message::StateSyncRequest | Message::StateSyncResponse { .. } => Ok(()),
-        Message::ApplicationMessage { .. } => Ok(()),
+        Message::Heartbeat { .. }
+        | Message::StateSyncRequest
+        | Message::ApplicationMessage { .. }
+        | Message::StateSyncResponse { .. } => Ok(()),
     }
 }
 

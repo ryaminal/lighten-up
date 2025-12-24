@@ -54,8 +54,13 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> NetworkAdapter for MdnsNetwor
         if let Some(disc) = discovery.as_ref() {
             let peers = disc.get_peers().await;
             if let Some(peer) = peers.iter().find(|p| &p.peer_id == peer_id) {
+                log::debug!("📧 Sending directly to peer {} at {}", peer_id.as_str(), peer.addr);
                 self.transport.send(peer.addr, &message).await?;
+            } else {
+                log::warn!("⚠️  Peer {} not found in discovery, cannot send", peer_id.as_str());
             }
+        } else {
+            log::warn!("⚠️  Discovery not initialized, cannot send to peer");
         }
         Ok(())
     }
