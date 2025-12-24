@@ -3,6 +3,7 @@ pub mod database;
 pub mod domain;
 pub mod encryption;
 pub mod network;
+pub mod services;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
