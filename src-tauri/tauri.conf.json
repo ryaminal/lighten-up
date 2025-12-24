@@ -45,6 +45,11 @@
           "name": "name",
           "description": "Override peer name",
           "takesValue": true
+        },
+        {
+          "name": "data-dir",
+          "description": "Override data directory path for testing",
+          "takesValue": true
         }
       ]
     }

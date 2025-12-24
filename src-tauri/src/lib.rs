@@ -57,6 +57,14 @@ pub fn run() {
                         std::env::set_var("LIGHTEN_UP_PEER_NAME", name_str);
                     }
                 }
+                if let Some(data_dir) = matches.args.get("data-dir")
+                    && let Some(dir_str) = data_dir.value.as_str()
+                {
+                    log::info!("Setting data directory from CLI: {}", dir_str);
+                    unsafe {
+                        std::env::set_var("LIGHTEN_UP_DATA_DIR", dir_str);
+                    }
+                }
             }
 
             let services = tauri::async_runtime::block_on(async {

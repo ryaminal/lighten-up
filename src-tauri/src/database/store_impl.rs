@@ -2,6 +2,7 @@ use crate::adapters::{AdapterError, DatabaseAdapter, Result};
 use crate::domain::{LightState, PeerInfo};
 use async_trait::async_trait;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::AppHandle;
 use tauri_plugin_store::{Store, StoreExt};
@@ -15,9 +16,17 @@ pub struct StoreDatabase {
 impl StoreDatabase {
     /// Create a new store database
     pub fn new(app: &AppHandle) -> Result<Self> {
-        let store = app
-            .store("lighten-up-data.json")
-            .map_err(|e| AdapterError::Database(format!("Failed to open store: {}", e)))?;
+        let store = if let Ok(data_dir) = std::env::var("LIGHTEN_UP_DATA_DIR") {
+            let path = PathBuf::from(&data_dir).join("lighten-up-data.json");
+            std::fs::create_dir_all(&data_dir)
+                .map_err(|e| AdapterError::Database(format!("Failed to create data directory: {}", e)))?;
+            app.store_builder(path)
+                .build()
+                .map_err(|e| AdapterError::Database(format!("Failed to open store: {}", e)))?
+        } else {
+            app.store("lighten-up-data.json")
+                .map_err(|e| AdapterError::Database(format!("Failed to open store: {}", e)))?
+        };
 
         Ok(Self {
             store: RwLock::new(store),

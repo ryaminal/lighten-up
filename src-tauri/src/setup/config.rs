@@ -1,14 +1,29 @@
 use crate::domain::PeerId;
+use std::path::PathBuf;
+use std::sync::Arc;
 use tauri::AppHandle;
-use tauri_plugin_store::StoreExt;
+use tauri_plugin_store::{Store, StoreExt};
 
 /// Load or create application configuration
 pub fn load_config(app: &AppHandle) -> Result<(PeerId, String, String), String> {
-    let store = app.store("store.json").map_err(|e| e.to_string())?;
+    let store = get_store(app, "store.json")?;
     let my_peer_id = get_or_create_peer_id(&store)?;
     let my_name = get_hostname()?;
     let passphrase = get_or_create_passphrase(&store)?;
     Ok((my_peer_id, my_name, passphrase))
+}
+
+fn get_store(app: &AppHandle, filename: &str) -> Result<Arc<Store<tauri::Wry>>, String> {
+    // Check for custom data directory
+    if let Ok(data_dir) = std::env::var("LIGHTEN_UP_DATA_DIR") {
+        let path = PathBuf::from(&data_dir).join(filename);
+        log::info!("Using custom data directory: {}", data_dir);
+        // Ensure directory exists
+        std::fs::create_dir_all(&data_dir).map_err(|e| format!("Failed to create data directory: {}", e))?;
+        app.store_builder(path).build().map_err(|e| e.to_string())
+    } else {
+        app.store(filename).map_err(|e| e.to_string())
+    }
 }
 
 fn get_or_create_peer_id(store: &tauri_plugin_store::Store<tauri::Wry>) -> Result<PeerId, String> {
