@@ -1,4 +1,5 @@
 # Always
+
 - lint (rust, typescript)
 - format (rust, typescript)
 - test (rust, typescript)
@@ -10,5 +11,6 @@
 - Test behavior not implementation
 
 # Never
+
 - Break existing tests without explicit approval
 - use emojis
