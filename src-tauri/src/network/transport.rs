@@ -60,7 +60,9 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> Transport<E> {
         encryption: Arc<E>,
     ) {
         tokio::spawn(async move {
-            while let Ok((peer_id, message)) = message_io::read_message(&mut stream, &*encryption).await {
+            while let Ok((peer_id, message)) =
+                message_io::read_message(&mut stream, &*encryption).await
+            {
                 if tx.send((peer_id, message)).is_err() {
                     break;
                 }
