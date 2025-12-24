@@ -5,6 +5,12 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
 
+/// Default timeout in seconds after which a peer is considered stale
+const PEER_TIMEOUT_SECS: u64 = 90; // 1.5 minutes
+
+/// How often to check for stale peers (in seconds)
+const CLEANUP_INTERVAL_SECS: u64 = 30;
+
 /// Service for managing peer discovery and state synchronization
 pub struct PeerService<D: DatabaseAdapter, N: NetworkAdapter> {
     my_peer_id: PeerId,
@@ -82,6 +88,9 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
 
         // Start periodic announcement loop
         self.start_announcement_loop();
+
+        // Start stale peer cleanup task
+        self.start_stale_peer_cleanup();
 
         Ok(())
     }
@@ -165,5 +174,64 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
     /// Get a specific peer by ID
     pub async fn get_peer(&self, peer_id: &PeerId) -> Option<PeerInfo> {
         self.peers.read().await.get(peer_id).cloned()
+    }
+
+    /// Start a background task to periodically check for and remove stale peers
+    fn start_stale_peer_cleanup(&self) {
+        let peers = self.peers.clone();
+        let database = self.database.clone();
+        let event_tx = self.event_tx.clone();
+        let mut shutdown_rx = self.shutdown_tx.subscribe();
+
+        tokio::spawn(async move {
+            loop {
+                tokio::select! {
+                    _ = shutdown_rx.changed() => {
+                        log::info!("🧹 Stopping stale peer cleanup task");
+                        break;
+                    }
+                    _ = tokio::time::sleep(tokio::time::Duration::from_secs(CLEANUP_INTERVAL_SECS)) => {
+                        Self::cleanup_stale_peers(&peers, &database, &event_tx).await;
+                    }
+                }
+            }
+        });
+
+        log::info!("🧹 Started stale peer cleanup task (timeout: {}s, interval: {}s)", 
+                   PEER_TIMEOUT_SECS, CLEANUP_INTERVAL_SECS);
+    }
+
+    /// Check for and remove stale peers
+    async fn cleanup_stale_peers(
+        peers: &Arc<RwLock<HashMap<PeerId, PeerInfo>>>,
+        database: &Arc<D>,
+        event_tx: &broadcast::Sender<Event>,
+    ) {
+        let mut peers_guard = peers.write().await;
+        let stale_peer_ids: Vec<PeerId> = peers_guard
+            .iter()
+            .filter(|(_, peer)| peer.is_stale(PEER_TIMEOUT_SECS))
+            .map(|(id, peer)| {
+                log::warn!(
+                    "🧹 Removing stale peer {} ({}) - last seen {}s ago",
+                    peer.name,
+                    id.as_str(),
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs()
+                        .saturating_sub(peer.last_seen)
+                );
+                id.clone()
+            })
+            .collect();
+
+        for peer_id in stale_peer_ids {
+            peers_guard.remove(&peer_id);
+            if let Err(e) = database.delete_peer(&peer_id).await {
+                log::error!("Failed to delete stale peer {}: {:?}", peer_id.as_str(), e);
+            }
+            let _ = event_tx.send(Event::PeerLeft { peer_id });
+        }
     }
 }

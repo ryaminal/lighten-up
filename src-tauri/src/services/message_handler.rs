@@ -17,6 +17,9 @@ pub async fn handle_message<D: DatabaseAdapter>(
         return Ok(());
     }
 
+    // Update last_seen for this peer on any message
+    touch_peer_last_seen(&peer_id, peers, database).await?;
+
     match message {
         Message::PeerAnnouncement { peer } => {
             handle_peer_announcement(peer, database, peers, event_tx).await
@@ -34,14 +37,30 @@ pub async fn handle_message<D: DatabaseAdapter>(
     }
 }
 
+/// Update the last_seen timestamp for a peer
+async fn touch_peer_last_seen<D: DatabaseAdapter>(
+    peer_id: &PeerId,
+    peers: &Arc<RwLock<HashMap<PeerId, PeerInfo>>>,
+    database: &Arc<D>,
+) -> Result<()> {
+    let mut peers_guard = peers.write().await;
+    if let Some(peer) = peers_guard.get_mut(peer_id) {
+        peer.touch();
+        database.save_peer(peer).await?;
+    }
+    Ok(())
+}
+
 async fn handle_peer_announcement<D: DatabaseAdapter>(
-    peer: PeerInfo,
+    mut peer: PeerInfo,
     database: &Arc<D>,
     peers: &Arc<RwLock<HashMap<PeerId, PeerInfo>>>,
     event_tx: &broadcast::Sender<Event>,
 ) -> Result<()> {
     let peer_id = peer.id.clone();
-    let is_new = !peers.read().await.contains_key(&peer_id);
+    
+    let mut peers_guard = peers.write().await;
+    let is_new = !peers_guard.contains_key(&peer_id);
 
     log::info!(
         "👋 Received peer announcement from {} ({}), is_new: {}",
@@ -50,8 +69,12 @@ async fn handle_peer_announcement<D: DatabaseAdapter>(
         is_new
     );
 
+    // Ensure last_seen is current
+    peer.touch();
+
     database.save_peer(&peer).await?;
-    peers.write().await.insert(peer_id.clone(), peer.clone());
+    peers_guard.insert(peer_id.clone(), peer.clone());
+    drop(peers_guard);
 
     if is_new {
         log::info!("📤 Emitting peer-discovered event for {}", peer_id.as_str());
@@ -80,6 +103,7 @@ async fn handle_state_update<D: DatabaseAdapter>(
 
     if let Some(peer) = peers_guard.get_mut(&peer_id) {
         peer.light_state = merged_state.clone();
+        peer.touch();
         database.save_peer(peer).await?;
     }
 
