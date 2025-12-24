@@ -34,7 +34,8 @@ impl Discovery {
 
     /// Register our service
     pub fn register(&self) -> Result<()> {
-        let service_name = format!("{}.{}", self.my_peer_id.as_str(), SERVICE_TYPE);
+        // Instance name is just the peer ID (e.g., "alice")
+        let instance_name = self.my_peer_id.as_str();
         let host_name = format!("{}.local.", self.my_peer_id.as_str());
         
         // Get local IP - use empty string to let mdns-sd handle it
@@ -48,7 +49,7 @@ impl Discovery {
 
         let service_info = ServiceInfo::new(
             SERVICE_TYPE,
-            &service_name,
+            instance_name,
             &host_name,
             my_addrs.unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST)),
             self.my_port,
@@ -56,7 +57,8 @@ impl Discovery {
         )
         .map_err(|e| AdapterError::Network(format!("Failed to create service info: {}", e)))?;
         
-        log::info!("Registering service {} on {:?}:{}", service_name, my_addrs, self.my_port);
+        log::info!("Registering mDNS service: instance='{}', type='{}', host='{}', addr={:?}, port={}", 
+            instance_name, SERVICE_TYPE, host_name, my_addrs, self.my_port);
 
         self.daemon
             .register(service_info)
