@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+pnpm exec svelte-kit sync
 set +e
 pnpm tauri build
 set -e
