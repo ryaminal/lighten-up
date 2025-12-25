@@ -46,7 +46,7 @@
       <p class="text-slate-400 italic text-center mt-8">Searching for peers...</p>
     {:else}
       {#each $peers as peer, idx (peer.id)}
-        {@const config = COLOR_CONFIG[peer.light_state.color]}
+        {@const config = COLOR_CONFIG[peer.light_state.color] ?? COLOR_CONFIG.Off ?? COLOR_CONFIG.Off}
         <div
           class="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer border-l-[6px] {config.borderClass}"
         >

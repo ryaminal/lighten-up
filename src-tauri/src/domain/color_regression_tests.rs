@@ -1,9 +1,7 @@
-use crate::domain::{LightColor, LightState, PeerId, PeerInfo, VectorClock};
-use crate::adapters::Message;
-
 #[cfg(test)]
-mod color_regression_tests {
-    use super::*;
+mod tests {
+    use crate::adapters::Message;
+    use crate::domain::{LightColor, LightState, PeerId, PeerInfo, VectorClock};
 
     /// Regression test: Ensure all LightColor variants can be serialized and deserialized.
     /// This prevents the bug where Rust had colors that TypeScript didn't support.

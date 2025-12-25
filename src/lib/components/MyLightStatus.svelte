@@ -72,7 +72,7 @@
 
   <div class="flex flex-col gap-4">
     <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-      Activate Light with BlueNote
+      Activate Light
     </h3>
     <LightColorPicker />
   </div>
@@ -100,27 +100,29 @@
     </div>
   </div>
 
-  <div class="flex gap-3">
+  <div class="mt-8 flex justify-between gap-4 pt-8 border-t border-slate-100 dark:border-slate-700 items-center">
     <button
-      class="flex-1 px-6 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      class="flex items-center gap-2 px-6 py-3 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
       onclick={turnOffLight}
       disabled={isSaving}
     >
       Turn Off Light
     </button>
-    <button
-      class="flex-1 px-6 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      onclick={cancelEdit}
-      disabled={isSaving || !editing}
-    >
-      Cancel
-    </button>
-    <button
-      class="flex-1 px-6 py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      onclick={saveNote}
-      disabled={isSaving}
-    >
-      {isSaving ? 'Saving...' : 'Update'}
-    </button>
+    <div class="flex gap-3">
+      <button
+        class="px-8 py-3 rounded-lg text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+        onclick={cancelEdit}
+        disabled={isSaving || !editing}
+      >
+        Cancel
+      </button>
+      <button
+        class="px-10 py-3 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg shadow-slate-900/10 hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
+        onclick={saveNote}
+        disabled={isSaving}
+      >
+        {isSaving ? 'Saving...' : 'Update'}
+      </button>
+    </div>
   </div>
 </div>
