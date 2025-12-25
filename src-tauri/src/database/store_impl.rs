@@ -1,5 +1,5 @@
 use crate::adapters::{AdapterError, DatabaseAdapter, Result};
-use crate::domain::{Light, LightId, LightState, PeerInfo};
+use crate::domain::{Light, LightConfig, LightId, LightState, PeerInfo};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -48,6 +48,11 @@ impl DatabaseAdapter for StoreDatabase {
         // Initialize empty lights map if it doesn't exist
         if store.get("lights").is_none() {
             store.set("lights", serde_json::json!({}));
+        }
+
+        // Initialize light config if it doesn't exist
+        if store.get("light_config").is_none() {
+            store.set("light_config", serde_json::json!(null));
         }
 
         store
@@ -241,5 +246,34 @@ impl DatabaseAdapter for StoreDatabase {
             .map_err(|e| AdapterError::Database(format!("Failed to delete light: {}", e)))?;
 
         Ok(())
+    }
+
+    async fn save_light_config(&self, config: &LightConfig) -> Result<()> {
+        let store = self.store.write().await;
+        store.set(
+            "light_config",
+            serde_json::to_value(config)
+                .expect("LightConfig should always serialize to JSON"),
+        );
+        store.save().map_err(|e| {
+            AdapterError::Database(format!("Failed to save light config: {}", e))
+        })?;
+        Ok(())
+    }
+
+    async fn get_light_config(&self) -> Result<LightConfig> {
+        let store = self.store.read().await;
+        store
+            .get("light_config")
+            .and_then(|v| {
+                if v.is_null() {
+                    None
+                } else {
+                    serde_json::from_value(v.clone()).ok()
+                }
+            })
+            .ok_or_else(|| {
+                AdapterError::Database("Light config not found".to_string())
+            })
     }
 }

@@ -73,6 +73,10 @@ fn forward_event(app: &AppHandle, event: &Event) {
             log::info!("[EVENT] Event: light-updated");
             app.emit("light-updated", light)
         }
+        Event::LightConfigChanged { config } => {
+            log::info!("[EVENT] Event: light-config-changed");
+            app.emit("light-config-changed", config)
+        }
     };
 
     if let Err(e) = result {

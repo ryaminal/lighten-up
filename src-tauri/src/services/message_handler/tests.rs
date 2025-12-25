@@ -1,9 +1,12 @@
 use super::*;
 use crate::domain::{LightColor, VectorClock};
-use crate::services::{MessageContext, test_utils::MockDatabaseAdapter};
+use crate::services::{
+    test_utils::{MockDatabaseAdapter, MockNetworkAdapter},
+    MessageContext,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{RwLock, broadcast};
+use tokio::sync::{broadcast, RwLock};
 
 #[tokio::test]
 async fn test_handle_peer_announcement_new_peer() {
@@ -13,6 +16,7 @@ async fn test_handle_peer_announcement_new_peer() {
     let peers = Arc::new(RwLock::new(HashMap::new()));
     let (event_tx, mut event_rx) = broadcast::channel(10);
     let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx);
+    let network = Arc::new(MockNetworkAdapter::new());
 
     let peer_id = PeerId::new("test-peer");
     let my_peer_id = PeerId::new("my-peer");
@@ -24,6 +28,7 @@ async fn test_handle_peer_announcement_new_peer() {
         peer_id.clone(),
         Message::PeerAnnouncement { peer: peer.clone() },
         &ctx,
+        network,
     )
     .await
     .unwrap();
@@ -55,6 +60,7 @@ async fn test_handle_state_update_crdt_merge() {
 
     let (event_tx, mut event_rx) = broadcast::channel(10);
     let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx);
+    let network = Arc::new(MockNetworkAdapter::new());
 
     let mut clock2 = VectorClock::new();
     clock2.increment(&peer_id);
@@ -69,6 +75,7 @@ async fn test_handle_state_update_crdt_merge() {
             state: state2,
         },
         &ctx,
+        network,
     )
     .await
     .unwrap();
@@ -100,6 +107,7 @@ async fn test_handle_peer_leaving() {
 
     let (event_tx, mut event_rx) = broadcast::channel(10);
     let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx);
+    let network = Arc::new(MockNetworkAdapter::new());
 
     handle_message(
         &my_peer_id,
@@ -108,6 +116,7 @@ async fn test_handle_peer_leaving() {
             peer_id: peer_id.clone(),
         },
         &ctx,
+        network,
     )
     .await
     .unwrap();

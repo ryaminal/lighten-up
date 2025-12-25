@@ -1,10 +1,15 @@
 import { writable } from 'svelte/store';
 import type { MyState, PeerInfo, LightState } from './types';
+import type { LightConfig } from './generated/types';
+
+export type ViewType = 'dashboard' | 'config';
 
 export const myState = writable<MyState | null>(null);
 export const peers = writable<PeerInfo[]>([]);
 export const isLoading = writable(true);
 export const error = writable<string | null>(null);
+export const currentView = writable<ViewType>('dashboard');
+export const lightConfig = writable<LightConfig | null>(null);
 
 export function updateMyState(state: MyState) {
   myState.set(state);

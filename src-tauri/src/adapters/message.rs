@@ -1,4 +1,4 @@
-use crate::domain::{Light, LightState, PeerId, PeerInfo};
+use crate::domain::{Light, LightConfig, LightState, PeerId, PeerInfo};
 use std::collections::HashMap;
 
 /// Message types for network communication
@@ -44,6 +44,12 @@ pub enum Message {
 
     /// Light priority was changed
     LightPriorityChanged { light: Light },
+
+    /// Request light configuration from peers
+    LightConfigRequest,
+
+    /// Broadcast complete light configuration
+    LightConfigSync { config: LightConfig },
 }
 
 #[cfg(test)]

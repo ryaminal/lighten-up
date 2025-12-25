@@ -36,4 +36,5 @@ log = "0.4"
 tauri-plugin-cli = "2.4.1"
 if-addrs = "0.13"
 ts-rs = "9.0"
+uuid = { version = "1.11", features = ["v4", "serde"] }
 

@@ -1,6 +1,13 @@
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import type { LightColor, MyState, PeerInfo, LightState } from './types';
+import type {
+  LightColor,
+  MyState,
+  PeerInfo,
+  LightState,
+  LightConfig,
+  LightDefinition,
+} from './types';
 import {
   myState,
   updatePeers,
@@ -9,12 +16,14 @@ import {
   removePeer,
   setError,
   setLoading,
+  lightConfig,
 } from './stores';
 
 export async function initializeTauri() {
   try {
     await setupEventListeners();
     await loadInitialState();
+    await loadLightConfig();
     setLoading(false);
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
@@ -50,6 +59,13 @@ async function setupEventListeners() {
     const peerId = event.payload as string;
     removePeer(peerId);
   });
+
+  await listen('light-config-changed', (event) => {
+    console.log('Received light-config-changed event:', event.payload);
+    const config = event.payload as LightConfig;
+    lightConfig.set(config);
+  });
+
   console.log('Event listeners setup complete');
 }
 
@@ -61,6 +77,16 @@ async function loadInitialState() {
 
   myState.set(myStateData);
   updatePeers(peersData);
+}
+
+async function loadLightConfig() {
+  try {
+    const config = await invoke<LightConfig>('get_light_config');
+    lightConfig.set(config);
+    console.log('Light config loaded:', config);
+  } catch (e) {
+    console.error('Failed to load light config:', e);
+  }
 }
 
 export async function setLightColor(color: LightColor): Promise<void> {
@@ -98,4 +124,33 @@ export async function getMyState(): Promise<MyState> {
 
 export async function getPeers(): Promise<PeerInfo[]> {
   return invoke<PeerInfo[]>('get_peers');
+}
+
+export async function getLightConfig(): Promise<LightConfig> {
+  return invoke<LightConfig>('get_light_config');
+}
+
+export async function updateLightDefinition(definition: LightDefinition): Promise<void> {
+  try {
+    // Convert BigInt to number for JSON serialization
+    const serializableDefinition = {
+      ...definition,
+      updated_at: Number(definition.updated_at),
+    };
+    await invoke('update_light_definition', { definition: serializableDefinition });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    setError(`Failed to update light definition: ${message}`);
+    throw e;
+  }
+}
+
+export async function deleteLightDefinition(id: string): Promise<void> {
+  try {
+    await invoke('delete_light_definition', { id });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    setError(`Failed to delete light definition: ${message}`);
+    throw e;
+  }
 }

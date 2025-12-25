@@ -1,12 +1,13 @@
 use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter};
 use crate::domain::PeerId;
-use crate::services::{LightService, PeerService};
+use crate::services::{ConfigService, LightService, PeerService};
 use std::sync::Arc;
 
 /// Application state managed by Tauri
 pub struct AppState<D: DatabaseAdapter, N: NetworkAdapter> {
     pub light_service: Arc<LightService<D, N>>,
     pub peer_service: Arc<PeerService<D, N>>,
+    pub config_service: Arc<ConfigService<D>>,
     pub network: Arc<N>,
     pub my_peer_id: PeerId,
 }
@@ -15,12 +16,14 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> AppState<D, N> {
     pub fn new(
         light_service: Arc<LightService<D, N>>,
         peer_service: Arc<PeerService<D, N>>,
+        config_service: Arc<ConfigService<D>>,
         network: Arc<N>,
         my_peer_id: PeerId,
     ) -> Self {
         Self {
             light_service,
             peer_service,
+            config_service,
             network,
             my_peer_id,
         }

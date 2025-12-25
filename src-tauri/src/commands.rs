@@ -1,6 +1,6 @@
 use crate::adapters::{Message, NetworkAdapter};
-use crate::domain::{Light, LightColor, LightId, PeerInfo};
-use tauri::State;
+use crate::domain::{Light, LightColor, LightId, PeerInfo, LightConfig, LightDefinition, LightDefinitionId};
+use tauri::{Emitter, State};
 
 type AppServices = crate::app_state::AppState<
     crate::database::StoreDatabase,
@@ -159,4 +159,95 @@ async fn broadcast_message(state: &AppServices, message: Message) -> Result<(), 
         .broadcast(message)
         .await
         .map_err(|e| format!("Failed to broadcast: {:?}", e))
+}
+
+/// Get the current light configuration
+#[tauri::command]
+pub async fn get_light_config(state: State<'_, AppServices>) -> Result<LightConfig, String> {
+    log::info!("[CMD] Command: get_light_config");
+    let config = state.config_service.get_config().await;
+    log::info!("[OK] Command completed, returning config with {} definitions", config.definitions.len());
+    Ok(config)
+}
+
+/// Update or create a light definition
+#[tauri::command]
+pub async fn update_light_definition(
+    state: State<'_, AppServices>,
+    app: tauri::AppHandle,
+    definition: LightDefinition,
+) -> Result<(), String> {
+    log::info!("[CMD] Command: update_light_definition({:?})", definition.id);
+    
+    let mut config = state.config_service.get_config().await;
+    
+    // Find and update or add new definition
+    if let Some(idx) = config.definitions.iter().position(|d| d.id == definition.id) {
+        config.definitions[idx] = definition;
+    } else {
+        config.definitions.push(definition);
+    }
+    
+    // Save updated config
+    state
+        .config_service
+        .update_config(config.clone())
+        .await
+        .map_err(|e| format!("Failed to update config: {:?}", e))?;
+    
+    // Emit event to frontend
+    if let Err(e) = app.emit("light-config-changed", &config) {
+        log::error!("Failed to emit light-config-changed event: {:?}", e);
+    }
+    
+    // Broadcast the update
+    let msg = Message::LightConfigSync { config };
+    state
+        .network
+        .broadcast(msg)
+        .await
+        .map_err(|e| format!("Failed to broadcast config: {:?}", e))?;
+    
+    log::info!("[OK] Command completed");
+    Ok(())
+}
+
+/// Delete a light definition
+#[tauri::command]
+pub async fn delete_light_definition(
+    state: State<'_, AppServices>,
+    app: tauri::AppHandle,
+    id: String,
+) -> Result<(), String> {
+    log::info!("[CMD] Command: delete_light_definition({})", id);
+    
+    let definition_id = LightDefinitionId::from(id);
+    
+    let mut config = state.config_service.get_config().await;
+    
+    // Remove the definition
+    config.definitions.retain(|d| d.id != definition_id);
+    
+    // Save updated config
+    state
+        .config_service
+        .update_config(config.clone())
+        .await
+        .map_err(|e| format!("Failed to update config: {:?}", e))?;
+    
+    // Emit event to frontend
+    if let Err(e) = app.emit("light-config-changed", &config) {
+        log::error!("Failed to emit light-config-changed event: {:?}", e);
+    }
+    
+    // Broadcast the update
+    let msg = Message::LightConfigSync { config };
+    state
+        .network
+        .broadcast(msg)
+        .await
+        .map_err(|e| format!("Failed to broadcast config: {:?}", e))?;
+    
+    log::info!("[OK] Command completed");
+    Ok(())
 }

@@ -70,7 +70,7 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
                         break;
                     }
                     result = network.receive() => {
-                        handle_receive_result(result, &my_peer_id, &ctx).await;
+                        handle_receive_result(result, &my_peer_id, &ctx, network.clone()).await;
                     }
                 }
             }
@@ -122,14 +122,23 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
     }
 }
 
-async fn handle_receive_result<D: DatabaseAdapter>(
+async fn handle_receive_result<D: DatabaseAdapter, N: NetworkAdapter>(
     result: Result<(PeerId, Message)>,
     my_peer_id: &PeerId,
     ctx: &MessageContext<D>,
+    network: Arc<N>,
 ) {
     match result {
         Ok((peer_id, message)) => {
-            if let Err(e) = message_handler::handle_message(my_peer_id, peer_id, message, ctx).await
+            if let Err(e) =
+                message_handler::handle_message(
+                    my_peer_id,
+                    peer_id,
+                    message,
+                    ctx,
+                    network,
+                )
+                .await
             {
                 log::error!("Error handling message: {:?}", e);
             }

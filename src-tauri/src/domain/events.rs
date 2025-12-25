@@ -1,5 +1,6 @@
 use crate::domain::{
-    current_timestamp_secs, light::Light, light_state::LightState, peer_id::PeerId,
+    current_timestamp_secs, light::Light, light_config::LightConfig,
+    light_state::LightState, peer_id::PeerId,
 };
 use serde::{Deserialize, Serialize};
 
@@ -54,6 +55,7 @@ pub enum Event {
     LightActivated { light: Light },
     LightDeactivated { light: Light },
     LightUpdated { light: Light },
+    LightConfigChanged { config: LightConfig },
 }
 
 #[cfg(test)]

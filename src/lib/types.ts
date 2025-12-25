@@ -1,8 +1,10 @@
 // TypeScript types matching Rust domain models
 
-// Re-export generated type from Rust
-export type { LightColor } from './generated/LightColor';
-import type { LightColor } from './generated/LightColor';
+// Re-export generated types from Rust
+export type { LightColor } from './generated/types';
+export type { LightConfig, LightDefinition, LightDefinitionId } from './generated/types';
+
+import type { LightColor } from './generated/types';
 
 export interface VectorClock {
   [peerId: string]: number;

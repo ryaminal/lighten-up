@@ -1,6 +1,6 @@
 <script lang="ts">
   import LightColorPicker from './LightColorPicker.svelte';
-  import { myState } from '$lib/stores';
+  import { myState, lightConfig } from '$lib/stores';
   import { setLightStatus } from '$lib/tauri';
   import { COLOR_CONFIG } from '$lib/config/colors';
   import type { LightColor } from '$lib/types';
@@ -21,10 +21,10 @@
   function handleNoteInput(e: Event) {
     const input = e.target as HTMLInputElement;
     note = input.value.slice(0, maxNoteLength);
-    
+
     // Clear existing timeout
     if (saveTimeout) clearTimeout(saveTimeout);
-    
+
     // Set new timeout to save after 500ms of no typing
     saveTimeout = setTimeout(() => {
       if ($myState) {
@@ -46,9 +46,16 @@
     }
   }
 
+  function getLightName(color: LightColor): string {
+    if (!$lightConfig) return '';
+    const definition = $lightConfig.definitions.find((d) => d.color === color);
+    return definition?.name || '';
+  }
+
   $: currentConfig = $myState ? COLOR_CONFIG[$myState.light_state.color] : COLOR_CONFIG.Off;
   $: isOff = $myState?.light_state.color === 'Off';
   $: statusMessage = $myState?.note?.trim() || '';
+  $: lightName = $myState ? getLightName($myState.light_state.color) : '';
 </script>
 
 <div class="flex flex-col h-full">
@@ -56,7 +63,9 @@
   <div class="flex justify-between items-start mb-6">
     <div>
       <div class="flex items-center gap-3 mb-1">
-        <h1 class="text-[#0d141b] dark:text-white text-2xl lg:text-3xl font-bold leading-tight tracking-tight">
+        <h1
+          class="text-[#0d141b] dark:text-white text-2xl lg:text-3xl font-bold leading-tight tracking-tight"
+        >
           {$myState?.name || 'Loading...'}
         </h1>
       </div>
@@ -66,22 +75,28 @@
           <p class="text-slate-500 dark:text-slate-400 text-sm font-bold tracking-wide uppercase">
             Status: OFF
           </p>
-        {:else if statusMessage}
-          <span class="relative flex h-3 w-3">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full {currentConfig.colorClass} opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 {currentConfig.colorClass}" style="box-shadow: 0 0 8px {currentConfig.hex}40"></span>
-          </span>
-          <p class="text-sm font-bold tracking-wide text-slate-700 dark:text-slate-300">
-            {statusMessage}
-          </p>
         {:else}
           <span class="relative flex h-3 w-3">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full {currentConfig.colorClass} opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-3 w-3 {currentConfig.colorClass}"></span>
+            <span
+              class="animate-ping absolute inline-flex h-full w-full rounded-full {currentConfig.colorClass} opacity-75"
+            ></span>
+            <span
+              class="relative inline-flex rounded-full h-3 w-3 {currentConfig.colorClass}"
+              style="box-shadow: 0 0 8px {currentConfig.hex}40"
+            ></span>
           </span>
-          <p class="text-slate-400 dark:text-slate-500 text-sm font-medium italic">
-            No status message
-          </p>
+          <div class="flex flex-col gap-0.5">
+            {#if lightName}
+              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                {lightName}
+              </p>
+            {/if}
+            {#if statusMessage}
+              <p class="text-sm tracking-wide text-slate-700 dark:text-slate-300">
+                {statusMessage}
+              </p>
+            {/if}
+          </div>
         {/if}
       </div>
     </div>
@@ -89,7 +104,9 @@
 
   <!-- Note input and color picker section -->
   <div class="mb-6">
-    <h2 class="text-[#0d141b] dark:text-slate-200 text-xs font-bold uppercase tracking-wider mb-3 opacity-70">
+    <h2
+      class="text-[#0d141b] dark:text-slate-200 text-xs font-bold uppercase tracking-wider mb-3 opacity-70"
+    >
       Light Selection & Message
     </h2>
 

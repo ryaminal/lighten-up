@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { peers } from '$lib/stores';
+  import { peers, lightConfig } from '$lib/stores';
   import { COLOR_CONFIG } from '$lib/config/colors';
+  import type { LightColor } from '$lib/generated/types';
 
   function formatElapsed(lastSeen: number): string {
     if (!lastSeen) return '';
@@ -10,6 +11,12 @@
     const minutes = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
+  function getLightName(color: LightColor): string {
+    if (!$lightConfig) return '';
+    const definition = $lightConfig.definitions.find((def) => def.enabled && def.color === color);
+    return definition?.name || '';
   }
 </script>
 
@@ -47,6 +54,7 @@
     {:else}
       {#each $peers as peer (peer.id)}
         {@const config = COLOR_CONFIG[peer.light_state.color] ?? COLOR_CONFIG.Off}
+        {@const lightName = getLightName(peer.light_state.color)}
         <div
           class="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer border-l-[6px] {config.borderClass}"
         >
@@ -55,14 +63,21 @@
               <h4 class="text-base font-bold text-slate-900 dark:text-white truncate">
                 {peer.name}
               </h4>
-              <span class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium">
+              <span
+                class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium"
+              >
                 {formatElapsed(peer.last_seen)}
               </span>
             </div>
+            {#if lightName}
+              <p class="text-xs text-slate-500 dark:text-slate-400 font-medium truncate mb-1">
+                {lightName}
+              </p>
+            {/if}
             {#if peer.note}
-              <p class="text-sm text-slate-700 dark:text-slate-300 font-semibold truncate">{peer.note}</p>
-            {:else}
-              <p class="text-xs text-slate-400 italic">No message</p>
+              <p class="text-sm text-slate-700 dark:text-slate-300 truncate">
+                {peer.note}
+              </p>
             {/if}
           </div>
         </div>

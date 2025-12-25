@@ -5,7 +5,7 @@ use crate::database::StoreDatabase;
 use crate::domain::{Event, PeerId};
 use crate::encryption::ChaCha20Encryption;
 use crate::network::MdnsNetwork;
-use crate::services::{LightService, PeerService};
+use crate::services::{ConfigService, LightService, PeerService};
 use std::sync::Arc;
 use tauri::AppHandle;
 use tokio::sync::broadcast;
@@ -85,8 +85,20 @@ pub async fn create_services(
         .map_err(|e| format!("Failed to create PeerService: {:?}", e))?,
     );
 
+    let config_service = Arc::new(
+        ConfigService::new(database.clone(), my_peer_id)
+            .await
+            .map_err(|e| format!("Failed to create ConfigService: {:?}", e))?,
+    );
+
     Ok((
-        AppState::new(light_service, peer_service, network, my_peer_id.clone()),
+        AppState::new(
+            light_service,
+            peer_service,
+            config_service,
+            network,
+            my_peer_id.clone(),
+        ),
         event_rx,
     ))
 }

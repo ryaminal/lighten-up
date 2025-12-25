@@ -1,13 +1,15 @@
-use crate::adapters::{DatabaseAdapter, Message, Result};
+use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter, Result};
 use crate::domain::{Event, Light, LightState, PeerId, PeerInfo};
 use crate::services::MessageContext;
+use std::sync::Arc;
 
 /// Handle incoming message from a peer
-pub async fn handle_message<D: DatabaseAdapter>(
+pub async fn handle_message<D: DatabaseAdapter, N: NetworkAdapter>(
     my_peer_id: &PeerId,
     peer_id: PeerId,
     message: Message,
     ctx: &MessageContext<D>,
+    network: Arc<N>,
 ) -> Result<()> {
     if peer_id == *my_peer_id {
         return Ok(());
@@ -18,12 +20,20 @@ pub async fn handle_message<D: DatabaseAdapter>(
 
     match message {
         Message::PeerAnnouncement { peer } => handle_peer_announcement(peer, ctx).await,
-        Message::StateUpdate { peer_id, state } => handle_state_update(peer_id, state, ctx).await,
+        Message::StateUpdate { peer_id, state } => {
+            handle_state_update(peer_id, state, ctx).await
+        }
         Message::PeerLeaving { peer_id } => handle_peer_leaving(peer_id, ctx).await,
         Message::LightActivated { light } => handle_light_activated(light, ctx).await,
         Message::LightDeactivated { light } => handle_light_deactivated(light, ctx).await,
         Message::LightCommentAdded { light } => handle_light_comment_added(light, ctx).await,
-        Message::LightPriorityChanged { light } => handle_light_priority_changed(light, ctx).await,
+        Message::LightPriorityChanged { light } => {
+            handle_light_priority_changed(light, ctx).await
+        }
+        Message::LightConfigRequest => {
+            handle_config_request(&peer_id, ctx, network).await
+        }
+        Message::LightConfigSync { config } => handle_config_sync(config, ctx).await,
         Message::Heartbeat { .. }
         | Message::StateSyncRequest
         | Message::ApplicationMessage { .. }
@@ -153,6 +163,42 @@ async fn handle_light_priority_changed<D: DatabaseAdapter>(
     let _ = ctx.event_tx.send(Event::LightUpdated {
         light: light.clone(),
     });
+    Ok(())
+}
+
+async fn handle_config_request<D: DatabaseAdapter, N: NetworkAdapter>(
+    peer_id: &PeerId,
+    ctx: &MessageContext<D>,
+    network: Arc<N>,
+) -> Result<()> {
+    if let Some(config_service) = &ctx.config_service {
+        let config = config_service.get_config().await;
+        let message = Message::LightConfigSync { config };
+        network.send_to_peer(peer_id, message).await?;
+    }
+    Ok(())
+}
+
+async fn handle_config_sync<D: DatabaseAdapter>(
+    config: crate::domain::LightConfig,
+    ctx: &MessageContext<D>,
+) -> Result<()> {
+    if let Some(config_service) = &ctx.config_service {
+        config_service
+            .merge_config(&config)
+            .await
+            .map_err(|e| {
+                crate::adapters::AdapterError::Database(format!(
+                    "Failed to merge config: {}",
+                    e
+                ))
+            })?;
+
+        let merged = config_service.get_config().await;
+        let _ = ctx
+            .event_tx
+            .send(Event::LightConfigChanged { config: merged });
+    }
     Ok(())
 }
 
