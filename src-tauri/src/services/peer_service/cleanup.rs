@@ -1,8 +1,9 @@
 use crate::adapters::DatabaseAdapter;
 use crate::domain::{Event, PeerId, PeerInfo, current_timestamp_secs};
+use crate::services::MessageContext;
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{RwLock, broadcast, watch};
+use tokio::sync::{broadcast, watch};
 
 /// Default timeout in seconds after which a peer is considered stale
 pub const PEER_TIMEOUT_SECS: u64 = 90;
@@ -11,12 +12,8 @@ pub const PEER_TIMEOUT_SECS: u64 = 90;
 const CLEANUP_INTERVAL_SECS: u64 = 30;
 
 /// Start a background task to periodically check for and remove stale peers
-pub fn start_stale_peer_cleanup<D>(
-    peers: Arc<RwLock<HashMap<PeerId, PeerInfo>>>,
-    database: Arc<D>,
-    event_tx: broadcast::Sender<Event>,
-    mut shutdown_rx: watch::Receiver<bool>,
-) where
+pub fn start_stale_peer_cleanup<D>(ctx: MessageContext<D>, mut shutdown_rx: watch::Receiver<bool>)
+where
     D: DatabaseAdapter + 'static,
 {
     tokio::spawn(async move {
@@ -27,7 +24,7 @@ pub fn start_stale_peer_cleanup<D>(
                     break;
                 }
                 _ = tokio::time::sleep(tokio::time::Duration::from_secs(CLEANUP_INTERVAL_SECS)) => {
-                    cleanup_stale_peers(&peers, &database, &event_tx).await;
+                    cleanup_stale_peers(&ctx).await;
                 }
             }
         }
@@ -41,18 +38,15 @@ pub fn start_stale_peer_cleanup<D>(
 }
 
 /// Check for and remove stale peers
-async fn cleanup_stale_peers<D>(
-    peers: &Arc<RwLock<HashMap<PeerId, PeerInfo>>>,
-    database: &Arc<D>,
-    event_tx: &broadcast::Sender<Event>,
-) where
+async fn cleanup_stale_peers<D>(ctx: &MessageContext<D>)
+where
     D: DatabaseAdapter,
 {
-    let mut peers_guard = peers.write().await;
+    let mut peers_guard = ctx.peers.write().await;
     let stale_peer_ids = find_stale_peers(&peers_guard);
 
     for peer_id in stale_peer_ids {
-        remove_stale_peer(&mut peers_guard, peer_id, database, event_tx).await;
+        remove_stale_peer(&mut peers_guard, peer_id, &ctx.database, &ctx.event_tx).await;
     }
 }
 

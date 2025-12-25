@@ -1,3 +1,4 @@
+pub mod context;
 pub mod light_service;
 pub mod message_handler;
 pub mod peer_service;
@@ -12,6 +13,7 @@ mod light_service_tests;
 #[cfg(test)]
 mod multi_peer_tests;
 
+pub use context::MessageContext;
 pub use light_service::LightService;
 pub use peer_service::PeerService;
 pub use state::ServiceState;

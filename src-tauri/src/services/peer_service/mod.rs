@@ -3,7 +3,7 @@ pub mod cleanup;
 
 use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter, Result};
 use crate::domain::{Event, PeerId, PeerInfo};
-use crate::services::message_handler;
+use crate::services::{MessageContext, message_handler};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{RwLock, broadcast};
@@ -55,11 +55,13 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
 
     fn start_message_loop(&self) {
         let network = self.network.clone();
-        let database = self.database.clone();
-        let peers = self.peers.clone();
-        let event_tx = self.event_tx.clone();
         let my_peer_id = self.my_peer_id.clone();
         let mut shutdown_rx = self.shutdown_tx.subscribe();
+        let ctx = MessageContext::new(
+            self.database.clone(),
+            self.peers.clone(),
+            self.event_tx.clone(),
+        );
 
         tokio::spawn(async move {
             loop {
@@ -68,13 +70,7 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
                         break;
                     }
                     result = network.receive() => {
-                        handle_receive_result(
-                            result,
-                            &my_peer_id,
-                            &database,
-                            &peers,
-                            &event_tx
-                        ).await;
+                        handle_receive_result(result, &my_peer_id, &ctx).await;
                     }
                 }
             }
@@ -92,12 +88,12 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
 
     fn start_stale_peer_cleanup(&self) {
         let shutdown_rx = self.shutdown_tx.subscribe();
-        cleanup::start_stale_peer_cleanup(
-            self.peers.clone(),
+        let ctx = MessageContext::new(
             self.database.clone(),
+            self.peers.clone(),
             self.event_tx.clone(),
-            shutdown_rx,
         );
+        cleanup::start_stale_peer_cleanup(ctx, shutdown_rx);
     }
 
     /// Announce our presence to all peers on the network
@@ -129,16 +125,11 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> PeerService<D, N
 async fn handle_receive_result<D: DatabaseAdapter>(
     result: Result<(PeerId, Message)>,
     my_peer_id: &PeerId,
-    database: &Arc<D>,
-    peers: &Arc<RwLock<HashMap<PeerId, PeerInfo>>>,
-    event_tx: &broadcast::Sender<Event>,
+    ctx: &MessageContext<D>,
 ) {
     match result {
         Ok((peer_id, message)) => {
-            if let Err(e) = message_handler::handle_message(
-                my_peer_id, peer_id, message, database, peers, event_tx,
-            )
-            .await
+            if let Err(e) = message_handler::handle_message(my_peer_id, peer_id, message, ctx).await
             {
                 log::error!("Error handling message: {:?}", e);
             }
