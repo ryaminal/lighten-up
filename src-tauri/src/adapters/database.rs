@@ -1,5 +1,6 @@
 use crate::adapters::error::Result;
 use crate::domain::{Light, LightConfig, LightId, LightState, PeerId, PeerInfo};
+use crate::services::controller_service::ControllerInfo;
 use async_trait::async_trait;
 
 /// Database adapter trait for persistent storage
@@ -50,4 +51,10 @@ pub trait DatabaseAdapter: Send + Sync {
 
     /// Get light configuration
     async fn get_light_config(&self) -> Result<LightConfig>;
+
+    /// Save controller information
+    async fn save_controller_info(&self, info: Option<ControllerInfo>) -> Result<()>;
+
+    /// Get controller information
+    async fn get_controller_info(&self) -> Result<Option<ControllerInfo>>;
 }

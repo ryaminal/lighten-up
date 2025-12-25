@@ -1,5 +1,6 @@
 use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter, Result};
 use crate::domain::{Light, LightConfig, LightId, LightState, PeerId, PeerInfo};
+use crate::services::controller_service::ControllerInfo;
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -86,6 +87,7 @@ pub struct MockDatabaseAdapter {
     peers: Arc<Mutex<HashMap<String, PeerInfo>>>,
     lights: Arc<Mutex<HashMap<String, Light>>>,
     light_config: Arc<Mutex<Option<LightConfig>>>,
+    controller_info: Arc<Mutex<Option<ControllerInfo>>>,
 }
 
 impl Default for MockDatabaseAdapter {
@@ -101,6 +103,7 @@ impl MockDatabaseAdapter {
             peers: Arc::new(Mutex::new(HashMap::new())),
             lights: Arc::new(Mutex::new(HashMap::new())),
             light_config: Arc::new(Mutex::new(None)),
+            controller_info: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -201,15 +204,18 @@ impl DatabaseAdapter for MockDatabaseAdapter {
     }
 
     async fn get_light_config(&self) -> Result<LightConfig> {
-        self.light_config
-            .lock()
-            .await
-            .clone()
-            .ok_or_else(|| {
-                crate::adapters::AdapterError::Database(
-                    "Light config not found".to_string(),
-                )
-            })
+        self.light_config.lock().await.clone().ok_or_else(|| {
+            crate::adapters::AdapterError::Database("Light config not found".to_string())
+        })
+    }
+
+    async fn save_controller_info(&self, info: Option<ControllerInfo>) -> Result<()> {
+        *self.controller_info.lock().await = info;
+        Ok(())
+    }
+
+    async fn get_controller_info(&self) -> Result<Option<ControllerInfo>> {
+        Ok(self.controller_info.lock().await.clone())
     }
 }
 

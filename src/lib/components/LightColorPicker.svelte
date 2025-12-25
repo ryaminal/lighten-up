@@ -17,7 +17,7 @@
   let lightButtons = $derived(
     $lightConfig
       ? $lightConfig.definitions
-          .filter((def) => def.enabled && def.color !== 'Off')
+          .filter((def) => !def.deleted_at && def.enabled && def.color !== 'Off')
           .sort((a, b) => a.order - b.order)
           .map((def) => ({
             color: def.color,

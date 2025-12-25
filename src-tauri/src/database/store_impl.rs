@@ -1,5 +1,6 @@
 use crate::adapters::{AdapterError, DatabaseAdapter, Result};
 use crate::domain::{Light, LightConfig, LightId, LightState, PeerInfo};
+use crate::services::controller_service::ControllerInfo;
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -53,6 +54,11 @@ impl DatabaseAdapter for StoreDatabase {
         // Initialize light config if it doesn't exist
         if store.get("light_config").is_none() {
             store.set("light_config", serde_json::json!(null));
+        }
+
+        // Initialize controller info if it doesn't exist
+        if store.get("controller_info").is_none() {
+            store.set("controller_info", serde_json::json!(null));
         }
 
         store
@@ -252,12 +258,11 @@ impl DatabaseAdapter for StoreDatabase {
         let store = self.store.write().await;
         store.set(
             "light_config",
-            serde_json::to_value(config)
-                .expect("LightConfig should always serialize to JSON"),
+            serde_json::to_value(config).expect("LightConfig should always serialize to JSON"),
         );
-        store.save().map_err(|e| {
-            AdapterError::Database(format!("Failed to save light config: {}", e))
-        })?;
+        store
+            .save()
+            .map_err(|e| AdapterError::Database(format!("Failed to save light config: {}", e)))?;
         Ok(())
     }
 
@@ -272,8 +277,26 @@ impl DatabaseAdapter for StoreDatabase {
                     serde_json::from_value(v.clone()).ok()
                 }
             })
-            .ok_or_else(|| {
-                AdapterError::Database("Light config not found".to_string())
-            })
+            .ok_or_else(|| AdapterError::Database("Light config not found".to_string()))
+    }
+
+    async fn save_controller_info(&self, info: Option<ControllerInfo>) -> Result<()> {
+        let store = self.store.write().await;
+        store.set(
+            "controller_info",
+            serde_json::to_value(info).expect("ControllerInfo should serialize"),
+        );
+        store.save().map_err(|e| {
+            AdapterError::Database(format!("Failed to save controller info: {}", e))
+        })?;
+        Ok(())
+    }
+
+    async fn get_controller_info(&self) -> Result<Option<ControllerInfo>> {
+        let store = self.store.read().await;
+        Ok(store
+            .get("controller_info")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .flatten())
     }
 }

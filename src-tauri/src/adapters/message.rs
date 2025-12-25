@@ -1,4 +1,4 @@
-use crate::domain::{Light, LightConfig, LightState, PeerId, PeerInfo};
+use crate::domain::{Light, LightColor, LightConfig, LightState, PeerId, PeerInfo};
 use std::collections::HashMap;
 
 /// Message types for network communication
@@ -6,6 +6,10 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type", content = "payload")]
 pub enum Message {
+    // ========================================
+    // BROADCAST MESSAGES (All → All)
+    // These are processed by all peers
+    // ========================================
     /// Announce peer presence with current state
     PeerAnnouncement { peer: PeerInfo },
 
@@ -45,10 +49,68 @@ pub enum Message {
     /// Light priority was changed
     LightPriorityChanged { light: Light },
 
-    /// Request light configuration from peers
+    /// Request all active lights from peers
+    LightSyncRequest,
+
+    /// Response with all lights
+    LightSyncResponse { lights: Vec<Light> },
+
+    /// Follower is overriding a global status command (emergency)
+    StatusOverride {
+        peer_id: PeerId,
+        reason: String,
+        original_command: LightColor,
+    },
+
+    // ========================================
+    // PUB/SUB MESSAGES (Controller → Followers)
+    // Only processed by subscribers (followers)
+    // ========================================
+    /// Controller election announcement
+    /// All peers update who the controller is
+    /// Previous controller steps down
+    ControllerElected {
+        controller_id: PeerId,
+        controller_name: String,
+    },
+
+    /// Controller is resigning
+    ControllerResigned { controller_id: PeerId },
+
+    /// Request light configuration from controller
+    ConfigSyncRequest { from_peer: PeerId },
+
+    /// Controller broadcasts complete light configuration
+    /// Followers replace their config with this
+    ConfigUpdate {
+        config: LightConfig,
+        from_controller: PeerId,
+    },
+
+    /// Controller broadcasts a global status command
+    /// All followers should set their light to this color
+    GlobalStatusCommand {
+        color: LightColor,
+        reason: String,
+        from_controller: PeerId,
+    },
+
+    /// Controller assigns a task/patient to a specific peer
+    TaskAssignment {
+        target_peer: PeerId,
+        task: String,
+        from_controller: PeerId,
+    },
+
+    // ========================================
+    // DEPRECATED - Keep for backward compat
+    // ========================================
+    /// Request light configuration from peers (DEPRECATED - use ConfigSyncRequest)
+    #[deprecated(note = "Use ConfigSyncRequest instead")]
     LightConfigRequest,
 
-    /// Broadcast complete light configuration
+    /// Broadcast complete light configuration (DEPRECATED - use ConfigUpdate)
+    #[deprecated(note = "Use ConfigUpdate instead")]
     LightConfigSync { config: LightConfig },
 }
 

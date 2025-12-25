@@ -8,7 +8,7 @@ pub mod peer_id;
 pub mod timestamp;
 pub mod vector_clock;
 
-pub use events::{Event, PeerInfo};
+pub use events::{Event, PeerInfo, PeerRole};
 pub use light::{Light, LightComment, LightId, LightPriority, LightStatus};
 pub use light_color::LightColor;
 pub use light_config::{LightConfig, LightDefinition, LightDefinitionId};

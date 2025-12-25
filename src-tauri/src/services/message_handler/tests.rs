@@ -1,12 +1,12 @@
 use super::*;
 use crate::domain::{LightColor, VectorClock};
 use crate::services::{
-    test_utils::{MockDatabaseAdapter, MockNetworkAdapter},
     MessageContext,
+    test_utils::{MockDatabaseAdapter, MockNetworkAdapter},
 };
 use std::collections::HashMap;
 use std::sync::Arc;
-use tokio::sync::{broadcast, RwLock};
+use tokio::sync::{RwLock, broadcast};
 
 #[tokio::test]
 async fn test_handle_peer_announcement_new_peer() {
@@ -15,11 +15,11 @@ async fn test_handle_peer_announcement_new_peer() {
 
     let peers = Arc::new(RwLock::new(HashMap::new()));
     let (event_tx, mut event_rx) = broadcast::channel(10);
-    let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx);
-    let network = Arc::new(MockNetworkAdapter::new());
 
     let peer_id = PeerId::new("test-peer");
     let my_peer_id = PeerId::new("my-peer");
+    let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx, my_peer_id.clone());
+    let network = Arc::new(MockNetworkAdapter::new());
     let state = LightState::new(LightColor::Red, VectorClock::new(), 100);
     let peer = PeerInfo::new(peer_id.clone(), "Test".to_string(), state);
 
@@ -59,7 +59,7 @@ async fn test_handle_state_update_crdt_merge() {
     peers.write().await.insert(peer_id.clone(), peer);
 
     let (event_tx, mut event_rx) = broadcast::channel(10);
-    let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx);
+    let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx, my_peer_id.clone());
     let network = Arc::new(MockNetworkAdapter::new());
 
     let mut clock2 = VectorClock::new();
@@ -106,7 +106,7 @@ async fn test_handle_peer_leaving() {
     peers.write().await.insert(peer_id.clone(), peer);
 
     let (event_tx, mut event_rx) = broadcast::channel(10);
-    let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx);
+    let ctx = MessageContext::new(db.clone(), peers.clone(), event_tx, my_peer_id.clone());
     let network = Arc::new(MockNetworkAdapter::new());
 
     handle_message(

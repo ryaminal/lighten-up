@@ -1,8 +1,18 @@
 use crate::domain::{
-    current_timestamp_secs, light::Light, light_config::LightConfig,
-    light_state::LightState, peer_id::PeerId,
+    current_timestamp_secs, light::Light, light_config::LightConfig, light_state::LightState,
+    peer_id::PeerId,
 };
 use serde::{Deserialize, Serialize};
+
+/// Role of a peer in the network
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub enum PeerRole {
+    /// This peer is the controller - manages global config
+    Controller,
+    /// This peer follows the controller's config
+    #[default]
+    Follower,
+}
 
 /// Represents information about a peer
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -15,6 +25,9 @@ pub struct PeerInfo {
     /// Optional note/message attached to the light status
     #[serde(default)]
     pub note: Option<String>,
+    /// Role of this peer (Controller or Follower)
+    #[serde(default)]
+    pub role: PeerRole,
 }
 
 impl PeerInfo {
@@ -25,12 +38,26 @@ impl PeerInfo {
             light_state,
             last_seen: current_timestamp_secs(),
             note: None,
+            role: PeerRole::default(),
         }
     }
 
     pub fn with_note(mut self, note: Option<String>) -> Self {
         self.note = note;
         self
+    }
+
+    pub fn with_role(mut self, role: PeerRole) -> Self {
+        self.role = role;
+        self
+    }
+
+    pub fn is_controller(&self) -> bool {
+        self.role == PeerRole::Controller
+    }
+
+    pub fn is_follower(&self) -> bool {
+        self.role == PeerRole::Follower
     }
 
     /// Update the last_seen timestamp to now

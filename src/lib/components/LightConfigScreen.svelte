@@ -3,6 +3,7 @@
   import type { LightColor, LightConfig, LightDefinition, LightDefinitionId } from '$lib/types';
   import { lightConfig } from '$lib/stores';
   import { updateLightDefinition, deleteLightDefinition } from '$lib/tauri';
+  import ControllerStatus from './ControllerStatus.svelte';
 
   let loading = true;
   let editingLight: LightDefinition | null = null;
@@ -17,7 +18,9 @@
 
   $: config = $lightConfig;
   $: sortedDefinitions = config
-    ? [...(config as LightConfig).definitions].sort((a, b) => a.order - b.order)
+    ? [...(config as LightConfig).definitions]
+        .filter((def) => !def.deleted_at)
+        .sort((a, b) => a.order - b.order)
     : [];
 
   const colorClasses: Record<string, { bg: string; ring: string; text: string }> = {
@@ -91,6 +94,7 @@
             : 0),
         updated_at: BigInt(Date.now()),
         updated_by: 'me', // Will be set by backend
+        deleted_at: null,
       };
 
       await updateLightDefinition(definition);
@@ -141,6 +145,11 @@
     {#if loading}
       <div class="text-center py-12 text-slate-500">Loading configuration...</div>
     {:else if config}
+      <!-- Controller Status Card -->
+      <div class="mb-6">
+        <ControllerStatus />
+      </div>
+
       <!-- Lights Table -->
       <div
         class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden"

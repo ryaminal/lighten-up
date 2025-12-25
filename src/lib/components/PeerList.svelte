@@ -15,7 +15,9 @@
 
   function getLightName(color: LightColor): string {
     if (!$lightConfig) return '';
-    const definition = $lightConfig.definitions.find((def) => def.enabled && def.color === color);
+    const definition = $lightConfig.definitions.find(
+      (def) => !def.deleted_at && def.enabled && def.color === color
+    );
     return definition?.name || '';
   }
 </script>

@@ -10,15 +10,11 @@ pub struct ConfigService<D: DatabaseAdapter> {
 }
 
 impl<D: DatabaseAdapter> ConfigService<D> {
-    pub async fn new(
-        database: Arc<D>,
-        peer_id: &PeerId,
-    ) -> Result<Self, String> {
+    pub async fn new(database: Arc<D>, peer_id: &PeerId) -> Result<Self, String> {
         let config = match database.get_light_config().await {
             Ok(cfg) => cfg,
             Err(_) => {
-                let default_cfg =
-                    LightConfig::default_config(peer_id.as_str());
+                let default_cfg = LightConfig::default_config(peer_id.as_str());
                 database
                     .save_light_config(&default_cfg)
                     .await
@@ -37,10 +33,7 @@ impl<D: DatabaseAdapter> ConfigService<D> {
         self.config.read().await.clone()
     }
 
-    pub async fn update_config(
-        &self,
-        config: LightConfig,
-    ) -> Result<(), String> {
+    pub async fn update_config(&self, config: LightConfig) -> Result<(), String> {
         self.database
             .save_light_config(&config)
             .await
@@ -52,17 +45,32 @@ impl<D: DatabaseAdapter> ConfigService<D> {
         Ok(())
     }
 
-    pub async fn merge_config(
-        &self,
-        other: &LightConfig,
-    ) -> Result<(), String> {
+    pub async fn merge_config(&self, other: &LightConfig) -> Result<(), String> {
         let mut current = self.config.write().await;
         current.merge(other);
 
         self.database
-            .save_light_config(&*current)
+            .save_light_config(&current)
             .await
             .map_err(|e| format!("Failed to save merged config: {}", e))?;
+
+        Ok(())
+    }
+
+    /// Replace config completely (for followers receiving controller config)
+    pub async fn replace_config(&self, config: &LightConfig) -> Result<(), String> {
+        log::info!(
+            "[CONFIG] Replacing config with controller's config (version {})",
+            config.version
+        );
+
+        self.database
+            .save_light_config(config)
+            .await
+            .map_err(|e| format!("Failed to save config: {}", e))?;
+
+        let mut current = self.config.write().await;
+        *current = config.clone();
 
         Ok(())
     }
@@ -72,9 +80,7 @@ impl<D: DatabaseAdapter> ConfigService<D> {
 mod tests {
     use super::*;
     use crate::adapters::{AdapterError, Result};
-    use crate::domain::{
-        Light, LightId, LightState, PeerId, PeerInfo,
-    };
+    use crate::domain::{Light, LightId, LightState, PeerId, PeerInfo};
     use async_trait::async_trait;
 
     struct MockDatabase {
@@ -123,10 +129,7 @@ mod tests {
             Ok(())
         }
 
-        async fn update_my_light_state(
-            &self,
-            _state: &LightState,
-        ) -> Result<()> {
+        async fn update_my_light_state(&self, _state: &LightState) -> Result<()> {
             Ok(())
         }
 
@@ -146,10 +149,7 @@ mod tests {
             Ok(())
         }
 
-        async fn save_light_config(
-            &self,
-            config: &LightConfig,
-        ) -> Result<()> {
+        async fn save_light_config(&self, config: &LightConfig) -> Result<()> {
             *self.config.write().await = Some(config.clone());
             Ok(())
         }
@@ -159,9 +159,20 @@ mod tests {
                 .read()
                 .await
                 .clone()
-                .ok_or_else(|| {
-                    AdapterError::Database("config not found".to_string())
-                })
+                .ok_or_else(|| AdapterError::Database("config not found".to_string()))
+        }
+
+        async fn save_controller_info(
+            &self,
+            _info: Option<crate::services::controller_service::ControllerInfo>,
+        ) -> Result<()> {
+            Ok(())
+        }
+
+        async fn get_controller_info(
+            &self,
+        ) -> Result<Option<crate::services::controller_service::ControllerInfo>> {
+            Ok(None)
         }
     }
 
@@ -170,8 +181,7 @@ mod tests {
         let db = Arc::new(MockDatabase::new());
         let peer_id = PeerId::new("test-peer");
 
-        let service =
-            ConfigService::new(db.clone(), &peer_id).await.expect("ok");
+        let service = ConfigService::new(db.clone(), &peer_id).await.expect("ok");
 
         let config = service.get_config().await;
         assert_eq!(config.definitions.len(), 6);
@@ -183,9 +193,7 @@ mod tests {
         let db = Arc::new(MockDatabase::new());
         let peer_id = PeerId::new("test-peer");
 
-        let service = ConfigService::new(db.clone(), &peer_id)
-            .await
-            .expect("ok");
+        let service = ConfigService::new(db.clone(), &peer_id).await.expect("ok");
 
         let mut config = service.get_config().await;
         config.version = 2;
@@ -201,9 +209,7 @@ mod tests {
         let db = Arc::new(MockDatabase::new());
         let peer_id = PeerId::new("test-peer");
 
-        let service = ConfigService::new(db.clone(), &peer_id)
-            .await
-            .expect("ok");
+        let service = ConfigService::new(db.clone(), &peer_id).await.expect("ok");
 
         let mut other_config = service.get_config().await;
         other_config.definitions[0].name = "Updated".to_string();

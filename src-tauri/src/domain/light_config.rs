@@ -35,6 +35,8 @@ pub struct LightDefinition {
     pub order: u32,
     pub updated_at: u64,
     pub updated_by: String,
+    #[serde(default)]
+    pub deleted_at: Option<u64>,
 }
 
 impl LightDefinition {
@@ -54,7 +56,12 @@ impl LightDefinition {
             order,
             updated_at: crate::domain::current_timestamp_secs(),
             updated_by: updated_by.into(),
+            deleted_at: None,
         }
+    }
+
+    pub fn is_deleted(&self) -> bool {
+        self.deleted_at.is_some()
     }
 
     pub fn should_replace(&self, other: &Self) -> bool {
@@ -91,20 +98,8 @@ impl LightConfig {
                 0,
                 &peer_id,
             ),
-            LightDefinition::new(
-                LightColor::Red,
-                "Assistance Needed",
-                "Urgent",
-                1,
-                &peer_id,
-            ),
-            LightDefinition::new(
-                LightColor::Blue,
-                "Assistance",
-                "Non-Urgent",
-                2,
-                &peer_id,
-            ),
+            LightDefinition::new(LightColor::Red, "Assistance Needed", "Urgent", 1, &peer_id),
+            LightDefinition::new(LightColor::Blue, "Assistance", "Non-Urgent", 2, &peer_id),
             LightDefinition::new(
                 LightColor::Magenta,
                 "Admin / Vitals",
@@ -112,13 +107,7 @@ impl LightConfig {
                 3,
                 &peer_id,
             ),
-            LightDefinition::new(
-                LightColor::Yellow,
-                "Provider In",
-                "Occupied",
-                4,
-                &peer_id,
-            ),
+            LightDefinition::new(LightColor::Yellow, "Provider In", "Occupied", 4, &peer_id),
             LightDefinition::new(LightColor::White, "Custom", "Other", 5, &peer_id),
         ];
 
@@ -129,17 +118,46 @@ impl LightConfig {
     }
 
     pub fn merge(&mut self, other: &Self) {
+        // If the other config has a significantly higher version, it's from an established
+        // network and should take precedence over our default config
+        let other_is_established = other.version > self.version;
+
+        // Merge definitions from other config
         for other_def in &other.definitions {
-            if let Some(existing) = self
-                .definitions
-                .iter_mut()
-                .find(|d| d.id == other_def.id)
-            {
-                if existing.should_replace(other_def) {
-                    *existing = other_def.clone();
+            // First, try to find by ID
+            let existing_by_id_pos = self.definitions.iter().position(|d| d.id == other_def.id);
+
+            if let Some(pos) = existing_by_id_pos {
+                // Found by ID - update if newer
+                if self.definitions[pos].should_replace(other_def) {
+                    self.definitions[pos] = other_def.clone();
                 }
             } else {
-                self.definitions.push(other_def.clone());
+                // Not found by ID - check if we have the same color with different ID
+                let existing_by_color_pos = self
+                    .definitions
+                    .iter()
+                    .position(|d| d.color == other_def.color);
+
+                if let Some(pos) = existing_by_color_pos {
+                    // Found same color with different ID
+                    // If other config is from an established network (higher version),
+                    // prefer it over our local definition
+                    let should_use_other = if other_is_established {
+                        // Established network wins over default config
+                        true
+                    } else {
+                        // Otherwise use timestamp comparison
+                        self.definitions[pos].should_replace(other_def)
+                    };
+
+                    if should_use_other {
+                        self.definitions[pos] = other_def.clone();
+                    }
+                } else {
+                    // Completely new definition - add it
+                    self.definitions.push(other_def.clone());
+                }
             }
         }
 
@@ -149,17 +167,24 @@ impl LightConfig {
     pub fn get_by_color(&self, color: &LightColor) -> Option<&LightDefinition> {
         self.definitions
             .iter()
-            .find(|def| def.enabled && def.color == *color)
+            .find(|def| !def.is_deleted() && def.enabled && def.color == *color)
     }
 
     pub fn enabled_definitions(&self) -> Vec<&LightDefinition> {
         let mut defs: Vec<_> = self
             .definitions
             .iter()
-            .filter(|def| def.enabled)
+            .filter(|def| !def.is_deleted() && def.enabled)
             .collect();
         defs.sort_by_key(|def| def.order);
         defs
+    }
+
+    pub fn active_definitions(&self) -> Vec<&LightDefinition> {
+        self.definitions
+            .iter()
+            .filter(|def| !def.is_deleted())
+            .collect()
     }
 }
 
@@ -175,13 +200,7 @@ mod tests {
 
     #[test]
     fn test_light_definition_creation() {
-        let def = LightDefinition::new(
-            LightColor::Green,
-            "Ready",
-            "Room Available",
-            0,
-            "peer1",
-        );
+        let def = LightDefinition::new(LightColor::Green, "Ready", "Room Available", 0, "peer1");
 
         assert_eq!(def.color, LightColor::Green);
         assert_eq!(def.name, "Ready");
@@ -192,13 +211,7 @@ mod tests {
 
     #[test]
     fn test_should_replace_by_timestamp() {
-        let def1 = LightDefinition::new(
-            LightColor::Green,
-            "Ready",
-            "Room Available",
-            0,
-            "peer1",
-        );
+        let def1 = LightDefinition::new(LightColor::Green, "Ready", "Room Available", 0, "peer1");
         let mut def2 = def1.clone();
 
         def2.updated_at = def1.updated_at + 1;
@@ -208,13 +221,7 @@ mod tests {
 
     #[test]
     fn test_should_replace_by_peer_id() {
-        let def1 = LightDefinition::new(
-            LightColor::Green,
-            "Ready",
-            "Room Available",
-            0,
-            "peer_a",
-        );
+        let def1 = LightDefinition::new(LightColor::Green, "Ready", "Room Available", 0, "peer_a");
         let mut def2 = def1.clone();
 
         def2.updated_by = "peer_b".to_string();

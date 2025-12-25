@@ -33,6 +33,10 @@ pub fn run() {
             commands::get_light_config,
             commands::update_light_definition,
             commands::delete_light_definition,
+            commands::get_controller_info,
+            commands::get_my_role,
+            commands::become_controller,
+            commands::resign_controller,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

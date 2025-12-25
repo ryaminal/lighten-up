@@ -154,3 +154,49 @@ export async function deleteLightDefinition(id: string): Promise<void> {
     throw e;
   }
 }
+
+// ========================================
+// Controller Commands
+// ========================================
+
+export async function getControllerInfo(): Promise<
+  import('./types/controller').ControllerInfo | null
+> {
+  try {
+    return await invoke('get_controller_info');
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    setError(`Failed to get controller info: ${message}`);
+    throw e;
+  }
+}
+
+export async function getMyRole(): Promise<import('./types/controller').PeerRole> {
+  try {
+    return await invoke('get_my_role');
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    setError(`Failed to get my role: ${message}`);
+    throw e;
+  }
+}
+
+export async function becomeController(): Promise<void> {
+  try {
+    await invoke('become_controller');
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    setError(`Failed to become controller: ${message}`);
+    throw e;
+  }
+}
+
+export async function resignController(): Promise<void> {
+  try {
+    await invoke('resign_controller');
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    setError(`Failed to resign as controller: ${message}`);
+    throw e;
+  }
+}

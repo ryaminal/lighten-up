@@ -38,6 +38,31 @@ where
             log::debug!("Initial broadcast failed (no peers yet?): {:?}", e);
         }
     }
+
+    // Request light configuration from controller/peers
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    let my_peer_id = match database.get_my_peer().await {
+        Ok(peer) => peer.id,
+        Err(_) => return,
+    };
+    let config_request = Message::ConfigSyncRequest {
+        from_peer: my_peer_id,
+    };
+    log::info!("[ANNOUNCE] Broadcasting config sync request");
+    if let Err(e) = network.broadcast(config_request).await {
+        log::debug!("Config request broadcast failed (no peers yet?): {:?}", e);
+    }
+
+    // Request all active lights from other peers
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    let light_sync_request = Message::LightSyncRequest;
+    log::info!("[ANNOUNCE] Broadcasting light sync request");
+    if let Err(e) = network.broadcast(light_sync_request).await {
+        log::debug!(
+            "Light sync request broadcast failed (no peers yet?): {:?}",
+            e
+        );
+    }
 }
 
 async fn send_startup_announcements<D, N>(database: &Arc<D>, network: &Arc<N>)
