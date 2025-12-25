@@ -1,14 +1,8 @@
 // TypeScript types matching Rust domain models
 
-export type LightColor =
-  | 'Red'
-  | 'Yellow'
-  | 'Green'
-  | 'Blue'
-  | 'Purple'
-  | 'Orange'
-  | 'White'
-  | 'Off';
+// Re-export generated type from Rust
+export type { LightColor } from './generated/LightColor';
+import type { LightColor } from './generated/LightColor';
 
 export interface VectorClock {
   [peerId: string]: number;

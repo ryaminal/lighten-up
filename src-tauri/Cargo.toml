@@ -35,4 +35,5 @@ mdns-sd = "0.17.1"
 log = "0.4"
 tauri-plugin-cli = "2.4.1"
 if-addrs = "0.13"
+ts-rs = "9.0"
 

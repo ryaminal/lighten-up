@@ -1,47 +1,6 @@
 <script lang="ts">
   import { peers } from '$lib/stores';
-  import type { LightColor } from '$lib/types';
-
-  const labelMap: Record<LightColor, string> = {
-    Green: 'Patient Ready',
-    Red: 'Doctor Needed',
-    Blue: 'Assistance',
-    Purple: 'Vitals Taken',
-    Orange: 'Cleaning Req.',
-    Yellow: 'Cleaning Req.',
-    White: 'Available',
-    Off: 'Off',
-  };
-  const colorClassMap: Record<LightColor, string> = {
-    Green: 'bg-green-500',
-    Red: 'bg-red-500',
-    Blue: 'bg-blue-500',
-    Purple: 'bg-purple-500',
-    Orange: 'bg-orange-400',
-    Yellow: 'bg-orange-400',
-    White: 'bg-white',
-    Off: 'bg-gray-400',
-  };
-  const borderColorMap: Record<LightColor, string> = {
-    Green: 'border-green-500',
-    Red: 'border-red-500',
-    Blue: 'border-blue-500',
-    Purple: 'border-purple-500',
-    Orange: 'border-orange-400',
-    Yellow: 'border-orange-400',
-    White: 'border-slate-300',
-    Off: 'border-slate-200',
-  };
-  const timeBgMap: Record<LightColor, string> = {
-    Red: 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold',
-    Green: 'bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium',
-    Blue: 'bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium',
-    Purple: 'bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium',
-    Orange: 'bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium',
-    Yellow: 'bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium',
-    White: 'bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium',
-    Off: 'bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium',
-  };
+  import { COLOR_CONFIG } from '$lib/config/colors';
 
   function formatElapsed(lastSeen: number): string {
     if (!lastSeen) return '';
@@ -87,30 +46,27 @@
       <p class="text-slate-400 italic text-center mt-8">Searching for peers...</p>
     {:else}
       {#each $peers as peer, idx (peer.id)}
+        {@const config = COLOR_CONFIG[peer.light_state.color]}
         <div
-          class="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer border-l-[6px] {borderColorMap[
-            peer.light_state.color
-          ]}"
+          class="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer border-l-[6px] {config.borderClass}"
         >
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-start mb-1">
               <h4 class="text-base font-bold text-slate-900 dark:text-white truncate">
                 {peer.name}
               </h4>
-              <span
-                class="text-xs font-mono px-2 py-0.5 rounded {timeBgMap[peer.light_state.color]}"
-              >
+              <span class="text-xs font-mono px-2 py-0.5 rounded {config.timeBgClass}">
                 {formatElapsed(peer.last_seen)}
               </span>
             </div>
             <div class="flex items-center gap-2{idx === 0 ? ' mb-1.5' : ''}">
               <span
-                class="h-2.5 w-2.5 rounded-full {colorClassMap[peer.light_state.color]}{idx === 0
+                class="h-2.5 w-2.5 rounded-full {config.colorClass}{idx === 0
                   ? ' animate-pulse'
                   : ''}"
               ></span>
               <p class="text-sm text-slate-700 dark:text-slate-200 font-semibold">
-                {labelMap[peer.light_state.color]}
+                {config.label}
               </p>
             </div>
             {#if peer.note}

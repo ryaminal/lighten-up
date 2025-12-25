@@ -13,6 +13,9 @@ vite.config.ts.timestamp-*
 src-tauri/target/
 src-tauri/gen/
 
+# Generated TypeScript types from Rust
+src/lib/generated/
+
 # Editor
 .vscode/*
 !.vscode/extensions.json

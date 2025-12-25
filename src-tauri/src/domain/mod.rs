@@ -1,3 +1,4 @@
+pub mod color_regression_tests;
 pub mod events;
 pub mod light;
 pub mod light_color;
