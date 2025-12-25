@@ -70,14 +70,34 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
 
     /// Set light color and broadcast to peers
     pub async fn set_light_color(&self, color: LightColor) -> Result<()> {
+        self.set_light_status(color, None).await
+    }
+
+    /// Set light color and note, then broadcast to peers
+    pub async fn set_light_status(&self, color: LightColor, note: Option<String>) -> Result<()> {
+        log::info!(
+            "[LIGHT_SERVICE] set_light_status called - color: {:?}, note: {:?}",
+            color,
+            note
+        );
+
         let timestamp = current_timestamp_secs();
-        let new_state = self.update_and_persist(color, timestamp).await?;
+        let _new_state = self
+            .update_and_persist(color, timestamp, note.clone())
+            .await?;
 
-        let message = Message::StateUpdate {
-            peer_id: self.my_peer_id.clone(),
-            state: new_state,
-        };
+        // Get the full peer info to broadcast (including note)
+        let peer_info = self.database.get_my_peer().await?;
+        log::info!(
+            "[LIGHT_SERVICE] Retrieved peer_info from DB - name: {}, note: {:?}",
+            peer_info.name,
+            peer_info.note
+        );
 
+        // Use PeerAnnouncement to broadcast full state including note
+        let message = Message::PeerAnnouncement { peer: peer_info };
+
+        log::info!("[LIGHT_SERVICE] Broadcasting PeerAnnouncement message");
         let result = self.network.broadcast(message).await;
         if let Err(e) = &result {
             log::warn!("Failed to broadcast: {:?}", e);
@@ -85,13 +105,35 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
         result
     }
 
-    async fn update_and_persist(&self, color: LightColor, timestamp: u64) -> Result<LightState> {
+    async fn update_and_persist(
+        &self,
+        color: LightColor,
+        timestamp: u64,
+        note: Option<String>,
+    ) -> Result<LightState> {
+        log::info!("[LIGHT_SERVICE] update_and_persist - note: {:?}", note);
+
         let mut state_guard = self.state.write().await;
         let new_state = state_guard.update(color, timestamp, &self.my_peer_id);
 
         let my_name = self.database.get_my_peer().await?.name;
-        let peer_info = PeerInfo::new(self.my_peer_id.clone(), my_name, new_state.clone());
+        let peer_info = PeerInfo::new(self.my_peer_id.clone(), my_name, new_state.clone())
+            .with_note(note.clone());
+
+        log::info!(
+            "[LIGHT_SERVICE] Saving peer_info to DB - name: {}, note: {:?}",
+            peer_info.name,
+            peer_info.note
+        );
         self.database.save_my_peer(&peer_info).await?;
+
+        log::info!("[LIGHT_SERVICE] Peer saved, verifying...");
+        let saved_peer = self.database.get_my_peer().await?;
+        log::info!(
+            "[LIGHT_SERVICE] Verified saved peer - name: {}, note: {:?}",
+            saved_peer.name,
+            saved_peer.note
+        );
 
         let send_result = self.event_tx.send(Event::MyStateChanged {
             state: new_state.clone(),

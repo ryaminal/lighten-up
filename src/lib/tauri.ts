@@ -25,22 +25,18 @@ export async function initializeTauri() {
 
 async function setupEventListeners() {
   console.log('Setting up event listeners...');
-  await listen('my-state-changed', (event) => {
+  await listen('my-state-changed', async (event) => {
     console.log('Received my-state-changed event:', event.payload);
-    const newLightState = event.payload as LightState;
-    // Update only the light_state field, preserve id and name
-    myState.update((current) => {
-      if (!current) return current;
-      return {
-        ...current,
-        light_state: newLightState,
-      };
-    });
+    // Reload full state to get note updates
+    const myStateData = await invoke<MyState>('get_my_state');
+    myState.set(myStateData);
   });
 
   await listen('peer-discovered', (event) => {
     console.log('Received peer-discovered event:', event.payload);
-    addPeer(event.payload as PeerInfo);
+    const peer = event.payload as PeerInfo;
+    console.log('[FRONTEND] Peer note from event:', peer.note);
+    addPeer(peer);
   });
 
   await listen('peer-state-changed', (event) => {
@@ -79,6 +75,19 @@ export async function setLightColor(color: LightColor): Promise<void> {
     console.error('set_light_color command failed:', e);
     const message = e instanceof Error ? e.message : 'Unknown error';
     setError(`Failed to set color: ${message}`);
+    throw e;
+  }
+}
+
+export async function setLightStatus(color: LightColor, note?: string): Promise<void> {
+  console.log('[FRONTEND] setLightStatus called with:', color, note);
+  try {
+    const result = await invoke('set_light_status', { color, note: note || null });
+    console.log('[FRONTEND] set_light_status command completed successfully, result:', result);
+  } catch (e) {
+    console.error('set_light_status command failed:', e);
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    setError(`Failed to set status: ${message}`);
     throw e;
   }
 }

@@ -52,16 +52,21 @@ async fn handle_peer_announcement<D: DatabaseAdapter>(
     let is_new = !ctx.peers.write().await.contains_key(&peer_id);
 
     log::info!(
-        "[PEER] {} peer announcement from {} ({})",
+        "[PEER] {} peer announcement from {} ({}) - note: {:?}",
         if is_new { "New" } else { "Updated" },
         peer.name,
-        peer_id.as_str()
+        peer_id.as_str(),
+        peer.note
     );
 
     peer.touch();
     ctx.database.save_peer(&peer).await?;
     ctx.peers.write().await.insert(peer_id, peer.clone());
 
+    log::info!(
+        "[PEER] Sending PeerDiscovered event - peer.note: {:?}",
+        peer.note
+    );
     let _ = ctx.event_tx.send(Event::PeerDiscovered { peer });
     Ok(())
 }

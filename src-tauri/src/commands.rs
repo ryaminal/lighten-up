@@ -23,6 +23,23 @@ pub async fn set_light_color(
     Ok("success".to_string())
 }
 
+/// Set the light color and note for this peer
+#[tauri::command]
+pub async fn set_light_status(
+    state: State<'_, AppServices>,
+    color: LightColor,
+    note: Option<String>,
+) -> Result<String, String> {
+    log::info!("[CMD] Command: set_light_status({:?}, {:?})", color, note);
+    state
+        .light_service
+        .set_light_status(color, note)
+        .await
+        .map_err(|e| format!("Failed to set light status: {:?}", e))?;
+    log::info!("[OK] Command completed, returning 'success'");
+    Ok("success".to_string())
+}
+
 /// Get my current light state
 #[tauri::command]
 pub async fn get_my_state(state: State<'_, AppServices>) -> Result<PeerInfo, String> {
@@ -41,10 +58,7 @@ pub async fn get_peers(state: State<'_, AppServices>) -> Result<Vec<PeerInfo>, S
 
 /// Create a new light
 #[tauri::command]
-pub async fn create_light(
-    state: State<'_, AppServices>,
-    name: String,
-) -> Result<Light, String> {
+pub async fn create_light(state: State<'_, AppServices>, name: String) -> Result<Light, String> {
     let peer_id = state.my_peer_id.clone();
     let light_id = LightId::new(format!("{}-{}", peer_id.as_str(), name));
     let light = Light::new(light_id, name);

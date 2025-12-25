@@ -11,6 +11,9 @@ pub struct PeerInfo {
     pub light_state: LightState,
     /// Last time we received any message from this peer (Unix timestamp in seconds)
     pub last_seen: u64,
+    /// Optional note/message attached to the light status
+    #[serde(default)]
+    pub note: Option<String>,
 }
 
 impl PeerInfo {
@@ -20,7 +23,13 @@ impl PeerInfo {
             name,
             light_state,
             last_seen: current_timestamp_secs(),
+            note: None,
         }
+    }
+
+    pub fn with_note(mut self, note: Option<String>) -> Self {
+        self.note = note;
+        self
     }
 
     /// Update the last_seen timestamp to now

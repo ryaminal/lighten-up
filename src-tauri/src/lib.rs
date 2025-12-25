@@ -22,6 +22,7 @@ pub fn run() {
         .on_window_event(handle_window_event)
         .invoke_handler(tauri::generate_handler![
             commands::set_light_color,
+            commands::set_light_status,
             commands::get_my_state,
             commands::get_peers,
             commands::create_light,
