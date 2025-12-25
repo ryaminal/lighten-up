@@ -1,6 +1,7 @@
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import type { MyState, PeerInfo, LightState } from './types';
 import type { LightConfig } from './generated/types';
+import type { ControllerInfo, PeerRole } from './types/controller';
 
 export type ViewType = 'dashboard' | 'config';
 
@@ -10,6 +11,14 @@ export const isLoading = writable(true);
 export const error = writable<string | null>(null);
 export const currentView = writable<ViewType>('dashboard');
 export const lightConfig = writable<LightConfig | null>(null);
+export const controllerInfo = writable<ControllerInfo | null>(null);
+export const myRole = writable<PeerRole>('Follower');
+
+// Derived store: should navigation bar be visible?
+// Visible if: no controller exists OR you are the controller
+export const showNavigation = derived([controllerInfo, myRole], ([$controllerInfo, $myRole]) => {
+  return !$controllerInfo || $myRole === 'Controller';
+});
 
 export function updateMyState(state: MyState) {
   myState.set(state);

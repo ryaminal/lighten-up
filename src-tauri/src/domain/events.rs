@@ -75,14 +75,38 @@ impl PeerInfo {
 /// Events that can occur in the system
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Event {
-    PeerDiscovered { peer: PeerInfo },
-    PeerStateChanged { peer_id: PeerId, state: LightState },
-    PeerLeft { peer_id: PeerId },
-    MyStateChanged { state: LightState },
-    LightActivated { light: Light },
-    LightDeactivated { light: Light },
-    LightUpdated { light: Light },
-    LightConfigChanged { config: LightConfig },
+    PeerDiscovered {
+        peer: PeerInfo,
+    },
+    PeerStateChanged {
+        peer_id: PeerId,
+        state: LightState,
+    },
+    PeerLeft {
+        peer_id: PeerId,
+    },
+    MyStateChanged {
+        state: LightState,
+    },
+    LightActivated {
+        light: Light,
+    },
+    LightDeactivated {
+        light: Light,
+    },
+    LightUpdated {
+        light: Light,
+    },
+    LightConfigChanged {
+        config: LightConfig,
+    },
+    ControllerElected {
+        controller_id: PeerId,
+        controller_name: String,
+    },
+    ControllerResigned {
+        controller_id: PeerId,
+    },
 }
 
 #[cfg(test)]

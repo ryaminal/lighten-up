@@ -8,6 +8,7 @@ import type {
   LightConfig,
   LightDefinition,
 } from './types';
+import type { ControllerInfo, PeerRole } from './types/controller';
 import {
   myState,
   updatePeers,
@@ -17,6 +18,8 @@ import {
   setError,
   setLoading,
   lightConfig,
+  controllerInfo,
+  myRole,
 } from './stores';
 
 export async function initializeTauri() {
@@ -24,6 +27,7 @@ export async function initializeTauri() {
     await setupEventListeners();
     await loadInitialState();
     await loadLightConfig();
+    await loadControllerInfo();
     setLoading(false);
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
@@ -66,6 +70,20 @@ async function setupEventListeners() {
     lightConfig.set(config);
   });
 
+  await listen('controller-elected', (event) => {
+    console.log('Received controller-elected event:', event.payload);
+    const [controllerId, controllerName] = event.payload as [string, string];
+    controllerInfo.set({ id: controllerId, name: controllerName });
+    // Reload my role to see if I'm the controller
+    loadControllerInfo();
+  });
+
+  await listen('controller-resigned', (event) => {
+    console.log('Received controller-resigned event:', event.payload);
+    controllerInfo.set(null);
+    myRole.set('Follower');
+  });
+
   console.log('Event listeners setup complete');
 }
 
@@ -86,6 +104,20 @@ async function loadLightConfig() {
     console.log('Light config loaded:', config);
   } catch (e) {
     console.error('Failed to load light config:', e);
+  }
+}
+
+async function loadControllerInfo() {
+  try {
+    const [info, role] = await Promise.all([
+      invoke<ControllerInfo | null>('get_controller_info'),
+      invoke<PeerRole>('get_my_role'),
+    ]);
+    controllerInfo.set(info);
+    myRole.set(role);
+    console.log('Controller info loaded:', info, 'My role:', role);
+  } catch (e) {
+    console.error('Failed to load controller info:', e);
   }
 }
 

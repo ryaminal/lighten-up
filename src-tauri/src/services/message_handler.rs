@@ -271,9 +271,14 @@ async fn handle_controller_elected<D: DatabaseAdapter>(
 
     if let Some(controller_service) = &ctx.controller_service {
         controller_service
-            .set_controller(controller_id, controller_name)
+            .set_controller(controller_id.clone(), controller_name.clone())
             .await;
     }
+
+    let _ = ctx.event_tx.send(Event::ControllerElected {
+        controller_id,
+        controller_name,
+    });
 
     Ok(())
 }
@@ -287,6 +292,10 @@ async fn handle_controller_resigned<D: DatabaseAdapter>(
     if let Some(controller_service) = &ctx.controller_service {
         controller_service.clear_controller().await;
     }
+
+    let _ = ctx
+        .event_tx
+        .send(Event::ControllerResigned { controller_id });
 
     Ok(())
 }

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import type { ControllerInfo, PeerRole } from '$lib/types/controller';
   import { getControllerInfo, getMyRole, becomeController, resignController } from '$lib/tauri';
+  import { controllerInfo as controllerStore, myRole as myRoleStore } from '$lib/stores';
 
   let loading = true;
   let controllerInfo: ControllerInfo | null = null;
@@ -16,6 +17,8 @@
   async function loadControllerState() {
     try {
       [controllerInfo, myRole] = await Promise.all([getControllerInfo(), getMyRole()]);
+      controllerStore.set(controllerInfo);
+      myRoleStore.set(myRole);
     } catch (e) {
       console.error('Failed to load controller state:', e);
     }

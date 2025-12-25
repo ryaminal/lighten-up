@@ -77,6 +77,17 @@ fn forward_event(app: &AppHandle, event: &Event) {
             log::info!("[EVENT] Event: light-config-changed");
             app.emit("light-config-changed", config)
         }
+        Event::ControllerElected {
+            controller_id,
+            controller_name,
+        } => {
+            log::info!("[EVENT] Event: controller-elected");
+            app.emit("controller-elected", (controller_id, controller_name))
+        }
+        Event::ControllerResigned { controller_id } => {
+            log::info!("[EVENT] Event: controller-resigned");
+            app.emit("controller-resigned", controller_id)
+        }
     };
 
     if let Err(e) = result {
