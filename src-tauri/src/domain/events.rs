@@ -1,4 +1,6 @@
-use crate::domain::{current_timestamp_secs, light_state::LightState, peer_id::PeerId};
+use crate::domain::{
+    current_timestamp_secs, light::Light, light_state::LightState, peer_id::PeerId,
+};
 use serde::{Deserialize, Serialize};
 
 /// Represents information about a peer
@@ -40,6 +42,9 @@ pub enum Event {
     PeerStateChanged { peer_id: PeerId, state: LightState },
     PeerLeft { peer_id: PeerId },
     MyStateChanged { state: LightState },
+    LightActivated { light: Light },
+    LightDeactivated { light: Light },
+    LightUpdated { light: Light },
 }
 
 #[cfg(test)]

@@ -61,6 +61,18 @@ fn forward_event(app: &AppHandle, event: &Event) {
             log::info!("[EVENT] Event: peer-left");
             app.emit("peer-left", peer_id)
         }
+        Event::LightActivated { light } => {
+            log::info!("[EVENT] Event: light-activated");
+            app.emit("light-activated", light)
+        }
+        Event::LightDeactivated { light } => {
+            log::info!("[EVENT] Event: light-deactivated");
+            app.emit("light-deactivated", light)
+        }
+        Event::LightUpdated { light } => {
+            log::info!("[EVENT] Event: light-updated");
+            app.emit("light-updated", light)
+        }
     };
 
     if let Err(e) = result {
