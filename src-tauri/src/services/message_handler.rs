@@ -1,5 +1,5 @@
 use crate::adapters::{DatabaseAdapter, Message, Result};
-use crate::domain::{Event, LightState, PeerId, PeerInfo};
+use crate::domain::{Event, Light, LightState, PeerId, PeerInfo};
 use crate::services::MessageContext;
 
 /// Handle incoming message from a peer
@@ -20,6 +20,10 @@ pub async fn handle_message<D: DatabaseAdapter>(
         Message::PeerAnnouncement { peer } => handle_peer_announcement(peer, ctx).await,
         Message::StateUpdate { peer_id, state } => handle_state_update(peer_id, state, ctx).await,
         Message::PeerLeaving { peer_id } => handle_peer_leaving(peer_id, ctx).await,
+        Message::LightActivated { light } => handle_light_activated(light, ctx).await,
+        Message::LightDeactivated { light } => handle_light_deactivated(light, ctx).await,
+        Message::LightCommentAdded { light } => handle_light_comment_added(light, ctx).await,
+        Message::LightPriorityChanged { light } => handle_light_priority_changed(light, ctx).await,
         Message::Heartbeat { .. }
         | Message::StateSyncRequest
         | Message::ApplicationMessage { .. }
@@ -100,6 +104,50 @@ async fn handle_peer_leaving<D: DatabaseAdapter>(
 
     let _ = ctx.event_tx.send(Event::PeerLeft { peer_id });
 
+    Ok(())
+}
+
+async fn handle_light_activated<D: DatabaseAdapter>(
+    light: Light,
+    ctx: &MessageContext<D>,
+) -> Result<()> {
+    ctx.database.save_light(&light).await?;
+    let _ = ctx.event_tx.send(Event::LightActivated {
+        light: light.clone(),
+    });
+    Ok(())
+}
+
+async fn handle_light_deactivated<D: DatabaseAdapter>(
+    light: Light,
+    ctx: &MessageContext<D>,
+) -> Result<()> {
+    ctx.database.save_light(&light).await?;
+    let _ = ctx.event_tx.send(Event::LightDeactivated {
+        light: light.clone(),
+    });
+    Ok(())
+}
+
+async fn handle_light_comment_added<D: DatabaseAdapter>(
+    light: Light,
+    ctx: &MessageContext<D>,
+) -> Result<()> {
+    ctx.database.save_light(&light).await?;
+    let _ = ctx.event_tx.send(Event::LightUpdated {
+        light: light.clone(),
+    });
+    Ok(())
+}
+
+async fn handle_light_priority_changed<D: DatabaseAdapter>(
+    light: Light,
+    ctx: &MessageContext<D>,
+) -> Result<()> {
+    ctx.database.save_light(&light).await?;
+    let _ = ctx.event_tx.send(Event::LightUpdated {
+        light: light.clone(),
+    });
     Ok(())
 }
 

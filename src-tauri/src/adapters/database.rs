@@ -1,5 +1,5 @@
 use crate::adapters::error::Result;
-use crate::domain::{LightState, PeerId, PeerInfo};
+use crate::domain::{Light, LightId, LightState, PeerId, PeerInfo};
 use async_trait::async_trait;
 
 /// Database adapter trait for persistent storage
@@ -31,4 +31,17 @@ pub trait DatabaseAdapter: Send + Sync {
 
     /// Update our light state
     async fn update_my_light_state(&self, state: &LightState) -> Result<()>;
+
+    // Light operations
+    /// Save or update a light
+    async fn save_light(&self, light: &Light) -> Result<()>;
+
+    /// Get a light by ID
+    async fn get_light(&self, light_id: &LightId) -> Result<Light>;
+
+    /// Get all lights
+    async fn get_all_lights(&self) -> Result<Vec<Light>>;
+
+    /// Delete a light by ID
+    async fn delete_light(&self, light_id: &LightId) -> Result<()>;
 }

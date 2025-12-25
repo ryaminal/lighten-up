@@ -24,6 +24,11 @@ pub fn run() {
             commands::set_light_color,
             commands::get_my_state,
             commands::get_peers,
+            commands::create_light,
+            commands::activate_light,
+            commands::deactivate_light,
+            commands::add_light_comment,
+            commands::get_all_lights,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

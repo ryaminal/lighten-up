@@ -1,5 +1,5 @@
 use crate::adapters::{DatabaseAdapter, NetworkAdapter};
-use crate::domain::{LightColor, PeerId};
+use crate::domain::{Light, LightColor, LightId, PeerId};
 use crate::encryption::ChaCha20Encryption;
 use crate::network::MdnsNetwork;
 use crate::services::light_service::LightService;
@@ -260,4 +260,50 @@ async fn test_multi_peer_rapid_changes() {
     // Cleanup
     let _ = network1.stop().await;
     let _ = network2.stop().await;
+}
+
+/// Integration test: Light CRUD operations
+#[tokio::test]
+async fn test_light_crud_operations() {
+    let peer_id = PeerId::new("test-peer");
+    let passphrase = "test-passphrase";
+
+    let enc = ChaCha20Encryption::from_passphrase(passphrase).unwrap();
+    let net = Arc::new(MdnsNetwork::new(peer_id.clone(), enc));
+    let db = Arc::new(MockDatabaseAdapter::new());
+
+    net.start().await.unwrap();
+
+    let (event_tx, _) = broadcast::channel(100);
+
+    let service = LightService::new(
+        peer_id.clone(),
+        "TestPeer".to_string(),
+        db.clone(),
+        net.clone(),
+        event_tx,
+    )
+    .await
+    .unwrap();
+
+    let light_id = LightId::new("test-light-1".to_string());
+    let mut light = Light::new(light_id.clone(), "Conference Room".to_string());
+
+    service.save_light(&light).await.unwrap();
+
+    let retrieved = service.get_light(&light_id).await.unwrap();
+    assert_eq!(retrieved.id, light.id);
+    assert_eq!(retrieved.name, light.name);
+
+    light.activate(peer_id.clone());
+    service.save_light(&light).await.unwrap();
+
+    let activated = service.get_light(&light_id).await.unwrap();
+    assert!(activated.is_active());
+
+    let all_lights = service.get_all_lights().await.unwrap();
+    assert_eq!(all_lights.len(), 1);
+    assert_eq!(all_lights[0].id, light.id);
+
+    let _ = net.stop().await;
 }

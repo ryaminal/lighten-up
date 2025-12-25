@@ -1,6 +1,7 @@
 use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter, Result};
 use crate::domain::{
-    Event, LightColor, LightState, PeerId, PeerInfo, VectorClock, current_timestamp_secs,
+    Event, Light, LightColor, LightId, LightState, PeerId, PeerInfo, VectorClock,
+    current_timestamp_secs,
 };
 use crate::services::state::ServiceState;
 use std::sync::Arc;
@@ -101,5 +102,20 @@ impl<D: DatabaseAdapter, N: NetworkAdapter> LightService<D, N> {
         }
 
         Ok(new_state)
+    }
+
+    /// Save a light to the database
+    pub async fn save_light(&self, light: &Light) -> Result<()> {
+        self.database.save_light(light).await
+    }
+
+    /// Get a light by ID
+    pub async fn get_light(&self, light_id: &LightId) -> Result<Light> {
+        self.database.get_light(light_id).await
+    }
+
+    /// Get all lights
+    pub async fn get_all_lights(&self) -> Result<Vec<Light>> {
+        self.database.get_all_lights().await
     }
 }

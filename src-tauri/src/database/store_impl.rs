@@ -1,5 +1,5 @@
 use crate::adapters::{AdapterError, DatabaseAdapter, Result};
-use crate::domain::{LightState, PeerInfo};
+use crate::domain::{Light, LightId, LightState, PeerInfo};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -43,6 +43,11 @@ impl DatabaseAdapter for StoreDatabase {
         // Initialize empty peers map if it doesn't exist
         if store.get("peers").is_none() {
             store.set("peers", serde_json::json!({}));
+        }
+
+        // Initialize empty lights map if it doesn't exist
+        if store.get("lights").is_none() {
+            store.set("lights", serde_json::json!({}));
         }
 
         store
@@ -158,6 +163,82 @@ impl DatabaseAdapter for StoreDatabase {
         store
             .save()
             .map_err(|e| AdapterError::Database(format!("Failed to delete peer: {}", e)))?;
+
+        Ok(())
+    }
+
+    // Light operations
+    async fn save_light(&self, light: &Light) -> Result<()> {
+        let store = self.store.write().await;
+
+        let mut lights: HashMap<String, serde_json::Value> = store
+            .get("lights")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .unwrap_or_default();
+
+        lights.insert(
+            light.id.as_str().to_string(),
+            serde_json::to_value(light).expect("Light should always serialize to JSON"),
+        );
+
+        store.set(
+            "lights",
+            serde_json::to_value(lights).expect("HashMap should always serialize to JSON"),
+        );
+        store
+            .save()
+            .map_err(|e| AdapterError::Database(format!("Failed to save light: {}", e)))?;
+
+        Ok(())
+    }
+
+    async fn get_light(&self, light_id: &LightId) -> Result<Light> {
+        let store = self.store.read().await;
+
+        let lights: HashMap<String, serde_json::Value> = store
+            .get("lights")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .unwrap_or_default();
+
+        lights
+            .get(light_id.as_str())
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .ok_or_else(|| AdapterError::Database(format!("Light {} not found", light_id.as_str())))
+    }
+
+    async fn get_all_lights(&self) -> Result<Vec<Light>> {
+        let store = self.store.read().await;
+
+        let lights: HashMap<String, serde_json::Value> = store
+            .get("lights")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .unwrap_or_default();
+
+        let result: Vec<Light> = lights
+            .values()
+            .filter_map(|v| serde_json::from_value(v.clone()).ok())
+            .collect();
+
+        Ok(result)
+    }
+
+    async fn delete_light(&self, light_id: &LightId) -> Result<()> {
+        let store = self.store.write().await;
+
+        let mut lights: HashMap<String, serde_json::Value> = store
+            .get("lights")
+            .and_then(|v| serde_json::from_value(v.clone()).ok())
+            .unwrap_or_default();
+
+        lights.remove(light_id.as_str());
+
+        store.set(
+            "lights",
+            serde_json::to_value(lights).expect("HashMap should always serialize to JSON"),
+        );
+        store
+            .save()
+            .map_err(|e| AdapterError::Database(format!("Failed to delete light: {}", e)))?;
 
         Ok(())
     }

@@ -1,4 +1,4 @@
-use crate::domain::{LightState, PeerId, PeerInfo};
+use crate::domain::{Light, LightState, PeerId, PeerInfo};
 use std::collections::HashMap;
 
 /// Message types for network communication
@@ -32,6 +32,18 @@ pub enum Message {
         from: PeerId,
         data: serde_json::Value,
     },
+
+    /// Light was activated
+    LightActivated { light: Light },
+
+    /// Light was deactivated
+    LightDeactivated { light: Light },
+
+    /// Comment was added to a light
+    LightCommentAdded { light: Light },
+
+    /// Light priority was changed
+    LightPriorityChanged { light: Light },
 }
 
 #[cfg(test)]

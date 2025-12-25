@@ -1,5 +1,5 @@
 use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter, Result};
-use crate::domain::{LightState, PeerId, PeerInfo};
+use crate::domain::{Light, LightId, LightState, PeerId, PeerInfo};
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -84,6 +84,7 @@ impl NetworkAdapter for MockNetworkAdapter {
 pub struct MockDatabaseAdapter {
     my_peer: Arc<Mutex<Option<PeerInfo>>>,
     peers: Arc<Mutex<HashMap<String, PeerInfo>>>,
+    lights: Arc<Mutex<HashMap<String, Light>>>,
 }
 
 impl Default for MockDatabaseAdapter {
@@ -97,6 +98,7 @@ impl MockDatabaseAdapter {
         Self {
             my_peer: Arc::new(Mutex::new(None)),
             peers: Arc::new(Mutex::new(HashMap::new())),
+            lights: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 }
@@ -157,6 +159,37 @@ impl DatabaseAdapter for MockDatabaseAdapter {
 
     async fn delete_peer(&self, peer_id: &PeerId) -> Result<()> {
         self.peers.lock().await.remove(peer_id.as_str());
+        Ok(())
+    }
+
+    async fn save_light(&self, light: &Light) -> Result<()> {
+        self.lights
+            .lock()
+            .await
+            .insert(light.id.as_str().to_string(), light.clone());
+        Ok(())
+    }
+
+    async fn get_light(&self, light_id: &LightId) -> Result<Light> {
+        self.lights
+            .lock()
+            .await
+            .get(light_id.as_str())
+            .cloned()
+            .ok_or_else(|| {
+                crate::adapters::AdapterError::Database(format!(
+                    "Light {} not found",
+                    light_id.as_str()
+                ))
+            })
+    }
+
+    async fn get_all_lights(&self) -> Result<Vec<Light>> {
+        Ok(self.lights.lock().await.values().cloned().collect())
+    }
+
+    async fn delete_light(&self, light_id: &LightId) -> Result<()> {
+        self.lights.lock().await.remove(light_id.as_str());
         Ok(())
     }
 }
