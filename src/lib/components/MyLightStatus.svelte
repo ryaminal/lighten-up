@@ -3,32 +3,42 @@
   import { myState } from '$lib/stores';
   import { setLightStatus } from '$lib/tauri';
   import { COLOR_CONFIG } from '$lib/config/colors';
+  import type { LightColor } from '$lib/types';
 
   let note: string = '';
-  const maxNoteLength = 140;
-  let editing = false;
+  const maxNoteLength = 60;
   let isSaving = false;
 
   // Keep note in sync with store
   $: {
-    if ($myState && !editing) {
+    if ($myState) {
       note = $myState.note || '';
     }
   }
 
-  function handleNoteChange(e: Event) {
-    editing = true;
-    note = (e.target as HTMLTextAreaElement).value.slice(0, maxNoteLength);
+  // Debounced note update - saves automatically as user types
+  let saveTimeout: number | undefined;
+  function handleNoteInput(e: Event) {
+    const input = e.target as HTMLInputElement;
+    note = input.value.slice(0, maxNoteLength);
+    
+    // Clear existing timeout
+    if (saveTimeout) clearTimeout(saveTimeout);
+    
+    // Set new timeout to save after 500ms of no typing
+    saveTimeout = setTimeout(() => {
+      if ($myState) {
+        saveNoteRealtime($myState.light_state.color);
+      }
+    }, 500) as unknown as number;
   }
 
-  async function saveNote() {
-    if (!$myState || isSaving) return;
+  async function saveNoteRealtime(color: LightColor) {
+    if (isSaving) return;
     isSaving = true;
     try {
-      // Send current color and new note
       const trimmedNote = note.trim();
-      await setLightStatus($myState.light_state.color, trimmedNote || undefined);
-      editing = false;
+      await setLightStatus(color, trimmedNote || undefined);
     } catch (error) {
       console.error('Failed to save note:', error);
     } finally {
@@ -36,93 +46,70 @@
     }
   }
 
-  function cancelEdit() {
-    editing = false;
-    note = $myState?.note || '';
-  }
-
-  async function turnOffLight() {
-    if (!$myState || isSaving) return;
-    isSaving = true;
-    try {
-      await setLightStatus('Off', note || undefined);
-    } catch (error) {
-      console.error('Failed to turn off light:', error);
-    } finally {
-      isSaving = false;
-    }
-  }
-
   $: currentConfig = $myState ? COLOR_CONFIG[$myState.light_state.color] : COLOR_CONFIG.Off;
+  $: isOff = $myState?.light_state.color === 'Off';
+  $: statusMessage = $myState?.note?.trim() || '';
 </script>
 
-<div class="flex flex-col gap-8">
-  <div class="flex flex-col gap-4">
-    <div class="flex items-center gap-3 mb-4">
-      <span class="h-3 w-3 rounded-full {currentConfig.colorClass}"></span>
-      <h2 class="text-3xl font-bold text-slate-900 dark:text-white">
-        {$myState?.name || 'Loading...'}
-      </h2>
-    </div>
-    <p class="text-slate-600 dark:text-slate-400 text-sm flex items-center gap-2">
-      Current status:
-      <span class="font-semibold text-slate-900 dark:text-white">{currentConfig.label}</span>
-    </p>
-  </div>
-
-  <div class="flex flex-col gap-4">
-    <h3 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-      Activate Light
-    </h3>
-    <LightColorPicker />
-  </div>
-
-  <div class="flex flex-col gap-4">
-    <label
-      for="status-note"
-      class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide"
-    >
-      Add Note (Optional)
-    </label>
-    <div class="relative">
-      <textarea
-        id="status-note"
-        class="w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-        placeholder="Add a note about the status..."
-        rows="3"
-        maxlength={maxNoteLength}
-        value={note}
-        oninput={handleNoteChange}
-      ></textarea>
-      <div class="absolute bottom-3 right-3 text-xs text-slate-400">
-        {note.length}/{maxNoteLength}
+<div class="flex flex-col h-full">
+  <!-- Header with status -->
+  <div class="flex justify-between items-start mb-6">
+    <div>
+      <div class="flex items-center gap-3 mb-1">
+        <h1 class="text-[#0d141b] dark:text-white text-2xl lg:text-3xl font-bold leading-tight tracking-tight">
+          {$myState?.name || 'Loading...'}
+        </h1>
+      </div>
+      <div class="flex items-center gap-2">
+        {#if isOff}
+          <span class="flex h-3 w-3 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+          <p class="text-slate-500 dark:text-slate-400 text-sm font-bold tracking-wide uppercase">
+            Status: OFF
+          </p>
+        {:else if statusMessage}
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full {currentConfig.colorClass} opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 {currentConfig.colorClass}" style="box-shadow: 0 0 8px {currentConfig.hex}40"></span>
+          </span>
+          <p class="text-sm font-bold tracking-wide text-slate-700 dark:text-slate-300">
+            {statusMessage}
+          </p>
+        {:else}
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full {currentConfig.colorClass} opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 {currentConfig.colorClass}"></span>
+          </span>
+          <p class="text-slate-400 dark:text-slate-500 text-sm font-medium italic">
+            No status message
+          </p>
+        {/if}
       </div>
     </div>
   </div>
 
-  <div class="mt-8 flex justify-between gap-4 pt-8 border-t border-slate-100 dark:border-slate-700 items-center">
-    <button
-      class="flex items-center gap-2 px-6 py-3 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-      onclick={turnOffLight}
-      disabled={isSaving}
-    >
-      Turn Off Light
-    </button>
-    <div class="flex gap-3">
-      <button
-        class="px-8 py-3 rounded-lg text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-        onclick={cancelEdit}
-        disabled={isSaving || !editing}
-      >
-        Cancel
-      </button>
-      <button
-        class="px-10 py-3 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg shadow-slate-900/10 hover:shadow-xl transition-all active:scale-95 disabled:opacity-50"
-        onclick={saveNote}
-        disabled={isSaving}
-      >
-        {isSaving ? 'Saving...' : 'Update'}
-      </button>
+  <!-- Note input and color picker section -->
+  <div class="mb-6">
+    <h2 class="text-[#0d141b] dark:text-slate-200 text-xs font-bold uppercase tracking-wider mb-3 opacity-70">
+      Light Selection & Message
+    </h2>
+
+    <!-- Note input ABOVE color picker -->
+    <div class="mb-4">
+      <div class="relative w-full">
+        <input
+          type="text"
+          class="block w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 py-3 px-4 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-sm"
+          placeholder="Add a custom message for this light (Optional)..."
+          maxlength={maxNoteLength}
+          value={note}
+          oninput={handleNoteInput}
+        />
+      </div>
     </div>
+
+    <!-- Color picker grid -->
+    <LightColorPicker {note} />
   </div>
+
+  <div class="mt-auto"></div>
 </div>
