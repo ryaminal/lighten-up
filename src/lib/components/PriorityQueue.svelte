@@ -34,17 +34,17 @@
     return `${Math.floor(elapsed / 86400)}d ago`;
   }
 
-  // Sort peers by priority (highest first), then by time in state (oldest first)
+  // Sort peers by priority (lowest number = highest priority), then by time in state (oldest first)
   $: sortedPeers = [...($peers || [])].sort((a, b) => {
     const aPriority = getLightConfig(a).priority;
     const bPriority = getLightConfig(b).priority;
-    // Higher priority first
-    if (aPriority !== bPriority) return bPriority - aPriority;
+    // Lower number = higher priority (0 is highest)
+    if (aPriority !== bPriority) return aPriority - bPriority;
     // Then by time in state (oldest first)
     return a.light_state.timestamp - b.light_state.timestamp;
   });
 
-  $: hasUrgent = sortedPeers.some((p) => getLightConfig(p).priority >= 3);
+  $: hasUrgent = sortedPeers.some((p) => getLightConfig(p).priority === 0);
 </script>
 
 <aside
@@ -75,29 +75,35 @@
         {@const config = getLightConfig(peer)}
         {@const timeInState = getTimeInState(peer.light_state.timestamp)}
         {@const priorityLabel =
-          config.priority >= 3
-            ? 'Urgent'
-            : config.priority === 2
-              ? 'Attention'
-              : config.priority === 1
-                ? 'Info'
-                : 'Normal'}
+          config.priority === 0
+            ? 'Critical'
+            : config.priority === 1
+              ? 'Urgent'
+              : config.priority === 2
+                ? 'High'
+                : config.priority === 3
+                  ? 'Medium'
+                  : 'Low'}
         {@const badgeClass =
-          config.priority >= 3
+          config.priority === 0
             ? 'bg-red-100 text-[#ef4444] dark:bg-red-900/30 dark:text-red-300'
-            : config.priority === 2
+            : config.priority === 1
               ? 'bg-orange-100 text-[#f97316] dark:bg-orange-900/30 dark:text-orange-300'
-              : config.priority === 1
-                ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300'
-                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}
+              : config.priority === 2
+                ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-300'
+                : config.priority === 3
+                  ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300'
+                  : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}
         {@const hoverClass =
-          config.priority >= 3
+          config.priority === 0
             ? 'hover:bg-red-50 dark:hover:bg-gray-800/80'
-            : config.priority === 2
+            : config.priority === 1
               ? 'hover:bg-orange-50 dark:hover:bg-gray-800/80'
-              : config.priority === 1
-                ? 'hover:bg-blue-50 dark:hover:bg-gray-800/80'
-                : 'hover:bg-gray-50 dark:hover:bg-gray-800/80'}
+              : config.priority === 2
+                ? 'hover:bg-yellow-50 dark:hover:bg-gray-800/80'
+                : config.priority === 3
+                  ? 'hover:bg-blue-50 dark:hover:bg-gray-800/80'
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-800/80'}
 
         <div
           class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 border-l-4 shadow-sm hover:shadow-md transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800 {hoverClass}"

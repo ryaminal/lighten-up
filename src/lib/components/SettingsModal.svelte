@@ -29,7 +29,7 @@
       ]);
       peerId = id;
       peerName = name;
-      // Ensure consistent sorting: priority first, then name
+      // Ensure consistent sorting: priority first (ASC: 0 is highest), then name
       lights = lightsData.sort((a, b) => {
         if (a.priority !== b.priority) return a.priority - b.priority;
         return a.name.localeCompare(b.name);
@@ -69,7 +69,7 @@
       color: '#3b82f6',
       name: 'New Light',
       enabled: true,
-      priority: 1,
+      priority: 0,
       updated_at: Math.floor(Date.now() / 1000),
       updated_by: peerId,
     };
@@ -80,7 +80,7 @@
         return getLights();
       })
       .then((fresh) => {
-        // Sort consistently: priority first, then name
+        // Sort consistently: priority first (ASC: 0 is highest), then name
         lights = fresh.sort((a, b) => {
           if (a.priority !== b.priority) return a.priority - b.priority;
           return a.name.localeCompare(b.name);
@@ -124,19 +124,15 @@
   }
 
   function getPriorityLabel(priority: number): string {
-    if (priority >= 3) return 'High';
-    if (priority === 2) return 'Medium';
-    return 'Low';
+    return priority.toString();
   }
 
-  function setPriority(light: LightConfig, priority: string) {
-    const priorityMap: Record<string, number> = {
-      High: 3,
-      Medium: 2,
-      Low: 1,
-    };
-    light.priority = priorityMap[priority];
-    handleLightChange(light);
+  function handlePriorityChange(light: LightConfig, value: string) {
+    const priority = parseInt(value, 10);
+    if (!isNaN(priority) && priority >= 0) {
+      light.priority = priority;
+      handleLightChange(light);
+    }
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -308,23 +304,16 @@
                     />
                   </div>
 
-                  <!-- Priority Dropdown -->
+                  <!-- Priority Input -->
                   <div class="col-span-3">
-                    <select
-                      class="flex h-8 w-full items-center justify-between rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs shadow-sm ring-offset-background placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 text-gray-900 dark:text-white"
-                      value={getPriorityLabel(light.priority)}
-                      on:change={(e) => setPriority(light, e.currentTarget.value)}
-                    >
-                      <option class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        >High</option
-                      >
-                      <option class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        >Medium</option
-                      >
-                      <option class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                        >Low</option
-                      >
-                    </select>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="flex h-8 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs shadow-sm ring-offset-background placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 text-gray-900 dark:text-white"
+                      value={light.priority}
+                      on:change={(e) => handlePriorityChange(light, e.currentTarget.value)}
+                    />
                   </div>
 
                   <!-- Delete Button -->

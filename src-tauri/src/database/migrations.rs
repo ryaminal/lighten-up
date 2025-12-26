@@ -15,8 +15,7 @@ pub fn run_migrations(conn: &Connection) -> Result<(), rusqlite::Error> {
             enabled INTEGER NOT NULL DEFAULT 1,
             priority INTEGER NOT NULL,
             updated_at INTEGER NOT NULL,
-            updated_by TEXT NOT NULL,
-            UNIQUE(priority)
+            updated_by TEXT NOT NULL
         );
 
         CREATE TABLE IF NOT EXISTS chat_messages (
