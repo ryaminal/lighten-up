@@ -163,6 +163,14 @@ fn setup_message_routing(
                     match msg {
                         Message::Presence(p) => {
                             log::debug!("[MESSAGE_ROUTING] Received presence message");
+                            match &p {
+                                // Log goodbye messages at INFO level
+                                crate::protocol::messages::PresenceMessage::Goodbye { peer_id } => {
+                                    log::info!("[MESSAGE_ROUTING] Received goodbye from peer {}", peer_id);
+                                }
+                                _ => {}
+                            }
+                            
                             match p {
                                 // Normal online/goodbye handling
                                 crate::protocol::messages::PresenceMessage::Online { .. }

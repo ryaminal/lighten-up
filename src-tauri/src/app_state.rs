@@ -36,25 +36,28 @@ impl AppState {
 
     /// Gracefully shutdown the application
     pub async fn shutdown(&self) -> Result<(), String> {
-        log::info!("Initiating graceful shutdown");
+        log::info!("[SHUTDOWN] Initiating graceful shutdown");
 
         // Broadcast offline status
+        log::info!("[SHUTDOWN] Broadcasting goodbye message to all peers");
         let message = self.presence_service.get_offline_message().await;
         if let Err(e) = self.network.broadcast(Message::Presence(message)).await {
-            log::warn!("Failed to broadcast offline status: {:?}", e);
+            log::warn!("[SHUTDOWN] Failed to broadcast offline status: {:?}", e);
         } else {
-            log::info!("Offline status broadcast successfully");
+            log::info!("[SHUTDOWN] Goodbye message broadcast successfully");
         }
+
+        // Give more time for message to be sent before stopping network
+        log::info!("[SHUTDOWN] Waiting for goodbye message to be delivered...");
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
         // Stop network
+        log::info!("[SHUTDOWN] Stopping network services");
         if let Err(e) = self.network.stop().await {
-            log::error!("Failed to stop network: {:?}", e);
+            log::error!("[SHUTDOWN] Failed to stop network: {:?}", e);
         }
 
-        // Small delay to ensure message is sent
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-
-        log::info!("Graceful shutdown completed");
+        log::info!("[SHUTDOWN] Graceful shutdown completed");
         Ok(())
     }
 }

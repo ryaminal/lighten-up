@@ -91,6 +91,7 @@ impl PresenceService {
                 ).await;
             }
             PresenceMessage::Goodbye { peer_id } => {
+                log::info!("[PRESENCE] Peer {} is going offline - removing from peer list", peer_id);
                 remove_peer(&self.peers, &peer_id).await;
             }
             // RequestStatus is a lightweight ping; we do not need to update state.
