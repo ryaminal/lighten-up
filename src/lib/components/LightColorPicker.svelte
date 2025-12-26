@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { setLightStatus } from '$lib/tauri';
-  import { myState, lightConfig } from '$lib/stores';
-  import type { LightColor } from '$lib/types';
+  import { setLightColor } from '$lib/tauri';
+  import { myLightColor, lights } from '$lib/stores';
+  import type { LightColor } from '$lib/generated/types';
   import { COLOR_CONFIG, type ColorConfig } from '$lib/config/colors';
 
   // Note prop passed from parent
@@ -15,14 +15,14 @@
 
   // Dynamically get available lights from config
   let lightButtons = $derived(
-    $lightConfig
-      ? $lightConfig.definitions
-          .filter((def) => !def.deleted_at && def.enabled && def.color !== 'Off')
-          .sort((a, b) => a.order - b.order)
-          .map((def) => ({
-            color: def.color,
-            config: COLOR_CONFIG[def.color],
-            name: def.name,
+    $lights
+      ? $lights
+          .filter((light) => light.enabled && light.color !== 'Off')
+          .sort((a, b) => a.priority - b.priority)
+          .map((light) => ({
+            color: light.color as LightColor,
+            config: COLOR_CONFIG[light.color as LightColor],
+            name: light.name,
           }))
       : []
   );
@@ -33,13 +33,13 @@
     if (isChanging) return;
 
     // If clicking the currently active color, toggle it off
-    const currentColor = $myState?.light_state.color;
+    const currentColor = $myLightColor;
     const targetColor = currentColor === color ? 'Off' : color;
 
     isChanging = true;
     try {
       // Send both color and current note
-      await setLightStatus(targetColor, note.trim() || undefined);
+      await setLightColor(targetColor, note.trim() || undefined);
     } catch (error) {
       console.error('Failed to set color:', error);
     } finally {
@@ -49,7 +49,7 @@
 
   // Check if color is currently active
   function isActive(color: LightColor): boolean {
-    return $myState?.light_state.color === color;
+    return $myLightColor === color;
   }
 </script>
 

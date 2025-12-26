@@ -1,225 +1,145 @@
-use crate::adapters::DatabaseAdapter;
-use crate::domain::{LightConfig, PeerId};
+use crate::database::Database;
+use crate::protocol::messages::{ConfigMessage, ConfigOp, LightConfig};
+use anyhow::Result;
 use std::sync::Arc;
-use tokio::sync::RwLock;
 
-/// Service for managing light configuration
-pub struct ConfigService<D: DatabaseAdapter> {
-    database: Arc<D>,
-    config: Arc<RwLock<LightConfig>>,
+pub struct ConfigService {
+    db: Arc<Database>,
+    my_peer_id: String,
 }
 
-impl<D: DatabaseAdapter> ConfigService<D> {
-    pub async fn new(database: Arc<D>, peer_id: &PeerId) -> Result<Self, String> {
-        let config = match database.get_light_config().await {
-            Ok(cfg) => cfg,
-            Err(_) => {
-                let default_cfg = LightConfig::default_config(peer_id.as_str());
-                database
-                    .save_light_config(&default_cfg)
-                    .await
-                    .map_err(|e| format!("Failed to save config: {}", e))?;
-                default_cfg
-            }
-        };
+impl ConfigService {
+    pub fn new(db: Arc<Database>, my_peer_id: String) -> Self {
+        Self { db, my_peer_id }
+    }
 
-        Ok(Self {
-            database,
-            config: Arc::new(RwLock::new(config)),
+    pub async fn get_all_lights(&self) -> Result<Vec<LightConfig>> {
+        let conn = self.db.connection();
+        crate::database::queries::get_all_lights(&conn)
+            .map_err(|e| anyhow::anyhow!("Failed to get lights: {}", e))
+    }
+
+    pub async fn upsert_light(&self, mut light: LightConfig) -> Result<ConfigMessage> {
+        light.updated_at = crate::utils::current_timestamp();
+        light.updated_by = self.my_peer_id.clone();
+
+        let conn = self.db.connection();
+        crate::database::queries::upsert_light(&conn, &light)
+            .map_err(|e| anyhow::anyhow!("Failed to upsert light: {}", e))?;
+
+        Ok(ConfigMessage {
+            op: ConfigOp::Upsert {
+                id: light.id,
+                color: light.color,
+                name: light.name,
+                enabled: light.enabled,
+                priority: light.priority,
+                updated_at: light.updated_at,
+                updated_by: light.updated_by,
+            },
+            peer_id: self.my_peer_id.clone(),
+            timestamp: crate::utils::current_timestamp(),
         })
     }
 
-    pub async fn get_config(&self) -> LightConfig {
-        self.config.read().await.clone()
+    pub async fn delete_light(&self, id: String) -> Result<ConfigMessage> {
+        let conn = self.db.connection();
+        crate::database::queries::delete_light(&conn, &id)
+            .map_err(|e| anyhow::anyhow!("Failed to delete light: {}", e))?;
+
+        Ok(ConfigMessage {
+            op: ConfigOp::Delete {
+                id,
+                deleted_at: crate::utils::current_timestamp(),
+            },
+            peer_id: self.my_peer_id.clone(),
+            timestamp: crate::utils::current_timestamp(),
+        })
     }
 
-    pub async fn update_config(&self, config: LightConfig) -> Result<(), String> {
-        self.database
-            .save_light_config(&config)
-            .await
-            .map_err(|e| format!("Failed to save config: {}", e))?;
-
-        let mut current = self.config.write().await;
-        *current = config;
-
-        Ok(())
-    }
-
-    pub async fn merge_config(&self, other: &LightConfig) -> Result<(), String> {
-        let mut current = self.config.write().await;
-        current.merge(other);
-
-        self.database
-            .save_light_config(&current)
-            .await
-            .map_err(|e| format!("Failed to save merged config: {}", e))?;
-
-        Ok(())
-    }
-
-    /// Replace config completely (for followers receiving controller config)
-    pub async fn replace_config(&self, config: &LightConfig) -> Result<(), String> {
-        log::info!(
-            "[CONFIG] Replacing config with controller's config (version {})",
-            config.version
-        );
-
-        self.database
-            .save_light_config(config)
-            .await
-            .map_err(|e| format!("Failed to save config: {}", e))?;
-
-        let mut current = self.config.write().await;
-        *current = config.clone();
-
-        Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::adapters::{AdapterError, Result};
-    use crate::domain::{Light, LightId, LightState, PeerId, PeerInfo};
-    use async_trait::async_trait;
-
-    struct MockDatabase {
-        config: Arc<RwLock<Option<LightConfig>>>,
-    }
-
-    impl MockDatabase {
-        fn new() -> Self {
-            Self {
-                config: Arc::new(RwLock::new(None)),
+    pub async fn handle_config_message(&self, msg: ConfigMessage) -> Result<()> {
+        match msg.op {
+            ConfigOp::Upsert {
+                id,
+                color,
+                name,
+                enabled,
+                priority,
+                updated_at,
+                updated_by,
+            } => {
+                apply_upsert_with_lww(
+                    &self.db,
+                    id,
+                    color,
+                    name,
+                    enabled,
+                    priority,
+                    updated_at,
+                    updated_by,
+                ).await
+            }
+            ConfigOp::Delete { id, deleted_at } => {
+                apply_delete_if_newer(&self.db, &id, deleted_at).await
             }
         }
     }
+}
 
-    #[async_trait]
-    impl DatabaseAdapter for MockDatabase {
-        async fn initialize(&self) -> Result<()> {
-            Ok(())
-        }
+async fn apply_upsert_with_lww(
+    db: &Arc<Database>,
+    id: String,
+    color: String,
+    name: String,
+    enabled: bool,
+    priority: i32,
+    updated_at: u64,
+    updated_by: String,
+) -> Result<()> {
+    let conn = db.connection();
+    let existing = crate::database::queries::get_all_lights(&conn)?
+        .into_iter()
+        .find(|l| l.id == id);
 
-        async fn save_peer(&self, _peer: &PeerInfo) -> Result<()> {
-            Ok(())
-        }
+    let should_apply = match existing {
+        Some(existing) => updated_at > existing.updated_at,
+        None => true,
+    };
 
-        async fn get_peer(&self, _peer_id: &PeerId) -> Result<PeerInfo> {
-            Err(AdapterError::Database("not implemented".to_string()))
-        }
-
-        async fn get_all_peers(&self) -> Result<Vec<PeerInfo>> {
-            Ok(vec![])
-        }
-
-        async fn delete_peer(&self, _peer_id: &PeerId) -> Result<()> {
-            Ok(())
-        }
-
-        async fn save_my_peer(&self, _peer: &PeerInfo) -> Result<()> {
-            Ok(())
-        }
-
-        async fn get_my_peer(&self) -> Result<PeerInfo> {
-            Err(AdapterError::Database("not implemented".to_string()))
-        }
-
-        async fn update_my_name(&self, _name: String) -> Result<()> {
-            Ok(())
-        }
-
-        async fn update_my_light_state(&self, _state: &LightState) -> Result<()> {
-            Ok(())
-        }
-
-        async fn save_light(&self, _light: &Light) -> Result<()> {
-            Ok(())
-        }
-
-        async fn get_light(&self, _light_id: &LightId) -> Result<Light> {
-            Err(AdapterError::Database("not implemented".to_string()))
-        }
-
-        async fn get_all_lights(&self) -> Result<Vec<Light>> {
-            Ok(vec![])
-        }
-
-        async fn delete_light(&self, _light_id: &LightId) -> Result<()> {
-            Ok(())
-        }
-
-        async fn save_light_config(&self, config: &LightConfig) -> Result<()> {
-            *self.config.write().await = Some(config.clone());
-            Ok(())
-        }
-
-        async fn get_light_config(&self) -> Result<LightConfig> {
-            self.config
-                .read()
-                .await
-                .clone()
-                .ok_or_else(|| AdapterError::Database("config not found".to_string()))
-        }
-
-        async fn save_controller_info(
-            &self,
-            _info: Option<crate::services::controller_service::ControllerInfo>,
-        ) -> Result<()> {
-            Ok(())
-        }
-
-        async fn get_controller_info(
-            &self,
-        ) -> Result<Option<crate::services::controller_service::ControllerInfo>> {
-            Ok(None)
-        }
+    if should_apply {
+        let light = LightConfig {
+            id,
+            color,
+            name,
+            enabled,
+            priority,
+            updated_at,
+            updated_by,
+        };
+        crate::database::queries::upsert_light(&conn, &light)?;
     }
 
-    #[tokio::test]
-    async fn test_new_creates_default_config() {
-        let db = Arc::new(MockDatabase::new());
-        let peer_id = PeerId::new("test-peer");
+    Ok(())
+}
 
-        let service = ConfigService::new(db.clone(), &peer_id).await.expect("ok");
+async fn apply_delete_if_newer(
+    db: &Arc<Database>,
+    id: &str,
+    deleted_at: u64,
+) -> Result<()> {
+    let conn = db.connection();
+    let existing = crate::database::queries::get_all_lights(&conn)?
+        .into_iter()
+        .find(|l| l.id == id);
 
-        let config = service.get_config().await;
-        assert_eq!(config.definitions.len(), 6);
-        assert_eq!(config.version, 1);
+    let should_delete = match existing {
+        Some(existing) => deleted_at > existing.updated_at,
+        None => false,
+    };
+
+    if should_delete {
+        crate::database::queries::delete_light(&conn, id)?;
     }
 
-    #[tokio::test]
-    async fn test_update_config() {
-        let db = Arc::new(MockDatabase::new());
-        let peer_id = PeerId::new("test-peer");
-
-        let service = ConfigService::new(db.clone(), &peer_id).await.expect("ok");
-
-        let mut config = service.get_config().await;
-        config.version = 2;
-
-        service.update_config(config.clone()).await.expect("ok");
-
-        let retrieved = service.get_config().await;
-        assert_eq!(retrieved.version, 2);
-    }
-
-    #[tokio::test]
-    async fn test_merge_config() {
-        let db = Arc::new(MockDatabase::new());
-        let peer_id = PeerId::new("test-peer");
-
-        let service = ConfigService::new(db.clone(), &peer_id).await.expect("ok");
-
-        let mut other_config = service.get_config().await;
-        other_config.definitions[0].name = "Updated".to_string();
-        other_config.definitions[0].updated_at += 1;
-        other_config.version = 2;
-
-        service.merge_config(&other_config).await.expect("ok");
-
-        let merged = service.get_config().await;
-        assert_eq!(merged.definitions[0].name, "Updated");
-        assert_eq!(merged.version, 2);
-    }
+    Ok(())
 }

@@ -5,8 +5,10 @@ pub mod database;
 pub mod domain;
 pub mod encryption;
 pub mod network;
+pub mod protocol;
 pub mod services;
 pub mod setup;
+pub mod utils;
 
 use tauri::Manager;
 
@@ -14,29 +16,30 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(configure_logging().build())
-        .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_cli::init())
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            log::warn!("Another instance of Lighten Up is already running");
+            // Focus the existing window
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_focus();
+            }
+        }))
         .setup(setup_application)
         .on_window_event(handle_window_event)
         .invoke_handler(tauri::generate_handler![
+            commands::get_my_peer_name,
+            commands::get_my_peer_id,
+            commands::set_peer_name,
             commands::set_light_color,
-            commands::set_light_status,
-            commands::get_my_state,
             commands::get_peers,
+            commands::get_lights,
             commands::create_light,
-            commands::activate_light,
-            commands::deactivate_light,
-            commands::add_light_comment,
-            commands::get_all_lights,
-            commands::get_light_config,
-            commands::update_light_definition,
-            commands::delete_light_definition,
-            commands::get_controller_info,
-            commands::get_my_role,
-            commands::become_controller,
-            commands::resign_controller,
+            commands::update_light,
+            commands::delete_light,
+            commands::send_chat_message,
+            commands::get_chat_messages,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -131,7 +134,7 @@ fn handle_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
 fn perform_graceful_shutdown(window: &tauri::Window) {
     log::info!("Window close requested, initiating graceful shutdown");
     let app_handle = window.app_handle();
-    let services = app_handle.state::<setup::AppServices>();
+    let services = app_handle.state::<app_state::AppState>();
 
     tauri::async_runtime::block_on(async {
         if let Err(e) = services.shutdown().await {

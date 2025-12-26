@@ -55,11 +55,14 @@ pub async fn write_message<E: EncryptionAdapter>(
 
 fn extract_peer_id(message: &Message) -> Result<PeerId> {
     match message {
-        Message::PeerAnnouncement { peer } => Ok(peer.id.clone()),
-        Message::StateUpdate { peer_id, .. } => Ok(peer_id.clone()),
-        Message::Heartbeat { peer_id } => Ok(peer_id.clone()),
-        Message::PeerLeaving { peer_id } => Ok(peer_id.clone()),
-        Message::ApplicationMessage { from, .. } => Ok(from.clone()),
-        _ => Err(AdapterError::Network("Message has no peer_id".to_string())),
+        Message::Presence(presence) => {
+            use crate::protocol::messages::PresenceMessage;
+            match presence {
+                PresenceMessage::Online { peer_id, .. } => Ok(PeerId::new(peer_id)),
+                PresenceMessage::Goodbye { peer_id } => Ok(PeerId::new(peer_id)),
+            }
+        }
+        Message::Config(config) => Ok(PeerId::new(&config.peer_id)),
+        Message::Chat(chat) => Ok(PeerId::new(&chat.peer_id)),
     }
 }

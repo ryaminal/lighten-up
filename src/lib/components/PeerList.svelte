@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { peers, lightConfig } from '$lib/stores';
+  import { peers, lights } from '$lib/stores';
   import { COLOR_CONFIG } from '$lib/config/colors';
   import type { LightColor } from '$lib/generated/types';
 
@@ -13,12 +13,10 @@
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  function getLightName(color: LightColor): string {
-    if (!$lightConfig) return '';
-    const definition = $lightConfig.definitions.find(
-      (def) => !def.deleted_at && def.enabled && def.color === color
-    );
-    return definition?.name || '';
+  function getLightName(color: string): string {
+    if (!$lights) return '';
+    const light = $lights.find((l) => l.enabled && l.color === color);
+    return light?.name || '';
   }
 </script>
 
@@ -54,8 +52,8 @@
     {#if $peers.length === 0}
       <p class="text-slate-400 italic text-center mt-8">Searching for peers...</p>
     {:else}
-      {#each $peers as peer (peer.id)}
-        {@const config = COLOR_CONFIG[peer.light_state.color] ?? COLOR_CONFIG.Off}
+      {#each $peers as peer (peer.peer_id)}
+        {@const config = COLOR_CONFIG[peer.light_state.color as LightColor] ?? COLOR_CONFIG.Off}
         {@const lightName = getLightName(peer.light_state.color)}
         <div
           class="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer border-l-[6px] {config.borderClass}"
@@ -63,7 +61,7 @@
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-start mb-2">
               <h4 class="text-base font-bold text-slate-900 dark:text-white truncate">
-                {peer.name}
+                {peer.peer_name}
               </h4>
               <span
                 class="text-xs font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium"

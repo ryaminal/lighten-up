@@ -1,34 +1,36 @@
-use crate::adapters::{DatabaseAdapter, Message, NetworkAdapter};
-use crate::domain::PeerId;
-use crate::services::{ConfigService, ControllerService, LightService, PeerService};
+use crate::adapters::{Message, NetworkAdapter};
+use crate::database::Database;
+use crate::encryption::ChaCha20Encryption;
+use crate::network::MdnsNetwork;
+use crate::services::{ChatService, ConfigService, PresenceService};
 use std::sync::Arc;
 
 /// Application state managed by Tauri
-pub struct AppState<D: DatabaseAdapter, N: NetworkAdapter> {
-    pub light_service: Arc<LightService<D, N>>,
-    pub peer_service: Arc<PeerService<D, N>>,
-    pub config_service: Arc<ConfigService<D>>,
-    pub controller_service: Arc<ControllerService<D>>,
-    pub network: Arc<N>,
-    pub my_peer_id: PeerId,
+pub struct AppState {
+    pub network: Arc<MdnsNetwork<ChaCha20Encryption>>,
+    pub my_peer_id: String,
+    pub presence_service: Arc<PresenceService>,
+    pub config_service: Arc<ConfigService>,
+    pub chat_service: Arc<ChatService>,
+    pub database: Arc<Database>,
 }
 
-impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> AppState<D, N> {
+impl AppState {
     pub fn new(
-        light_service: Arc<LightService<D, N>>,
-        peer_service: Arc<PeerService<D, N>>,
-        config_service: Arc<ConfigService<D>>,
-        controller_service: Arc<ControllerService<D>>,
-        network: Arc<N>,
-        my_peer_id: PeerId,
+        network: Arc<MdnsNetwork<ChaCha20Encryption>>,
+        my_peer_id: String,
+        presence_service: Arc<PresenceService>,
+        config_service: Arc<ConfigService>,
+        chat_service: Arc<ChatService>,
+        database: Arc<Database>,
     ) -> Self {
         Self {
-            light_service,
-            peer_service,
-            config_service,
-            controller_service,
             network,
             my_peer_id,
+            presence_service,
+            config_service,
+            chat_service,
+            database,
         }
     }
 
@@ -36,20 +38,12 @@ impl<D: DatabaseAdapter + 'static, N: NetworkAdapter + 'static> AppState<D, N> {
     pub async fn shutdown(&self) -> Result<(), String> {
         log::info!("Initiating graceful shutdown");
 
-        // Broadcast PeerLeaving message to all peers
-        let message = Message::PeerLeaving {
-            peer_id: self.my_peer_id.clone(),
-        };
-
-        if let Err(e) = self.network.broadcast(message).await {
-            log::warn!("Failed to broadcast PeerLeaving message: {:?}", e);
+        // Broadcast offline status
+        let message = self.presence_service.get_offline_message().await;
+        if let Err(e) = self.network.broadcast(Message::Presence(message)).await {
+            log::warn!("Failed to broadcast offline status: {:?}", e);
         } else {
-            log::info!("PeerLeaving message broadcast successfully");
-        }
-
-        // Stop peer service
-        if let Err(e) = self.peer_service.stop() {
-            log::error!("Failed to stop peer service: {:?}", e);
+            log::info!("Offline status broadcast successfully");
         }
 
         // Stop network

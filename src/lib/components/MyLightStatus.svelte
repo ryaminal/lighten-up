@@ -1,9 +1,9 @@
 <script lang="ts">
   import LightColorPicker from './LightColorPicker.svelte';
-  import { myState, lightConfig } from '$lib/stores';
-  import { setLightStatus } from '$lib/tauri';
+  import { myPeerName, myLightColor, myNote, lights } from '$lib/stores';
+  import { setLightColor } from '$lib/tauri';
   import { COLOR_CONFIG } from '$lib/config/colors';
-  import type { LightColor } from '$lib/types';
+  import type { LightColor } from '$lib/generated/types';
 
   let note: string = '';
   const maxNoteLength = 60;
@@ -11,8 +11,8 @@
 
   // Keep note in sync with store
   $: {
-    if ($myState) {
-      note = $myState.note || '';
+    if ($myNote !== undefined) {
+      note = $myNote || '';
     }
   }
 
@@ -27,18 +27,16 @@
 
     // Set new timeout to save after 500ms of no typing
     saveTimeout = setTimeout(() => {
-      if ($myState) {
-        saveNoteRealtime($myState.light_state.color);
-      }
+      saveNoteRealtime($myLightColor);
     }, 500) as unknown as number;
   }
 
-  async function saveNoteRealtime(color: LightColor) {
+  async function saveNoteRealtime(color: string) {
     if (isSaving) return;
     isSaving = true;
     try {
       const trimmedNote = note.trim();
-      await setLightStatus(color, trimmedNote || undefined);
+      await setLightColor(color as LightColor, trimmedNote || undefined);
     } catch (error) {
       console.error('Failed to save note:', error);
     } finally {
@@ -46,16 +44,16 @@
     }
   }
 
-  function getLightName(color: LightColor): string {
-    if (!$lightConfig) return '';
-    const definition = $lightConfig.definitions.find((d) => !d.deleted_at && d.color === color);
-    return definition?.name || '';
+  function getLightName(color: string): string {
+    if (!$lights) return '';
+    const light = $lights.find((l) => l.enabled && l.color === color);
+    return light?.name || '';
   }
 
-  $: currentConfig = $myState ? COLOR_CONFIG[$myState.light_state.color] : COLOR_CONFIG.Off;
-  $: isOff = $myState?.light_state.color === 'Off';
-  $: statusMessage = $myState?.note?.trim() || '';
-  $: lightName = $myState ? getLightName($myState.light_state.color) : '';
+  $: currentConfig = COLOR_CONFIG[$myLightColor as LightColor] || COLOR_CONFIG.Off;
+  $: isOff = $myLightColor === 'Off';
+  $: statusMessage = $myNote?.trim() || '';
+  $: lightName = getLightName($myLightColor);
 </script>
 
 <div class="flex flex-col h-full">
@@ -66,7 +64,7 @@
         <h1
           class="text-[#0d141b] dark:text-white text-2xl lg:text-3xl font-bold leading-tight tracking-tight"
         >
-          {$myState?.name || 'Loading...'}
+          {$myPeerName || 'Loading...'}
         </h1>
       </div>
       <div class="flex items-center gap-2">

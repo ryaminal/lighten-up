@@ -20,6 +20,9 @@ pub enum AdapterError {
 
     #[error("Invalid data: {0}")]
     InvalidData(String),
+
+    #[error("{0}")]
+    Other(String),
 }
 
 #[cfg(test)]

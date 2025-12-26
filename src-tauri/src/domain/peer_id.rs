@@ -9,16 +9,6 @@ impl PeerId {
         Self(id.into())
     }
 
-    pub fn generate() -> Self {
-        use rand::Rng;
-        let id: String = rand::thread_rng()
-            .sample_iter(&rand::distributions::Alphanumeric)
-            .take(16)
-            .map(char::from)
-            .collect();
-        Self(id)
-    }
-
     pub fn as_str(&self) -> &str {
         &self.0
     }

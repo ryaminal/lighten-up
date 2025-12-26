@@ -1,8 +1,19 @@
 <script lang="ts">
   import { currentView } from '$lib/stores';
+  import SettingsModal from './SettingsModal.svelte';
+
+  let showSettings = false;
 
   function navigate(view: 'dashboard' | 'config') {
     currentView.set(view);
+  }
+
+  function openSettings() {
+    showSettings = true;
+  }
+
+  function closeSettings() {
+    showSettings = false;
   }
 </script>
 
@@ -42,10 +53,13 @@
   <div class="mt-auto pt-4 border-t border-slate-700/50 w-full flex justify-center">
     <button
       class="h-10 w-10 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors flex items-center justify-center text-white font-bold text-xs shadow-inner ring-2 ring-slate-800"
-      title="User"
+      title="Settings"
       type="button"
+      on:click={openSettings}
     >
       ME
     </button>
   </div>
 </aside>
+
+<SettingsModal isOpen={showSettings} onClose={closeSettings} />

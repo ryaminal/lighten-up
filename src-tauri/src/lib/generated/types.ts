@@ -5,3 +5,16 @@
  * Covers the 8 standard terminal/ANSI colors (0-7)
  */
 export type LightColor = "Black" | "Red" | "Green" | "Yellow" | "Blue" | "Magenta" | "Cyan" | "White" | "Off";
+
+/**
+ * Light configuration (CRDT)
+ */
+export interface LightConfig {
+	id: string;
+	color: string;
+	name: string;
+	enabled: boolean;
+	priority: number;
+	updated_at: number;
+	updated_by: string;
+}
