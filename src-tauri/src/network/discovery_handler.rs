@@ -18,7 +18,7 @@ pub async fn handle_event(
             log::info!("[DISC] Service resolved: {}", info.get_fullname());
             if let Some(peer_conn) = extract_peer_info(&info, my_peer_id) {
                 log::info!(
-                    "[OK] Adding peer: {} at {}",
+                    "[PEER_DISCOVERED] New peer added: {} at {} - peers should now see each other",
                     peer_conn.peer_id.as_str(),
                     peer_conn.addr
                 );
