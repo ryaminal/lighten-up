@@ -91,7 +91,7 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> Transport<E> {
                     }
                 Err(e) => {
                     // Treat unexpected EOF (client closed connection) as normal
-                    if e.as_ref().to_string().contains("unexpected end of file") {
+                    if format!("{}", e).contains("unexpected end of file") {
                         log::info!(
                             "[CONN] Connection closed by peer {:?} ({}). No error.",
                             peer_addr,
