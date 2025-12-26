@@ -40,7 +40,7 @@ pub fn get_all_lights(
         let mut stmt = c.prepare(
             "SELECT id, color, name, enabled, priority, updated_at, updated_by 
              FROM light_config 
-             ORDER BY priority ASC",
+             ORDER BY priority ASC, name ASC",
         )?;
 
         let lights = stmt

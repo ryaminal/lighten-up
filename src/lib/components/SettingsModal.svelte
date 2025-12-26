@@ -29,7 +29,11 @@
       ]);
       peerId = id;
       peerName = name;
-      lights = lightsData;
+      // Ensure consistent sorting: priority first, then name
+      lights = lightsData.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.name.localeCompare(b.name);
+      });
     } catch (err) {
       errorMessage = `Failed to load settings: ${err}`;
     } finally {
@@ -46,15 +50,11 @@
     try {
       isSaving = true;
       errorMessage = '';
-      successMessage = '';
 
       await invoke('set_peer_name', { name: peerName.trim() });
 
-      successMessage = 'Settings saved successfully!';
-      setTimeout(() => {
-        successMessage = '';
-        onClose();
-      }, 1500);
+      // Close immediately without delay
+      onClose();
     } catch (err) {
       errorMessage = `Failed to save settings: ${err}`;
     } finally {
@@ -76,11 +76,15 @@
     // Persist via backend; backend will broadcast to other peers.
     createLight(newLight)
       .then(() => {
-        // Refresh lights from backend to stay in sync.
+        // Refresh lights from backend to stay in sync and ensure proper sorting.
         return getLights();
       })
       .then((fresh) => {
-        lights = fresh;
+        // Sort consistently: priority first, then name
+        lights = fresh.sort((a, b) => {
+          if (a.priority !== b.priority) return a.priority - b.priority;
+          return a.name.localeCompare(b.name);
+        });
       })
       .catch((err) => {
         errorMessage = `Failed to add light: ${err}`;
@@ -90,7 +94,12 @@
   async function handleDeleteLight(id: string) {
     try {
       await deleteLight(id);
-      lights = lights.filter((l) => l.id !== id);
+      // Refresh from backend to stay in sync
+      const refreshed = await getLights();
+      lights = refreshed.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.name.localeCompare(b.name);
+      });
     } catch (err) {
       errorMessage = `Failed to delete light: ${err}`;
     }
@@ -104,7 +113,11 @@
       await updateLight(light);
       // Refresh lights to stay in sync with backend (including our own update)
       const refreshed = await getLights();
-      lights = refreshed;
+      // Ensure consistent sorting: priority first, then name
+      lights = refreshed.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.name.localeCompare(b.name);
+      });
     } catch (err) {
       errorMessage = `Failed to update light: ${err}`;
     }
