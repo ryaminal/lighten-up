@@ -95,7 +95,7 @@
       </div>
 
       <!-- Content -->
-      <div class="p-6 space-y-6">
+      <div class="p-6 space-y-6 overflow-y-auto max-h-[60vh]">
         <!-- Light Grid -->
         <div>
           <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">

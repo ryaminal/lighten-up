@@ -14,6 +14,7 @@
   let isSaving = false;
   let errorMessage = '';
   let successMessage = '';
+  let scrollContainer: HTMLDivElement;
 
   onMount(async () => {
     await loadData();
@@ -64,12 +65,13 @@
 
   function handleAddLight() {
     // Create a new light config both locally and on the backend so it propagates to peers.
+    // Priority is set to the end of the list (number of existing lights)
     const newLight: LightConfig = {
       id: crypto.randomUUID(),
       color: '#3b82f6',
       name: 'New Light',
       enabled: true,
-      priority: 0,
+      priority: lights.length,
       updated_at: Math.floor(Date.now() / 1000),
       updated_by: peerId,
     };
@@ -123,15 +125,79 @@
     }
   }
 
-  function getPriorityLabel(priority: number): string {
-    return priority.toString();
+  async function handleMoveLightUp(index: number) {
+    if (index === 0) return; // Already at top
+
+    const currentLight = lights[index];
+    const previousLight = lights[index - 1];
+
+    // Swap priorities
+    const tempPriority = currentLight.priority;
+    currentLight.priority = previousLight.priority;
+    previousLight.priority = tempPriority;
+
+    // Update both lights
+    currentLight.updated_at = Math.floor(Date.now() / 1000);
+    currentLight.updated_by = peerId;
+    previousLight.updated_at = Math.floor(Date.now() / 1000);
+    previousLight.updated_by = peerId;
+
+    try {
+      await updateLight(currentLight);
+      await updateLight(previousLight);
+
+      // Refresh from backend to ensure consistency
+      const refreshed = await getLights();
+      lights = refreshed.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.name.localeCompare(b.name);
+      });
+    } catch (err) {
+      errorMessage = `Failed to reorder lights: ${err}`;
+      // Refresh to revert to server state on error
+      const refreshed = await getLights();
+      lights = refreshed.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.name.localeCompare(b.name);
+      });
+    }
   }
 
-  function handlePriorityChange(light: LightConfig, value: string) {
-    const priority = parseInt(value, 10);
-    if (!isNaN(priority) && priority >= 0) {
-      light.priority = priority;
-      handleLightChange(light);
+  async function handleMoveLightDown(index: number) {
+    if (index === lights.length - 1) return; // Already at bottom
+
+    const currentLight = lights[index];
+    const nextLight = lights[index + 1];
+
+    // Swap priorities
+    const tempPriority = currentLight.priority;
+    currentLight.priority = nextLight.priority;
+    nextLight.priority = tempPriority;
+
+    // Update both lights
+    currentLight.updated_at = Math.floor(Date.now() / 1000);
+    currentLight.updated_by = peerId;
+    nextLight.updated_at = Math.floor(Date.now() / 1000);
+    nextLight.updated_by = peerId;
+
+    try {
+      await updateLight(currentLight);
+      await updateLight(nextLight);
+
+      // Refresh from backend to ensure consistency
+      const refreshed = await getLights();
+      lights = refreshed.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.name.localeCompare(b.name);
+      });
+    } catch (err) {
+      errorMessage = `Failed to reorder lights: ${err}`;
+      // Refresh to revert to server state on error
+      const refreshed = await getLights();
+      lights = refreshed.sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return a.name.localeCompare(b.name);
+      });
     }
   }
 
@@ -195,7 +261,10 @@
         </div>
       {:else}
         <!-- Content -->
-        <div class="p-6 pt-6 overflow-y-auto space-y-8 custom-scrollbar">
+        <div
+          bind:this={scrollContainer}
+          class="p-6 pt-6 overflow-y-auto space-y-8 custom-scrollbar"
+        >
           <!-- Identification Section -->
           <div class="space-y-4">
             <div class="flex items-center gap-2">
@@ -270,17 +339,39 @@
               <div
                 class="grid grid-cols-12 gap-4 p-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
               >
+                <div class="col-span-1 text-center">Order</div>
                 <div class="col-span-1 text-center">Color</div>
-                <div class="col-span-6">Light Name</div>
-                <div class="col-span-3">Priority</div>
+                <div class="col-span-8">Light Name</div>
                 <div class="col-span-2 text-right">Actions</div>
               </div>
 
               <!-- Table Rows -->
-              {#each lights as light (light.id)}
+              {#each lights as light, index (light.id)}
                 <div
-                  class="grid grid-cols-12 gap-4 p-3 items-center border-b border-gray-200 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors group"
+                  class="grid grid-cols-12 gap-4 p-3 items-center border-b border-gray-200 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-all duration-200 group"
                 >
+                  <!-- Up/Down Arrows -->
+                  <div class="col-span-1 flex flex-col items-center gap-0.5">
+                    <button
+                      class="inline-flex items-center justify-center rounded text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      on:click={() => handleMoveLightUp(index)}
+                      disabled={index === 0}
+                      aria-label="Move up"
+                      title="Move up"
+                    >
+                      <span class="material-symbols-outlined text-sm">arrow_upward</span>
+                    </button>
+                    <button
+                      class="inline-flex items-center justify-center rounded text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      on:click={() => handleMoveLightDown(index)}
+                      disabled={index === lights.length - 1}
+                      aria-label="Move down"
+                      title="Move down"
+                    >
+                      <span class="material-symbols-outlined text-sm">arrow_downward</span>
+                    </button>
+                  </div>
+
                   <!-- Color Picker -->
                   <div class="col-span-1 flex justify-center relative">
                     <div
@@ -292,27 +383,17 @@
                       type="color"
                       bind:value={light.color}
                       on:change={() => handleLightChange(light)}
+                      on:click|stopPropagation
                     />
                   </div>
 
                   <!-- Light Name -->
-                  <div class="col-span-6">
+                  <div class="col-span-8">
                     <input
                       class="flex h-8 w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-900 focus:bg-white dark:focus:bg-gray-900 text-gray-900 dark:text-white transition-all"
                       bind:value={light.name}
                       on:change={() => handleLightChange(light)}
-                    />
-                  </div>
-
-                  <!-- Priority Input -->
-                  <div class="col-span-3">
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      class="flex h-8 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs shadow-sm ring-offset-background placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 text-gray-900 dark:text-white"
-                      value={light.priority}
-                      on:change={(e) => handlePriorityChange(light, e.currentTarget.value)}
+                      maxlength="30"
                     />
                   </div>
 
