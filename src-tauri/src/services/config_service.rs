@@ -57,7 +57,7 @@ impl ConfigService {
         })
     }
 
-    pub async fn handle_config_message(&self, msg: ConfigMessage) -> Result<()> {
+    pub async fn handle_config_message(&self, msg: ConfigMessage) -> Result<bool> {
         match msg.op {
             ConfigOp::Upsert {
                 id,
@@ -77,12 +77,38 @@ impl ConfigService {
                     priority,
                     updated_at,
                     updated_by,
-                ).await
+                ).await?;
+                Ok(false)
             }
             ConfigOp::Delete { id, deleted_at } => {
-                apply_delete_if_newer(&self.db, &id, deleted_at).await
+                apply_delete_if_newer(&self.db, &id, deleted_at).await?;
+                Ok(false)
+            }
+            ConfigOp::RequestSync { .. } => {
+                // Return true to signal that a sync response is needed
+                Ok(true)
             }
         }
+    }
+    
+    pub async fn get_all_config_messages(&self) -> Result<Vec<ConfigMessage>> {
+        let lights = self.get_all_lights().await?;
+        let messages = lights.into_iter().map(|light| {
+            ConfigMessage {
+                op: ConfigOp::Upsert {
+                    id: light.id,
+                    color: light.color,
+                    name: light.name,
+                    enabled: light.enabled,
+                    priority: light.priority,
+                    updated_at: light.updated_at,
+                    updated_by: light.updated_by,
+                },
+                peer_id: self.my_peer_id.clone(),
+                timestamp: crate::utils::current_timestamp(),
+            }
+        }).collect();
+        Ok(messages)
     }
 }
 

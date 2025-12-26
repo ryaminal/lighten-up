@@ -81,6 +81,7 @@ pub async fn initialize_services(app: &AppHandle) -> Result<AppState, String> {
     // Start background tasks
     spawn_heartbeat_task(network.clone(), presence_service.clone());
     spawn_cleanup_task(presence_service.clone());
+    spawn_config_sync_task(network.clone(), config_service.clone(), peer_id_str.clone());
 
     Ok(AppState::new(
         network,
@@ -189,8 +190,27 @@ fn setup_message_routing(
                         }
                         Message::Config(c) => {
                             log::debug!("[MESSAGE_ROUTING] Received config message");
-                            if let Err(e) = config.handle_config_message(c).await {
-                                log::error!("[MESSAGE_ROUTING] Failed to handle config: {}", e);
+                            match config.handle_config_message(c.clone()).await {
+                                Ok(needs_sync_response) => {
+                                    if needs_sync_response {
+                                        // This was a RequestSync - send all our configs to the requester
+                                        log::info!("[MESSAGE_ROUTING] Received config sync request from {}, sending all configs", c.peer_id);
+                                        let target_peer = crate::domain::PeerId::new(c.peer_id);
+                                        match config.get_all_config_messages().await {
+                                            Ok(messages) => {
+                                                for msg in messages {
+                                                    if let Err(e) = network.send_to_peer(&target_peer, Message::Config(msg)).await {
+                                                        log::error!("[MESSAGE_ROUTING] Failed to send config to peer: {}", e);
+                                                    }
+                                                }
+                                            }
+                                            Err(e) => log::error!("[MESSAGE_ROUTING] Failed to get config messages: {}", e),
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    log::error!("[MESSAGE_ROUTING] Failed to handle config: {}", e);
+                                }
                             }
                             
                             // Emit event to frontend
@@ -245,13 +265,24 @@ fn spawn_heartbeat_task(network: Arc<AppNetwork>, presence: Arc<PresenceService>
         }
     });
 
-    // Immediately broadcast a status request so newly started client learns about existing peers.
-    let request = crate::protocol::messages::PresenceMessage::RequestStatus {
-        peer_id: presence.get_my_peer_id(),
-    };
-    let net_clone = network.clone();
+    // Immediately broadcast our online presence and request status from all peers
+    let net_for_online = network.clone();
+    let pres_for_online = presence.clone();
     tokio::spawn(async move {
-        if let Err(e) = net_clone.broadcast(Message::Presence(request)).await {
+        log::info!("[INIT] Broadcasting initial online presence");
+        let online_msg = pres_for_online.get_my_presence().await;
+        if let Err(e) = net_for_online.broadcast(Message::Presence(online_msg)).await {
+            log::error!("[INIT] Failed to broadcast online presence: {}", e);
+        }
+        
+        // Small delay to allow network to settle
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        
+        log::info!("[INIT] Broadcasting status request");
+        let request = crate::protocol::messages::PresenceMessage::RequestStatus {
+            peer_id: pres_for_online.get_my_peer_id(),
+        };
+        if let Err(e) = net_for_online.broadcast(Message::Presence(request)).await {
             log::error!("[INIT] Failed to broadcast status request: {}", e);
         }
     });
@@ -264,6 +295,26 @@ fn spawn_cleanup_task(presence: Arc<PresenceService>) {
         loop {
             interval.tick().await;
             presence.cleanup_stale_peers().await;
+        }
+    });
+}
+
+fn spawn_config_sync_task(network: Arc<AppNetwork>, _config: Arc<ConfigService>, peer_id: String) {
+    tokio::spawn(async move {
+        // Wait a bit for network to be established
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+        
+        log::info!("[INIT] Broadcasting config sync request");
+        let sync_request = crate::protocol::messages::ConfigMessage {
+            op: crate::protocol::messages::ConfigOp::RequestSync {
+                peer_id: peer_id.clone(),
+            },
+            peer_id,
+            timestamp: crate::utils::current_timestamp(),
+        };
+        
+        if let Err(e) = network.broadcast(Message::Config(sync_request)).await {
+            log::error!("[INIT] Failed to broadcast config sync request: {}", e);
         }
     });
 }

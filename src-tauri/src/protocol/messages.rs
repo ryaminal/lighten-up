@@ -56,6 +56,10 @@ pub enum ConfigOp {
         id: String,
         deleted_at: u64,
     },
+    /// Request all light configs from peers
+    RequestSync {
+        peer_id: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
