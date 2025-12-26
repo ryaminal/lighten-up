@@ -101,8 +101,11 @@ async fn apply_upsert_with_lww(
         .into_iter()
         .find(|l| l.id == id);
 
+    // Apply if the incoming update is newer or has the same timestamp.
+    // Using `>=` ensures that updates with identical timestamps (e.g., rapid succession
+    // on different peers) are not silently dropped, which improves eventual consistency.
     let should_apply = match existing {
-        Some(existing) => updated_at > existing.updated_at,
+        Some(existing) => updated_at >= existing.updated_at,
         None => true,
     };
 
@@ -132,8 +135,9 @@ async fn apply_delete_if_newer(
         .into_iter()
         .find(|l| l.id == id);
 
+    // Delete if the delete timestamp is newer or equal to the current record's timestamp.
     let should_delete = match existing {
-        Some(existing) => deleted_at > existing.updated_at,
+        Some(existing) => deleted_at >= existing.updated_at,
         None => false,
     };
 

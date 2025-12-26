@@ -93,6 +93,10 @@ impl PresenceService {
             PresenceMessage::Goodbye { peer_id } => {
                 remove_peer(&self.peers, &peer_id).await;
             }
+            // RequestStatus is a lightweight ping; we do not need to update state.
+            PresenceMessage::RequestStatus { .. } => {
+                // No action needed – the routing layer will reply directly.
+            }
         }
     }
 

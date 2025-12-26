@@ -63,6 +63,7 @@
   }
 
   function handleAddLight() {
+    // Create a new light config both locally and on the backend so it propagates to peers.
     const newLight: LightConfig = {
       id: crypto.randomUUID(),
       color: '#3b82f6',
@@ -72,7 +73,18 @@
       updated_at: Math.floor(Date.now() / 1000),
       updated_by: peerId,
     };
-    lights = [...lights, newLight];
+    // Persist via backend; backend will broadcast to other peers.
+    createLight(newLight)
+      .then(() => {
+        // Refresh lights from backend to stay in sync.
+        return getLights();
+      })
+      .then((fresh) => {
+        lights = fresh;
+      })
+      .catch((err) => {
+        errorMessage = `Failed to add light: ${err}`;
+      });
   }
 
   async function handleDeleteLight(id: string) {
@@ -90,6 +102,9 @@
       light.updated_at = Math.floor(Date.now() / 1000);
       light.updated_by = peerId;
       await updateLight(light);
+      // Refresh lights to stay in sync with backend (including our own update)
+      const refreshed = await getLights();
+      lights = refreshed;
     } catch (err) {
       errorMessage = `Failed to update light: ${err}`;
     }

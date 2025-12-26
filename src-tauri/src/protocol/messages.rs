@@ -12,6 +12,11 @@ pub enum PresenceMessage {
     Goodbye {
         peer_id: String,
     },
+    /// Request current online status from all peers.
+    /// `peer_id` is the requester so others can reply directly.
+    RequestStatus {
+        peer_id: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

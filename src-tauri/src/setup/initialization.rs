@@ -162,8 +162,25 @@ fn setup_message_routing(
                     match msg {
                         Message::Presence(p) => {
                             log::debug!("[MESSAGE_ROUTING] Received presence message");
-                            presence.handle_presence(p).await;
-                            
+                            match p {
+                                // Normal online/goodbye handling
+                                crate::protocol::messages::PresenceMessage::Online { .. }
+                                | crate::protocol::messages::PresenceMessage::Goodbye { .. } => {
+                                    presence.handle_presence(p).await;
+                                }
+                                // A peer is asking for status – reply directly to them
+                                crate::protocol::messages::PresenceMessage::RequestStatus { peer_id } => {
+                                    // Build our current presence and send back to the requester
+                                let my_presence = presence.get_my_presence().await;
+                                let reply = Message::Presence(my_presence);
+                                // Send directly to the requesting peer using its ID
+                                let target_peer = crate::domain::PeerId::new(peer_id.clone());
+                                if let Err(e) = network.send_to_peer(&target_peer, reply).await {
+                                    log::error!("[MESSAGE_ROUTING] Failed to reply to status request: {}", e);
+                                }
+                                }
+                            }
+
                             // Emit event to frontend
                             let peers = presence.get_all_peers().await;
                             if let Err(e) = app.emit("peers-changed", peers) {
@@ -209,18 +226,33 @@ fn setup_message_routing(
 }
 
 fn spawn_heartbeat_task(network: Arc<AppNetwork>, presence: Arc<PresenceService>) {
+    // Clone for use after moving into the heartbeat task.
+    let net_for_heartbeat = network.clone();
+    let pres_for_heartbeat = presence.clone();
+
     tokio::spawn(async move {
         log::info!("[HEARTBEAT] Heartbeat task started, broadcasting every 30s");
         let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
         loop {
             interval.tick().await;
-            let msg = presence.get_my_presence().await;
+            let msg = pres_for_heartbeat.get_my_presence().await;
             log::info!("[HEARTBEAT] Broadcasting presence");
 
             let message = Message::Presence(msg);
-            if let Err(e) = network.broadcast(message).await {
+            if let Err(e) = net_for_heartbeat.broadcast(message).await {
                 log::error!("[HEARTBEAT] Failed to broadcast: {}", e);
             }
+        }
+    });
+
+    // Immediately broadcast a status request so newly started client learns about existing peers.
+    let request = crate::protocol::messages::PresenceMessage::RequestStatus {
+        peer_id: presence.get_my_peer_id(),
+    };
+    let net_clone = network.clone();
+    tokio::spawn(async move {
+        if let Err(e) = net_clone.broadcast(Message::Presence(request)).await {
+            log::error!("[INIT] Failed to broadcast status request: {}", e);
         }
     });
 }
