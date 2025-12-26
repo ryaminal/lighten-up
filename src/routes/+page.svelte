@@ -57,11 +57,13 @@
       // Initialize Tauri event listeners
       await initializeTauri({
         onPeersChanged: (updatedPeers) => {
+          console.log('[Peers] Updated:', updatedPeers.length, 'peers');
           peers.set(updatedPeers);
           // Update my status whenever peers change
           updateMyStatusFromPeers(updatedPeers, initialPeerId);
         },
         onLightsChanged: (updatedLights) => {
+          console.log('[Lights] Updated:', updatedLights.length, 'lights', updatedLights);
           lights.set(updatedLights);
         },
         onChatMessage: (message) => {

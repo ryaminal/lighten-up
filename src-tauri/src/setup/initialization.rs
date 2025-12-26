@@ -224,6 +224,7 @@ fn setup_message_routing(
                             // Emit event to frontend
                             match config.get_all_lights().await {
                                 Ok(lights) => {
+                                    log::info!("[MESSAGE_ROUTING] Emitting lights-changed with {} lights", lights.len());
                                     if let Err(e) = app.emit("lights-changed", lights) {
                                         log::error!("[MESSAGE_ROUTING] Failed to emit lights-changed: {}", e);
                                     }
