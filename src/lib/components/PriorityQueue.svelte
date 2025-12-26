@@ -51,7 +51,7 @@
   class="w-80 bg-white dark:bg-[#111827] border-l border-gray-200 dark:border-gray-800 flex flex-col z-10 shadow-soft relative hidden md:flex"
 >
   <div
-    class="p-5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-950/50 backdrop-blur-sm sticky top-0"
+    class="h-16 px-5 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-950/50 backdrop-blur-sm sticky top-0"
   >
     <div>
       <h2 class="font-bold text-lg text-gray-800 dark:text-white">Priority Queue</h2>
