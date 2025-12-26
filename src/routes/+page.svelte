@@ -31,6 +31,12 @@
   function updateMyStatusFromPeers(peersList: typeof $peers, myId: string) {
     const myPeer = peersList.find((p) => p.peer_id === myId);
     if (myPeer) {
+      console.log('[Status] Updating my status from peers:', {
+        name: myPeer.peer_name,
+        color: myPeer.light_state.color,
+        note: myPeer.note,
+      });
+      myPeerName.set(myPeer.peer_name);
       myLightColor.set(myPeer.light_state.color);
       myNote.set(myPeer.note || '');
     }

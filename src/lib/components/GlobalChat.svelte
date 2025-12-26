@@ -3,6 +3,7 @@
   import { getChatMessages, sendChatMessage, getMyPeerId, getMyPeerName } from '$lib/tauri';
   import { listen, type UnlistenFn } from '@tauri-apps/api/event';
   import type { ChatMessage } from '$lib/tauri';
+  import { peers, myPeerName as myPeerNameStore } from '$lib/stores';
 
   let messages: ChatMessage[] = [];
   let messageInput = '';
@@ -11,6 +12,15 @@
   let myPeerName = '';
   let unlistenChat: UnlistenFn | null = null;
   let messagesContainer: HTMLDivElement;
+
+  // Get current peer name for a message (looks up from peers store)
+  function getCurrentPeerName(message: ChatMessage): string {
+    if (message.peer_id === myPeerId) {
+      return $myPeerNameStore || myPeerName;
+    }
+    const peer = $peers?.find((p) => p.peer_id === message.peer_id);
+    return peer?.peer_name || message.peer_name;
+  }
 
   onMount(async () => {
     try {
@@ -128,23 +138,24 @@
       </div>
 
       {#each messages as message (message.id)}
+        {@const currentName = getCurrentPeerName(message)}
         <div class="group flex gap-3 max-w-3xl">
           <div
             class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-700 dark:text-blue-300 text-sm font-bold shrink-0 mt-1"
           >
-            {getInitials(message.peer_name)}
+            {getInitials(currentName)}
           </div>
           <div>
             <div class="flex items-center gap-2 mb-1">
-              <span class="text-sm font-bold text-gray-900 dark:text-gray-100"
-                >{message.peer_name}</span
-              >
+              <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{currentName}</span>
               <span class="text-[11px] text-gray-400">{formatTime(message.timestamp)}</span>
             </div>
             <div
               class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-lg rounded-tl-none p-4 shadow-sm"
             >
-              <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-line">
+              <p
+                class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-line"
+              >
                 {message.content}
               </p>
             </div>
