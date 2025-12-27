@@ -40,7 +40,8 @@ impl PresenceService {
             &self.my_peer_name,
             &self.my_light_state,
             &self.my_note,
-        ).await
+        )
+        .await
     }
 
     pub async fn get_offline_message(&self) -> PresenceMessage {
@@ -88,10 +89,14 @@ impl PresenceService {
                     light_state,
                     note,
                     timestamp,
-                ).await;
+                )
+                .await;
             }
             PresenceMessage::Goodbye { peer_id } => {
-                log::info!("[PRESENCE] Peer {} is going offline - removing from peer list", peer_id);
+                log::info!(
+                    "[PRESENCE] Peer {} is going offline - removing from peer list",
+                    peer_id
+                );
                 remove_peer(&self.peers, &peer_id).await;
             }
             // RequestStatus is a lightweight ping; we do not need to update state.
@@ -104,14 +109,12 @@ impl PresenceService {
     pub async fn cleanup_stale_peers(&self) {
         let now = crate::utils::current_timestamp();
         let mut peers = self.peers.write().await;
-        peers.retain(|_, peer| {
-            now - peer.last_seen < PEER_TIMEOUT_SECS
-        });
+        peers.retain(|_, peer| now - peer.last_seen < PEER_TIMEOUT_SECS);
     }
 
     pub async fn get_all_peers(&self) -> Vec<PeerPresence> {
         let mut all_peers: Vec<PeerPresence> = self.peers.read().await.values().cloned().collect();
-        
+
         // Include myself in the peers list
         let my_presence = PeerPresence {
             peer_id: self.my_peer_id.clone(),
@@ -121,7 +124,7 @@ impl PresenceService {
             last_seen: crate::utils::current_timestamp(),
         };
         all_peers.push(my_presence);
-        
+
         all_peers
     }
 }
@@ -166,10 +169,7 @@ async fn add_or_update_peer(
     );
 }
 
-async fn remove_peer(
-    peers: &Arc<RwLock<HashMap<String, PeerPresence>>>,
-    peer_id: &str,
-) {
+async fn remove_peer(peers: &Arc<RwLock<HashMap<String, PeerPresence>>>, peer_id: &str) {
     let mut peers_map = peers.write().await;
     peers_map.remove(peer_id);
 }

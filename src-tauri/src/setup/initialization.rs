@@ -40,9 +40,8 @@ pub async fn initialize_services(app: &AppHandle) -> Result<AppState, String> {
     let db_path = data_dir.join("lighten-up.db");
 
     // Create database
-    let database = Arc::new(
-        Database::new(db_path).map_err(|e| format!("Failed to create database: {}", e))?,
-    );
+    let database =
+        Arc::new(Database::new(db_path).map_err(|e| format!("Failed to create database: {}", e))?);
 
     // Initialize peer identity
     let (peer_id_str, peer_name) = initialize_peer_identity(&database)?;
@@ -52,16 +51,13 @@ pub async fn initialize_services(app: &AppHandle) -> Result<AppState, String> {
     let peer_id = PeerId::new(peer_id_str.clone());
 
     // Create encryption and network
-    let passphrase = std::env::var("LIGHTEN_UP_PASSPHRASE")
-        .unwrap_or_else(|_| "default-passphrase".to_string());
+    let passphrase =
+        std::env::var("LIGHTEN_UP_PASSPHRASE").unwrap_or_else(|_| "default-passphrase".to_string());
     let encryption = create_encryption(&passphrase)?;
     let network = create_network(peer_id, encryption).await?;
 
     // Create services
-    let presence_service = Arc::new(PresenceService::new(
-        peer_id_str.clone(),
-        peer_name.clone(),
-    ));
+    let presence_service = Arc::new(PresenceService::new(peer_id_str.clone(), peer_name.clone()));
     let config_service = Arc::new(ConfigService::new(database.clone(), peer_id_str.clone()));
     let chat_service = Arc::new(ChatService::new(
         database.connection(),
@@ -163,14 +159,15 @@ fn setup_message_routing(
                     match msg {
                         Message::Presence(p) => {
                             log::debug!("[MESSAGE_ROUTING] Received presence message");
-                            match &p {
-                                // Log goodbye messages at INFO level
-                                crate::protocol::messages::PresenceMessage::Goodbye { peer_id } => {
-                                    log::info!("[MESSAGE_ROUTING] Received goodbye from peer {}", peer_id);
-                                }
-                                _ => {}
+                            if let crate::protocol::messages::PresenceMessage::Goodbye { peer_id } =
+                                &p
+                            {
+                                log::info!(
+                                    "[MESSAGE_ROUTING] Received goodbye from peer {}",
+                                    peer_id
+                                );
                             }
-                            
+
                             match p {
                                 // Normal online/goodbye handling
                                 crate::protocol::messages::PresenceMessage::Online { .. }
@@ -178,22 +175,31 @@ fn setup_message_routing(
                                     presence.handle_presence(p).await;
                                 }
                                 // A peer is asking for status – reply directly to them
-                                crate::protocol::messages::PresenceMessage::RequestStatus { peer_id } => {
+                                crate::protocol::messages::PresenceMessage::RequestStatus {
+                                    peer_id,
+                                } => {
                                     // Build our current presence and send back to the requester
-                                let my_presence = presence.get_my_presence().await;
-                                let reply = Message::Presence(my_presence);
-                                // Send directly to the requesting peer using its ID
-                                let target_peer = crate::domain::PeerId::new(peer_id.clone());
-                                if let Err(e) = network.send_to_peer(&target_peer, reply).await {
-                                    log::error!("[MESSAGE_ROUTING] Failed to reply to status request: {}", e);
-                                }
+                                    let my_presence = presence.get_my_presence().await;
+                                    let reply = Message::Presence(my_presence);
+                                    // Send directly to the requesting peer using its ID
+                                    let target_peer = crate::domain::PeerId::new(peer_id.clone());
+                                    if let Err(e) = network.send_to_peer(&target_peer, reply).await
+                                    {
+                                        log::error!(
+                                            "[MESSAGE_ROUTING] Failed to reply to status request: {}",
+                                            e
+                                        );
+                                    }
                                 }
                             }
 
                             // Emit event to frontend
                             let peers = presence.get_all_peers().await;
                             if let Err(e) = app.emit("peers-changed", peers) {
-                                log::error!("[MESSAGE_ROUTING] Failed to emit peers-changed: {}", e);
+                                log::error!(
+                                    "[MESSAGE_ROUTING] Failed to emit peers-changed: {}",
+                                    e
+                                );
                             }
                         }
                         Message::Config(c) => {
@@ -202,17 +208,32 @@ fn setup_message_routing(
                                 Ok(needs_sync_response) => {
                                     if needs_sync_response {
                                         // This was a RequestSync - send all our configs to the requester
-                                        log::info!("[MESSAGE_ROUTING] Received config sync request from {}, sending all configs", c.peer_id);
+                                        log::info!(
+                                            "[MESSAGE_ROUTING] Received config sync request from {}, sending all configs",
+                                            c.peer_id
+                                        );
                                         let target_peer = crate::domain::PeerId::new(c.peer_id);
                                         match config.get_all_config_messages().await {
                                             Ok(messages) => {
                                                 for msg in messages {
-                                                    if let Err(e) = network.send_to_peer(&target_peer, Message::Config(msg)).await {
-                                                        log::error!("[MESSAGE_ROUTING] Failed to send config to peer: {}", e);
+                                                    if let Err(e) = network
+                                                        .send_to_peer(
+                                                            &target_peer,
+                                                            Message::Config(msg),
+                                                        )
+                                                        .await
+                                                    {
+                                                        log::error!(
+                                                            "[MESSAGE_ROUTING] Failed to send config to peer: {}",
+                                                            e
+                                                        );
                                                     }
                                                 }
                                             }
-                                            Err(e) => log::error!("[MESSAGE_ROUTING] Failed to get config messages: {}", e),
+                                            Err(e) => log::error!(
+                                                "[MESSAGE_ROUTING] Failed to get config messages: {}",
+                                                e
+                                            ),
                                         }
                                     }
                                 }
@@ -220,16 +241,24 @@ fn setup_message_routing(
                                     log::error!("[MESSAGE_ROUTING] Failed to handle config: {}", e);
                                 }
                             }
-                            
+
                             // Emit event to frontend
                             match config.get_all_lights().await {
                                 Ok(lights) => {
-                                    log::info!("[MESSAGE_ROUTING] Emitting lights-changed with {} lights", lights.len());
+                                    log::info!(
+                                        "[MESSAGE_ROUTING] Emitting lights-changed with {} lights",
+                                        lights.len()
+                                    );
                                     if let Err(e) = app.emit("lights-changed", lights) {
-                                        log::error!("[MESSAGE_ROUTING] Failed to emit lights-changed: {}", e);
+                                        log::error!(
+                                            "[MESSAGE_ROUTING] Failed to emit lights-changed: {}",
+                                            e
+                                        );
                                     }
                                 }
-                                Err(e) => log::error!("[MESSAGE_ROUTING] Failed to get lights: {}", e),
+                                Err(e) => {
+                                    log::error!("[MESSAGE_ROUTING] Failed to get lights: {}", e)
+                                }
                             }
                         }
                         Message::Chat(c) => {
@@ -237,7 +266,7 @@ fn setup_message_routing(
                             if let Err(e) = chat.handle_message(c.clone()).await {
                                 log::error!("[MESSAGE_ROUTING] Failed to handle chat: {}", e);
                             }
-                            
+
                             // Emit event to frontend
                             if let Err(e) = app.emit("chat-message", c) {
                                 log::error!("[MESSAGE_ROUTING] Failed to emit chat-message: {}", e);
@@ -281,16 +310,19 @@ fn spawn_heartbeat_task(network: Arc<AppNetwork>, presence: Arc<PresenceService>
         // Wait for mDNS discovery to complete
         log::info!("[INIT] Waiting 2 seconds for mDNS discovery to find peers...");
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        
+
         log::info!("[INIT] Broadcasting initial online presence");
         let online_msg = pres_for_online.get_my_presence().await;
-        if let Err(e) = net_for_online.broadcast(Message::Presence(online_msg)).await {
+        if let Err(e) = net_for_online
+            .broadcast(Message::Presence(online_msg))
+            .await
+        {
             log::error!("[INIT] Failed to broadcast online presence: {}", e);
         }
-        
+
         // Small delay between broadcasts
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-        
+
         log::info!("[INIT] Broadcasting status request");
         let request = crate::protocol::messages::PresenceMessage::RequestStatus {
             peer_id: pres_for_online.get_my_peer_id(),
@@ -317,7 +349,7 @@ fn spawn_config_sync_task(network: Arc<AppNetwork>, _config: Arc<ConfigService>,
         // Wait for mDNS discovery and initial presence broadcasts
         log::info!("[INIT] Waiting 3 seconds before requesting config sync...");
         tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
-        
+
         log::info!("[INIT] Broadcasting config sync request");
         let sync_request = crate::protocol::messages::ConfigMessage {
             op: crate::protocol::messages::ConfigOp::RequestSync {
@@ -326,7 +358,7 @@ fn spawn_config_sync_task(network: Arc<AppNetwork>, _config: Arc<ConfigService>,
             peer_id,
             timestamp: crate::utils::current_timestamp(),
         };
-        
+
         if let Err(e) = network.broadcast(Message::Config(sync_request)).await {
             log::error!("[INIT] Failed to broadcast config sync request: {}", e);
         }

@@ -6,10 +6,10 @@ use crate::protocol::messages::{ChatMessage, ConfigMessage, PresenceMessage};
 pub enum Message {
     /// Presence message (heartbeat, online/offline status)
     Presence(PresenceMessage),
-    
+
     /// Configuration sync message (CRDT-based)
     Config(ConfigMessage),
-    
+
     /// Chat message
     Chat(ChatMessage),
 }
@@ -28,7 +28,7 @@ mod tests {
             note: Some("Testing".to_string()),
             timestamp: 123456,
         };
-        
+
         let message = Message::Presence(msg);
 
         let serialized = serde_json::to_string(&message).expect("Failed to serialize");

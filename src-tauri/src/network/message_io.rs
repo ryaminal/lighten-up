@@ -53,17 +53,17 @@ pub async fn write_message<E: EncryptionAdapter>(
     Ok(())
 }
 
-    fn extract_peer_id(message: &Message) -> Result<PeerId> {
-        match message {
-            Message::Presence(presence) => {
-                use crate::protocol::messages::PresenceMessage;
-                match presence {
-                    PresenceMessage::Online { peer_id, .. } => Ok(PeerId::new(peer_id)),
-                    PresenceMessage::Goodbye { peer_id } => Ok(PeerId::new(peer_id)),
-                    PresenceMessage::RequestStatus { peer_id } => Ok(PeerId::new(peer_id)),
-                }
+fn extract_peer_id(message: &Message) -> Result<PeerId> {
+    match message {
+        Message::Presence(presence) => {
+            use crate::protocol::messages::PresenceMessage;
+            match presence {
+                PresenceMessage::Online { peer_id, .. } => Ok(PeerId::new(peer_id)),
+                PresenceMessage::Goodbye { peer_id } => Ok(PeerId::new(peer_id)),
+                PresenceMessage::RequestStatus { peer_id } => Ok(PeerId::new(peer_id)),
             }
-            Message::Config(config) => Ok(PeerId::new(&config.peer_id)),
-            Message::Chat(chat) => Ok(PeerId::new(&chat.peer_id)),
         }
+        Message::Config(config) => Ok(PeerId::new(&config.peer_id)),
+        Message::Chat(chat) => Ok(PeerId::new(&chat.peer_id)),
     }
+}

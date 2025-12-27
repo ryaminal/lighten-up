@@ -89,23 +89,23 @@ impl<E: EncryptionAdapter + Send + Sync + 'static> Transport<E> {
                             break;
                         }
                     }
-                Err(e) => {
-                    // Treat unexpected EOF (client closed connection) as normal
-                    if format!("{}", e).contains("unexpected end of file") {
-                        log::info!(
-                            "[CONN] Connection closed by peer {:?} ({}). No error.",
-                            peer_addr,
-                            e
-                        );
-                    } else {
-                        log::error!(
-                            "[ERROR] Error reading message from {:?}: {:?}",
-                            peer_addr,
-                            e
-                        );
+                    Err(e) => {
+                        // Treat unexpected EOF (client closed connection) as normal
+                        if format!("{}", e).contains("unexpected end of file") {
+                            log::info!(
+                                "[CONN] Connection closed by peer {:?} ({}). No error.",
+                                peer_addr,
+                                e
+                            );
+                        } else {
+                            log::error!(
+                                "[ERROR] Error reading message from {:?}: {:?}",
+                                peer_addr,
+                                e
+                            );
+                        }
+                        break;
                     }
-                    break;
-                }
                 }
             }
             log::info!("[CONN] Connection closed from {:?}", peer_addr);

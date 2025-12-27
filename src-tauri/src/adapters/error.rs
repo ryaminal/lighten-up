@@ -25,7 +25,6 @@ pub enum AdapterError {
     Other(String),
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

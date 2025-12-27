@@ -28,7 +28,6 @@ impl Database {
     }
 
     pub fn set_setting(&self, key: &str, value: &str) -> Result<(), String> {
-        queries::set_setting(&self.conn, key, value)
-            .map_err(|e| e.to_string())
+        queries::set_setting(&self.conn, key, value).map_err(|e| e.to_string())
     }
 }

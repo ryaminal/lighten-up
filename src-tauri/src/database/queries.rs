@@ -1,6 +1,6 @@
 use crate::database::connection::execute_query;
 use crate::protocol::messages::LightConfig;
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{Connection, OptionalExtension, params};
 use std::sync::{Arc, Mutex};
 
 // Settings queries
@@ -33,9 +33,7 @@ pub fn set_setting(
 }
 
 // Light config queries
-pub fn get_all_lights(
-    conn: &Arc<Mutex<Connection>>,
-) -> Result<Vec<LightConfig>, rusqlite::Error> {
+pub fn get_all_lights(conn: &Arc<Mutex<Connection>>) -> Result<Vec<LightConfig>, rusqlite::Error> {
     execute_query(conn, |c| {
         let mut stmt = c.prepare(
             "SELECT id, color, name, enabled, priority, updated_at, updated_by 
@@ -84,10 +82,7 @@ pub fn upsert_light(
     })
 }
 
-pub fn delete_light(
-    conn: &Arc<Mutex<Connection>>,
-    id: &str,
-) -> Result<(), rusqlite::Error> {
+pub fn delete_light(conn: &Arc<Mutex<Connection>>, id: &str) -> Result<(), rusqlite::Error> {
     execute_query(conn, |c| {
         c.execute("DELETE FROM light_config WHERE id = ?1", params![id])?;
         Ok(())
