@@ -3,6 +3,20 @@
   import { COLOR_CONFIG } from '$lib/config/colors';
   import type { LightColor } from '$lib/generated/types';
   import type { PeerPresence } from '$lib/tauri';
+  import { onMount, onDestroy } from 'svelte';
+
+  let currentTime = Date.now();
+  let intervalId: number;
+
+  onMount(() => {
+    intervalId = setInterval(() => {
+      currentTime = Date.now();
+    }, 1000);
+  });
+
+  onDestroy(() => {
+    if (intervalId) clearInterval(intervalId);
+  });
 
   // Get light config for a peer's current color
   function getLightConfig(peer: PeerPresence) {
@@ -25,7 +39,7 @@
 
   // Calculate time in current state
   function getTimeInState(timestamp: number): string {
-    const now = Math.floor(Date.now() / 1000);
+    const now = Math.floor(currentTime / 1000);
     const elapsed = now - timestamp;
 
     if (elapsed < 60) return `${elapsed}s ago`;
@@ -43,6 +57,12 @@
     // Then by time in state (oldest first)
     return a.light_state.timestamp - b.light_state.timestamp;
   });
+
+  // Force reactivity by creating a computed value that depends on both peers and currentTime
+  $: peersWithTime = sortedPeers.map((peer) => ({
+    ...peer,
+    _renderKey: currentTime,
+  }));
 
   $: hasUrgent = sortedPeers.some((p) => getLightConfig(p).priority === 0);
 </script>
@@ -71,9 +91,8 @@
     {#if sortedPeers.length === 0}
       <p class="text-gray-400 italic text-center mt-8">No peers online...</p>
     {:else}
-      {#each sortedPeers as peer (peer.peer_id)}
+      {#each peersWithTime as peer (peer.peer_id)}
         {@const config = getLightConfig(peer)}
-        {@const timeInState = getTimeInState(peer.light_state.timestamp)}
         {@const priorityLabel =
           config.priority === 0
             ? 'Critical'
@@ -120,7 +139,9 @@
                 {peer.peer_name}
               </h3>
             </div>
-            <span class="text-xs text-gray-400 dark:text-gray-500 font-mono">{timeInState}</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 font-mono"
+              >{getTimeInState(peer.light_state.timestamp)}</span
+            >
           </div>
           <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
             {peer.note || config.name}

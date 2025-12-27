@@ -2,10 +2,24 @@
   import { peers, lights } from '$lib/stores';
   import { COLOR_CONFIG } from '$lib/config/colors';
   import type { LightColor } from '$lib/generated/types';
+  import { onMount, onDestroy } from 'svelte';
+
+  let currentTime = Date.now();
+  let intervalId: number;
+
+  onMount(() => {
+    intervalId = setInterval(() => {
+      currentTime = Date.now();
+    }, 1000);
+  });
+
+  onDestroy(() => {
+    if (intervalId) clearInterval(intervalId);
+  });
 
   function formatElapsed(lastSeen: number): string {
     if (!lastSeen) return '';
-    const nowSec = Math.floor(Date.now() / 1000);
+    const nowSec = Math.floor(currentTime / 1000);
     const elapsed = nowSec - lastSeen;
     if (elapsed < 60) return `00:${elapsed.toString().padStart(2, '0')}`;
     const minutes = Math.floor(elapsed / 60);
@@ -18,6 +32,12 @@
     const light = $lights.find((l) => l.enabled && l.color === color);
     return light?.name || '';
   }
+
+  // Force reactivity by creating a computed value that depends on both peers and currentTime
+  $: peersWithTime = $peers.map((peer) => ({
+    ...peer,
+    _renderKey: currentTime,
+  }));
 </script>
 
 <div class="w-full md:w-[400px] xl:w-[450px] bg-slate-50 dark:bg-[#15202b] flex flex-col h-full">
@@ -33,7 +53,7 @@
       <div class="flex gap-1">
         <span
           class="text-xs font-semibold bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full"
-          >{$peers.length} Active</span
+          >{peersWithTime.length} Active</span
         >
       </div>
     </div>
@@ -49,10 +69,10 @@
   </div>
 
   <div class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-3 pb-8">
-    {#if $peers.length === 0}
+    {#if peersWithTime.length === 0}
       <p class="text-slate-400 italic text-center mt-8">Searching for peers...</p>
     {:else}
-      {#each $peers as peer (peer.peer_id)}
+      {#each peersWithTime as peer (peer.peer_id)}
         {@const config = COLOR_CONFIG[peer.light_state.color as LightColor] ?? COLOR_CONFIG.Off}
         {@const lightName = getLightName(peer.light_state.color)}
         <div
