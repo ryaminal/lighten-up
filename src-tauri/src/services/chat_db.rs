@@ -1,4 +1,4 @@
-use crate::protocol::messages::ChatMessage;
+use crate::domain::ChatMessage;
 use rusqlite::{Connection, params};
 use std::sync::{Arc, Mutex};
 

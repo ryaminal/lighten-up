@@ -2,9 +2,27 @@
   import { onMount } from 'svelte';
   import { invoke } from '@tauri-apps/api/core';
 
-  let peers: any[] = [];
-  let lights: any[] = [];
-  let messages: any[] = [];
+  // Define minimal types for the test UI to avoid "any" lint errors.
+  interface Peer {
+    peer_id: string;
+    peer_name: string;
+    light_state: { color: string };
+  }
+  interface Light {
+    id: string;
+    name: string;
+    color: string;
+    priority: number;
+  }
+  interface ChatMsg {
+    peer_name: string;
+    content: string;
+    timestamp?: number;
+  }
+
+  let peers: Peer[] = [];
+  let lights: Light[] = [];
+  let messages: ChatMsg[] = [];
   let myColor = '#ff0000';
   let chatInput = '';
 
@@ -60,7 +78,7 @@
   <section>
     <h2>Peers ({peers.length})</h2>
     <div class="peers">
-      {#each peers as peer}
+      {#each peers as peer (peer.peer_id)}
         <div class="peer-card">
           <div class="peer-color" style="background-color: {peer.light_state.color};"></div>
           <div>
@@ -80,7 +98,7 @@
     <h2>Chat ({messages.length})</h2>
     <div class="chat">
       <div class="messages">
-        {#each messages as msg}
+        {#each messages as msg (msg)}
           <div class="message">
             <strong>{msg.peer_name}:</strong>
             {msg.content}
@@ -105,7 +123,7 @@
   <section>
     <h2>Lights Config ({lights.length})</h2>
     <div class="lights">
-      {#each lights as light}
+      {#each lights as light (light.id)}
         <div class="light-card">
           <div class="light-color" style="background-color: {light.color};"></div>
           <div>

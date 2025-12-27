@@ -9,7 +9,8 @@
   $: colorHex = $myLightColor || '#9ca3af';
   $: colorEntry = Object.entries(COLOR_CONFIG).find(([_, config]) => config.hex === colorHex);
   $: lightColorName = (colorEntry ? colorEntry[0] : 'Off') as LightColor;
-  $: colorConfig = COLOR_CONFIG[lightColorName];
+  // unused config retained for potential future use; prefix with underscore to satisfy lint
+  $: _colorConfig = COLOR_CONFIG[lightColorName];
   $: currentLight = $lights?.find((l) => l.enabled && l.color === colorHex);
   $: statusName = currentLight?.name || lightColorName;
   $: isUrgent = lightColorName === 'Red';

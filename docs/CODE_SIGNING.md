@@ -5,6 +5,7 @@ This document explains how to set up code signing for Lighten Up across differen
 ## Why Code Signing?
 
 **Benefits:**
+
 - ✅ Eliminates "Unknown Publisher" warnings
 - ✅ Enables Tauri auto-updater functionality
 - ✅ Builds trust with enterprise/healthcare customers
@@ -12,6 +13,7 @@ This document explains how to set up code signing for Lighten Up across differen
 - ✅ Prevents tampering and malware warnings
 
 **When to implement:**
+
 - **Now (Development):** Not needed
 - **Beta Testing:** Optional (helps with trust)
 - **Production Release:** Highly recommended
@@ -43,10 +45,12 @@ pnpm tauri signer generate -w ~/.tauri/lighten-up.key
 4. Add two secrets:
 
 **Secret 1:**
+
 - Name: `TAURI_SIGNING_PRIVATE_KEY`
 - Value: The private key string (starts with `dW50cnVzdGVk...`)
 
 **Secret 2:**
+
 - Name: `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
 - Value: The password shown in output
 
@@ -99,11 +103,13 @@ Windows code signing prevents SmartScreen warnings and shows your company as the
 ### Step 1: Purchase Certificate
 
 **Recommended providers for businesses:**
+
 - **DigiCert** ($474/year) - Industry standard, high trust
 - **Sectigo** ($199/year) - Good balance of price/trust
 - **SSL.com** ($299/year) - Good for small businesses
 
 **For open source/individuals:**
+
 - Consider Microsoft Store distribution (free signing)
 - Or self-sign for internal use only
 
@@ -124,6 +130,7 @@ cat certificate.pfx | base64 -w 0 > certificate.txt
 ```
 
 Add to GitHub Secrets:
+
 - Name: `WINDOWS_CERTIFICATE`
 - Value: Contents of `certificate.txt`
 
@@ -245,16 +252,16 @@ cat certificate.p12 | base64 -w 0 > certificate.txt
     CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
     KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
     KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
-    
+
     echo -n "${{ secrets.APPLE_CERTIFICATE }}" | base64 --decode -o $CERTIFICATE_PATH
-    
+
     security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
     security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
     security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-    
+
     security import $CERTIFICATE_PATH -P "${{ secrets.APPLE_CERTIFICATE_PASSWORD }}" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
     security list-keychain -d user -s $KEYCHAIN_PATH
-    
+
     rm $CERTIFICATE_PATH
 
 - name: Build and sign Tauri app (macOS)
@@ -293,6 +300,7 @@ cat certificate.p12 | base64 -w 0 > certificate.txt
 Linux distributions use package repository signing rather than individual app signing. No additional setup needed.
 
 **For enterprise Linux deployments:**
+
 - Sign your deb/rpm packages with your organization's GPG key
 - Distribute via your own package repository
 - Users add your repository's public key to their trusted keys
@@ -302,6 +310,7 @@ Linux distributions use package repository signing rather than individual app si
 ## Testing Signed Builds
 
 ### Windows
+
 ```powershell
 # Check signature
 Get-AuthenticodeSignature .\lighten-up.exe
@@ -310,6 +319,7 @@ Get-AuthenticodeSignature .\lighten-up.exe
 ```
 
 ### macOS
+
 ```bash
 # Check code signature
 codesign -dv --verbose=4 lighten-up.app
@@ -321,6 +331,7 @@ spctl -a -vv lighten-up.app
 ```
 
 ### Tauri Updater
+
 ```bash
 # Verify signed update
 pnpm tauri signer verify <path-to-update-file> <path-to-signature>
@@ -330,18 +341,19 @@ pnpm tauri signer verify <path-to-update-file> <path-to-signature>
 
 ## Cost Summary
 
-| Platform | Cost | Frequency | Required For |
-|----------|------|-----------|--------------|
-| Tauri Updater | **FREE** | One-time | Auto-updates |
-| Windows | $100-$474 | Annual | Trusted installer |
-| macOS | $99 | Annual | Distribution outside App Store |
-| Linux | **FREE** | - | - |
-| iOS | $99* | Annual | App Store |
-| Android | $25 | One-time | Google Play Store |
+| Platform      | Cost      | Frequency | Required For                   |
+| ------------- | --------- | --------- | ------------------------------ |
+| Tauri Updater | **FREE**  | One-time  | Auto-updates                   |
+| Windows       | $100-$474 | Annual    | Trusted installer              |
+| macOS         | $99       | Annual    | Distribution outside App Store |
+| Linux         | **FREE**  | -         | -                              |
+| iOS           | $99\*     | Annual    | App Store                      |
+| Android       | $25       | One-time  | Google Play Store              |
 
-\* *Same Apple Developer account for macOS and iOS*
+\* _Same Apple Developer account for macOS and iOS_
 
 **Recommended priority:**
+
 1. Tauri updater signing (free, enables updates)
 2. Windows Authenticode (most important for enterprise)
 3. macOS notarization (if targeting Mac users)
@@ -352,21 +364,25 @@ pnpm tauri signer verify <path-to-update-file> <path-to-signature>
 ## Troubleshooting
 
 ### "Certificate not found" on Windows
+
 - Ensure certificate is imported to `Cert:\CurrentUser\My`
 - Check thumbprint matches in config
 - Verify certificate hasn't expired
 
 ### "Unable to verify" on macOS
+
 - Ensure you're using "Developer ID Application" not "Mac Development"
 - Check that notarization completed successfully
 - May take 10-30 minutes for notarization to complete
 
 ### Tauri updater signature mismatch
+
 - Ensure public key in `tauri.conf.json` matches generated private key
 - Verify you're using the correct password
 - Check that signature file was generated during build
 
 ### GitHub Actions certificate import fails
+
 - Verify base64 encoding doesn't have line breaks
 - Check that secrets are set correctly
 - Ensure certificate password is correct

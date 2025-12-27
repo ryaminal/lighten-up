@@ -62,14 +62,8 @@ pub enum ConfigOp {
     },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChatMessage {
-    pub id: String,
-    pub peer_id: String,
-    pub peer_name: String,
-    pub content: String,
-    pub timestamp: u64,
-}
+// Re‑export the domain chat message type; no derives needed on a type alias.
+pub type ChatMessage = crate::domain::ChatMessage;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LightConfig {

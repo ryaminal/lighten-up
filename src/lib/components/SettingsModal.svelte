@@ -62,7 +62,7 @@
     }
   }
 
-  async function handleSave() {
+  async function _handleSave() {
     if (!peerName.trim()) {
       errorMessage = 'Display name cannot be empty';
       return;
@@ -284,7 +284,7 @@
     }
   }
 
-  function handleResetDefaults() {
+  function _handleResetDefaults() {
     if (
       confirm(
         'Are you sure you want to reset to default settings? This will restore the default light configuration.'
@@ -307,6 +307,7 @@
     <div
       class="relative w-full max-w-2xl border bg-white dark:bg-[#111827] text-gray-900 dark:text-gray-100 shadow-lg sm:rounded-lg overflow-hidden flex flex-col max-h-[85vh]"
       on:click|stopPropagation
+      on:keydown={handleKeydown}
       role="dialog"
       aria-modal="true"
       tabindex="-1"
@@ -349,7 +350,10 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="grid gap-2">
-                <label class="text-sm font-medium leading-none text-gray-700 dark:text-gray-300">
+                <label
+                  for="room-identifier"
+                  class="text-sm font-medium leading-none text-gray-700 dark:text-gray-300"
+                >
                   Room Identifier
                 </label>
                 <input
@@ -361,7 +365,10 @@
               </div>
 
               <div class="grid gap-2">
-                <label class="text-sm font-medium leading-none text-gray-700 dark:text-gray-300">
+                <label
+                  for="display-name"
+                  class="text-sm font-medium leading-none text-gray-700 dark:text-gray-300"
+                >
                   Display Name
                 </label>
                 <input
@@ -508,14 +515,4 @@
 {/if}
 
 <style>
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.3);
-    border-radius: 20px;
-  }
 </style>

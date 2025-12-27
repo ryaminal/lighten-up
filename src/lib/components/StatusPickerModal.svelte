@@ -1,8 +1,8 @@
 <script lang="ts">
   import { myLightColor, lights, myNote } from '$lib/stores';
   import { setLightColor } from '$lib/tauri';
-  import { COLOR_CONFIG } from '$lib/config/colors';
-  import type { LightColor } from '$lib/generated/types';
+  // NOTE: Previously imported COLOR_CONFIG and LightColor were unused.
+  // They have been removed to satisfy linting rules.
 
   export let isOpen = false;
   export let onClose: () => void;
@@ -70,6 +70,7 @@
     <div
       class="relative w-full max-w-md border bg-white dark:bg-[#111827] text-gray-900 dark:text-gray-100 shadow-lg sm:rounded-lg overflow-hidden flex flex-col"
       on:click|stopPropagation
+      on:keydown|stopPropagation
       role="dialog"
       aria-modal="true"
       tabindex="-1"
@@ -99,9 +100,9 @@
       <div class="p-6 space-y-6 overflow-y-auto max-h-[60vh]">
         <!-- Light Grid -->
         <div>
-          <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
+          <div class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
             Select Status Light
-          </label>
+          </div>
           <div class="grid grid-cols-4 gap-4">
             {#each availableLights as light (light.id)}
               {@const isSelected = selectedLightId === light.id}
@@ -137,11 +138,15 @@
 
         <!-- Optional Note -->
         <div>
-          <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+          <label
+            class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block"
+            for="status-note"
+          >
             Optional Note
             <span class="text-gray-400 font-normal">(visible to team)</span>
           </label>
           <textarea
+            id="status-note"
             class="flex min-h-[80px] w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none text-gray-900 dark:text-white"
             bind:value={note}
             placeholder="e.g., 'In exam room 4' or 'Taking break'"

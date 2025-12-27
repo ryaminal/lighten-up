@@ -1,5 +1,6 @@
+use crate::domain::{AppError, DomainResult as Result};
 use crate::{database::Database, protocol::messages::LightConfig};
-use anyhow::Result;
+use log::info;
 use std::sync::Arc;
 
 /// Applies a LightConfig update if the incoming message is newer or equal.
@@ -13,8 +14,10 @@ pub(crate) async fn apply_upsert_with_lww(
     updated_at: u64,
     updated_by: String,
 ) -> Result<()> {
+    info!("Applying upsert for light id={}", id);
     let conn = db.connection();
-    let existing = crate::database::queries::get_all_lights(&conn)?
+    let existing = crate::database::queries::get_all_lights(&conn)
+        .map_err(|e| AppError::Other(e.into()))?
         .into_iter()
         .find(|l| l.id == id);
 
@@ -33,7 +36,8 @@ pub(crate) async fn apply_upsert_with_lww(
             updated_at,
             updated_by,
         };
-        crate::database::queries::upsert_light(&conn, &light)?;
+        crate::database::queries::upsert_light(&conn, &light)
+            .map_err(|e| AppError::Other(e.into()))?;
     }
 
     Ok(())
@@ -45,8 +49,10 @@ pub(crate) async fn apply_delete_if_newer(
     id: &str,
     deleted_at: u64,
 ) -> Result<()> {
+    info!("Applying delete check for light id={}", id);
     let conn = db.connection();
-    let existing = crate::database::queries::get_all_lights(&conn)?
+    let existing = crate::database::queries::get_all_lights(&conn)
+        .map_err(|e| AppError::Other(e.into()))?
         .into_iter()
         .find(|l| l.id == id);
 
@@ -56,7 +62,7 @@ pub(crate) async fn apply_delete_if_newer(
     };
 
     if should_delete {
-        crate::database::queries::delete_light(&conn, id)?;
+        crate::database::queries::delete_light(&conn, id).map_err(|e| AppError::Other(e.into()))?;
     }
 
     Ok(())

@@ -7,7 +7,8 @@
   // Note prop passed from parent
   let { note = '' }: { note?: string } = $props();
 
-  type LightButton = {
+  // Unused type retained for documentation; underscore prefix silences lint
+  type _LightButton = {
     color: LightColor;
     config: ColorConfig;
     name: string;

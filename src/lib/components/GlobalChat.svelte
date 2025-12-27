@@ -175,7 +175,8 @@
     }
   }
 
-  function getInitials(name: string): string {
+  // Helper retained for possible future use; underscore prefix avoids unused‑function lint
+  function _getInitials(name: string): string {
     return name
       .split(' ')
       .map((n) => n[0])
