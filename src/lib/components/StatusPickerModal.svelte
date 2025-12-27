@@ -7,7 +7,7 @@
   export let isOpen = false;
   export let onClose: () => void;
 
-  let selectedColor: string | null = null;
+  let selectedLightId: string | null = null;
   let note = '';
   let isUpdating = false;
   let errorMessage = '';
@@ -18,15 +18,16 @@
   // Initialize note from store when modal opens
   $: if (isOpen) {
     note = $myNote || '';
-    selectedColor = null;
+    selectedLightId = null;
   }
 
   // Button is enabled if either color changed or note changed
-  $: hasChanges = selectedColor !== null || note !== ($myNote || '');
+  $: hasChanges = selectedLightId !== null || note !== ($myNote || '');
 
   async function handleUpdateStatus() {
-    // Use selected color or fall back to current color
-    const colorToSet = selectedColor || currentColorHex;
+    // Get the color from the selected light, or fall back to current color
+    const selectedLight = availableLights.find((l) => l.id === selectedLightId);
+    const colorToSet = selectedLight ? selectedLight.color : currentColorHex;
 
     try {
       isUpdating = true;
@@ -38,7 +39,7 @@
 
       onClose();
       // Reset selections
-      selectedColor = null;
+      selectedLightId = null;
       note = '';
     } catch (err) {
       errorMessage = `Failed to update status: ${err}`;
@@ -47,8 +48,8 @@
     }
   }
 
-  function handleColorSelect(color: string) {
-    selectedColor = color;
+  function handleLightSelect(lightId: string) {
+    selectedLightId = lightId;
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -103,13 +104,13 @@
           </label>
           <div class="grid grid-cols-4 gap-4">
             {#each availableLights as light (light.id)}
-              {@const isSelected = selectedColor === light.color}
+              {@const isSelected = selectedLightId === light.id}
               {@const isCurrent = currentColorHex === light.color}
               <button
                 class="flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all hover:shadow-md {isSelected
                   ? 'border-[#3b82f6] bg-blue-50 dark:bg-blue-900/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}"
-                on:click={() => handleColorSelect(light.color)}
+                on:click={() => handleLightSelect(light.id)}
               >
                 <div class="relative">
                   <div
