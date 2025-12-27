@@ -73,6 +73,14 @@ export async function getChatMessages(): Promise<ChatMessage[]> {
   return await invoke('get_chat_messages');
 }
 
+export async function editChatMessage(id: string, content: string): Promise<void> {
+  await invoke('edit_chat_message', { id, content });
+}
+
+export async function deleteChatMessage(id: string): Promise<void> {
+  await invoke('delete_chat_message', { id });
+}
+
 // ===========================
 // Event Listeners
 // ===========================
@@ -83,6 +91,7 @@ export async function initializeTauri(callbacks: {
   onPeersChanged?: (peers: PeerPresence[]) => void;
   onLightsChanged?: (lights: LightConfig[]) => void;
   onChatMessage?: (message: ChatMessage) => void;
+  onChatMessageDeleted?: (id: string) => void;
 }): Promise<void> {
   // Clean up existing listeners
   await cleanupListeners();
@@ -107,6 +116,14 @@ export async function initializeTauri(callbacks: {
   if (callbacks.onChatMessage) {
     const unlisten = await listen<ChatMessage>('chat-message', (event) => {
       callbacks.onChatMessage?.(event.payload);
+    });
+    unlistenFns.push(unlisten);
+  }
+
+  // Listen for chat message deletions
+  if (callbacks.onChatMessageDeleted) {
+    const unlisten = await listen<string>('chat-message-deleted', (event) => {
+      callbacks.onChatMessageDeleted?.(event.payload);
     });
     unlistenFns.push(unlisten);
   }

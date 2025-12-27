@@ -193,3 +193,46 @@ pub async fn get_chat_messages(state: State<'_, AppState>) -> Result<Vec<ChatMes
         .await
         .map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn edit_chat_message(
+    id: String,
+    content: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let chat_msg = state
+        .chat_service
+        .edit_message(id, content)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    state
+        .network
+        .broadcast(Message::Chat(chat_msg.clone()))
+        .await
+        .map_err(|e| format!("Failed to broadcast chat edit: {}", e))?;
+
+    // Emit local event for immediate UI update
+    let _ = app.emit("chat-message", chat_msg);
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_chat_message(
+    id: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    state
+        .chat_service
+        .delete_message(id.clone())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Emit local event for immediate UI update - send the ID as a deletion event
+    let _ = app.emit("chat-message-deleted", id);
+
+    Ok(())
+}

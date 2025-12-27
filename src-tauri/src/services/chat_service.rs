@@ -44,6 +44,50 @@ impl ChatService {
     pub async fn get_all_messages(&self) -> Result<Vec<ChatMessage>> {
         Ok(get_chat_messages(&self.conn)?)
     }
+
+    pub async fn edit_message(&self, id: String, content: String) -> Result<ChatMessage> {
+        let conn = self.conn.lock().expect("Failed to acquire lock");
+        
+        // First verify the message exists and belongs to this peer
+        let mut stmt = conn.prepare("SELECT peer_id FROM chat_messages WHERE id = ?1")?;
+        let peer_id: String = stmt.query_row(params![id], |row| row.get(0))
+            .map_err(|_| anyhow::anyhow!("Message not found"))?;
+        
+        if peer_id != self.my_peer_id {
+            return Err(anyhow::anyhow!("Cannot edit another user's message"));
+        }
+
+        // Update the message
+        let timestamp = crate::utils::current_timestamp();
+        conn.execute(
+            "UPDATE chat_messages SET content = ?1, timestamp = ?2 WHERE id = ?3",
+            params![content, timestamp, id],
+        )?;
+
+        Ok(ChatMessage {
+            id,
+            peer_id: self.my_peer_id.clone(),
+            peer_name: self.my_peer_name.clone(),
+            content,
+            timestamp,
+        })
+    }
+
+    pub async fn delete_message(&self, id: String) -> Result<()> {
+        let conn = self.conn.lock().expect("Failed to acquire lock");
+        
+        // First verify the message exists and belongs to this peer
+        let mut stmt = conn.prepare("SELECT peer_id FROM chat_messages WHERE id = ?1")?;
+        let peer_id: String = stmt.query_row(params![id], |row| row.get(0))
+            .map_err(|_| anyhow::anyhow!("Message not found"))?;
+        
+        if peer_id != self.my_peer_id {
+            return Err(anyhow::anyhow!("Cannot delete another user's message"));
+        }
+
+        conn.execute("DELETE FROM chat_messages WHERE id = ?1", params![id])?;
+        Ok(())
+    }
 }
 
 fn save_chat_message(
