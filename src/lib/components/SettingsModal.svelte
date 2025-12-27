@@ -30,11 +30,8 @@
       ]);
       peerId = id;
       peerName = name;
-      // Ensure consistent sorting: priority first (ASC: 0 is highest), then name
-      lights = lightsData.sort((a, b) => {
-        if (a.priority !== b.priority) return a.priority - b.priority;
-        return a.name.localeCompare(b.name);
-      });
+      // Sort by priority only (ASC: 0 is highest)
+      lights = lightsData.sort((a, b) => a.priority - b.priority);
     } catch (err) {
       errorMessage = `Failed to load settings: ${err}`;
     } finally {
@@ -78,15 +75,12 @@
     // Persist via backend; backend will broadcast to other peers.
     createLight(newLight)
       .then(() => {
-        // Refresh lights from backend to stay in sync and ensure proper sorting.
+        // Refresh lights from backend to stay in sync
         return getLights();
       })
       .then((fresh) => {
-        // Sort consistently: priority first (ASC: 0 is highest), then name
-        lights = fresh.sort((a, b) => {
-          if (a.priority !== b.priority) return a.priority - b.priority;
-          return a.name.localeCompare(b.name);
-        });
+        // Sort by priority only
+        lights = fresh.sort((a, b) => a.priority - b.priority);
       })
       .catch((err) => {
         errorMessage = `Failed to add light: ${err}`;
@@ -98,10 +92,7 @@
       await deleteLight(id);
       // Refresh from backend to stay in sync
       const refreshed = await getLights();
-      lights = refreshed.sort((a, b) => {
-        if (a.priority !== b.priority) return a.priority - b.priority;
-        return a.name.localeCompare(b.name);
-      });
+      lights = refreshed.sort((a, b) => a.priority - b.priority);
     } catch (err) {
       errorMessage = `Failed to delete light: ${err}`;
     }
@@ -115,11 +106,9 @@
       await updateLight(light);
       // Refresh lights to stay in sync with backend (including our own update)
       const refreshed = await getLights();
-      // Ensure consistent sorting: priority first, then name
-      lights = refreshed.sort((a, b) => {
-        if (a.priority !== b.priority) return a.priority - b.priority;
-        return a.name.localeCompare(b.name);
-      });
+      // Keep current sort order - only sort by priority, NOT by name
+      // This prevents lights from jumping position when renamed
+      lights = refreshed.sort((a, b) => a.priority - b.priority);
     } catch (err) {
       errorMessage = `Failed to update light: ${err}`;
     }
@@ -148,18 +137,12 @@
 
       // Refresh from backend to ensure consistency
       const refreshed = await getLights();
-      lights = refreshed.sort((a, b) => {
-        if (a.priority !== b.priority) return a.priority - b.priority;
-        return a.name.localeCompare(b.name);
-      });
+      lights = refreshed.sort((a, b) => a.priority - b.priority);
     } catch (err) {
       errorMessage = `Failed to reorder lights: ${err}`;
       // Refresh to revert to server state on error
       const refreshed = await getLights();
-      lights = refreshed.sort((a, b) => {
-        if (a.priority !== b.priority) return a.priority - b.priority;
-        return a.name.localeCompare(b.name);
-      });
+      lights = refreshed.sort((a, b) => a.priority - b.priority);
     }
   }
 
@@ -186,18 +169,12 @@
 
       // Refresh from backend to ensure consistency
       const refreshed = await getLights();
-      lights = refreshed.sort((a, b) => {
-        if (a.priority !== b.priority) return a.priority - b.priority;
-        return a.name.localeCompare(b.name);
-      });
+      lights = refreshed.sort((a, b) => a.priority - b.priority);
     } catch (err) {
       errorMessage = `Failed to reorder lights: ${err}`;
       // Refresh to revert to server state on error
       const refreshed = await getLights();
-      lights = refreshed.sort((a, b) => {
-        if (a.priority !== b.priority) return a.priority - b.priority;
-        return a.name.localeCompare(b.name);
-      });
+      lights = refreshed.sort((a, b) => a.priority - b.priority);
     }
   }
 
@@ -337,21 +314,21 @@
             <div class="rounded-md border border-gray-200 dark:border-gray-800">
               <!-- Table Header -->
               <div
-                class="grid grid-cols-12 gap-4 p-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                class="grid grid-cols-12 gap-6 p-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
               >
-                <div class="col-span-1 text-center">Order</div>
-                <div class="col-span-1 text-center">Color</div>
-                <div class="col-span-8">Light Name</div>
+                <div class="col-span-1 text-center">Priority</div>
+                <div class="col-span-2 text-center">Color</div>
+                <div class="col-span-7">Light Name</div>
                 <div class="col-span-2 text-right">Actions</div>
               </div>
 
               <!-- Table Rows -->
               {#each lights as light, index (light.id)}
                 <div
-                  class="grid grid-cols-12 gap-4 p-3 items-center border-b border-gray-200 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-all duration-200 group"
+                  class="grid grid-cols-12 gap-6 p-3 items-center border-b border-gray-200 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-all duration-200 group"
                 >
                   <!-- Up/Down Arrows -->
-                  <div class="col-span-1 flex flex-col items-center gap-0.5">
+                  <div class="col-span-1 flex flex-col items-center gap-1">
                     <button
                       class="inline-flex items-center justify-center rounded text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       on:click={() => handleMoveLightUp(index)}
@@ -373,7 +350,7 @@
                   </div>
 
                   <!-- Color Picker -->
-                  <div class="col-span-1 flex justify-center relative">
+                  <div class="col-span-2 flex justify-center relative">
                     <div
                       class="h-6 w-6 rounded-full ring-offset-background transition-all cursor-pointer ring-2 ring-transparent group-hover:ring-gray-300 dark:group-hover:ring-gray-700 shadow-sm"
                       style="background-color: {light.color}"
@@ -388,7 +365,7 @@
                   </div>
 
                   <!-- Light Name -->
-                  <div class="col-span-8">
+                  <div class="col-span-7">
                     <input
                       class="flex h-8 w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-900 focus:bg-white dark:focus:bg-gray-900 text-gray-900 dark:text-white transition-all"
                       bind:value={light.name}
