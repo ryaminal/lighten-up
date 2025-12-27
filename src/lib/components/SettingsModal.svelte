@@ -83,11 +83,66 @@
   }
 
   function handleAddLight() {
+    // Find an unused color for the new light
+    const usedColors = new Set(lights.map((l) => l.color.toLowerCase()));
+    const defaultColors = [
+      '#3b82f6', // blue
+      '#ef4444', // red
+      '#10b981', // green
+      '#f59e0b', // amber
+      '#8b5cf6', // purple
+      '#ec4899', // pink
+      '#14b8a6', // teal
+      '#f97316', // orange
+      '#6366f1', // indigo
+      '#84cc16', // lime
+    ];
+
+    let newColor = '#3b82f6'; // default to blue
+    for (const color of defaultColors) {
+      if (!usedColors.has(color.toLowerCase())) {
+        newColor = color;
+        break;
+      }
+    }
+
+    // If all default colors are used, generate a random unique color
+    if (usedColors.has(newColor.toLowerCase())) {
+      let attempts = 0;
+      const maxAttempts = 100;
+      while (attempts < maxAttempts) {
+        // Generate random bright color
+        const hue = Math.floor(Math.random() * 360);
+        const saturation = 70 + Math.floor(Math.random() * 20); // 70-90%
+        const lightness = 50 + Math.floor(Math.random() * 10); // 50-60%
+
+        // Convert HSL to hex
+        const h = hue / 360;
+        const s = saturation / 100;
+        const l = lightness / 100;
+        const a = s * Math.min(l, 1 - l);
+        const f = (n: number) => {
+          const k = (n + h * 12) % 12;
+          const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+          return Math.round(255 * color)
+            .toString(16)
+            .padStart(2, '0');
+        };
+        const candidateColor = `#${f(0)}${f(8)}${f(4)}`;
+
+        if (!usedColors.has(candidateColor.toLowerCase())) {
+          newColor = candidateColor;
+          break;
+        }
+        attempts++;
+      }
+    }
+
     // Create a new light config both locally and on the backend so it propagates to peers.
     // Priority is set to the end of the list (number of existing lights)
     const newLight: LightConfig = {
       id: crypto.randomUUID(),
-      color: '#3b82f6',
+      color: newColor,
       name: 'New Light',
       enabled: true,
       priority: lights.length,
@@ -122,6 +177,16 @@
 
   async function handleLightChange(light: LightConfig) {
     try {
+      // Check for duplicate colors (excluding the current light)
+      const duplicateColor = lights.find((l) => l.id !== light.id && l.color === light.color);
+      if (duplicateColor) {
+        errorMessage = `Color already used by "${duplicateColor.name}". Each light must have a unique color.`;
+        // Revert the color change by refreshing from backend
+        const refreshed = await getLights();
+        lights = refreshed.sort((a, b) => a.priority - b.priority);
+        return;
+      }
+
       // Update timestamp before sending to backend
       light.updated_at = Math.floor(Date.now() / 1000);
       light.updated_by = peerId;
@@ -131,6 +196,8 @@
       // Keep current sort order - only sort by priority, NOT by name
       // This prevents lights from jumping position when renamed
       lights = refreshed.sort((a, b) => a.priority - b.priority);
+      // Clear error on success
+      errorMessage = '';
     } catch (err) {
       errorMessage = `Failed to update light: ${err}`;
     }

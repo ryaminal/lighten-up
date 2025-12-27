@@ -139,19 +139,17 @@
 
       {#each messages as message (message.id)}
         {@const currentName = getCurrentPeerName(message)}
-        <div class="group flex gap-3 max-w-3xl">
-          <div
-            class="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-700 dark:text-blue-300 text-sm font-bold shrink-0 mt-1"
-          >
-            {getInitials(currentName)}
-          </div>
+        {@const isMyMessage = message.peer_id === myPeerId}
+        <div class="group max-w-3xl">
           <div>
             <div class="flex items-center gap-2 mb-1">
               <span class="text-sm font-bold text-gray-900 dark:text-gray-100">{currentName}</span>
               <span class="text-[11px] text-gray-400">{formatTime(message.timestamp)}</span>
             </div>
             <div
-              class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-lg rounded-tl-none p-4 shadow-sm"
+              class="{isMyMessage
+                ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/50'
+                : 'bg-white dark:bg-[#111827] border-gray-200 dark:border-gray-800'} border rounded-lg rounded-tl-none p-4 shadow-sm"
             >
               <p
                 class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-line break-words overflow-wrap-anywhere"
