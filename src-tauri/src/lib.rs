@@ -42,6 +42,8 @@ pub fn run() {
             commands::get_chat_messages,
             commands::edit_chat_message,
             commands::delete_chat_message,
+            commands::send_notification,
+            commands::send_patient_notification,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

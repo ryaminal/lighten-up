@@ -20,6 +20,27 @@ pub enum PresenceMessage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum NotificationType {
+    PatientReady,
+    RoomReady,
+    UrgentAssist,
+    GeneralMessage,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Notification {
+    #[serde(rename = "type")]
+    pub notification_type: NotificationType,
+    pub message: String,
+    pub target_peer_id: String,
+    pub sender_peer_id: String,
+    pub timestamp: u64,
+    pub priority: Option<String>,
+    pub color: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LightState {
     pub color: String,
     pub timestamp: u64,

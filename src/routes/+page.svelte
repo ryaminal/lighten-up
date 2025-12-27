@@ -17,16 +17,22 @@
     myLightColor,
     myNote,
     myPeerId,
+    notification,
   } from '$lib/stores';
   import NavigationBar from '$lib/components/NavigationBar.svelte';
   import GlobalChat from '$lib/components/GlobalChat.svelte';
   import PriorityQueue from '$lib/components/PriorityQueue.svelte';
   import SettingsModal from '$lib/components/SettingsModal.svelte';
   import BottomStatusBar from '$lib/components/BottomStatusBar.svelte';
-  import StatusPickerModal from '$lib/components/StatusPickerModal.svelte';
+  import LightPickerModal from '$lib/components/LightPickerModal.svelte';
+  import { setLightColor } from '$lib/tauri';
 
   let showSettings = false;
   let showStatusPicker = false;
+
+  async function handleStatusSelect(color: string, message: string | null) {
+    await setLightColor(color, message || undefined);
+  }
 
   function updateMyStatusFromPeers(peersList: typeof $peers, myId: string) {
     const myPeer = peersList.find((p) => p.peer_id === myId);
@@ -74,6 +80,21 @@
         },
         onChatMessage: (message) => {
           console.log('[Chat] Received message:', message);
+        },
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore - Notification type exists but linter cache is stale
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onNotification: (notif: any) => {
+          console.log('[Notification] Received:', notif);
+          notification.set({
+            type: notif.type,
+            message: notif.message,
+            targetPeerId: notif.target_peer_id,
+            senderPeerId: notif.sender_peer_id,
+            timestamp: notif.timestamp,
+            priority: notif.priority,
+            color: notif.color,
+          });
         },
       });
 
@@ -123,7 +144,18 @@
   {/if}
 
   {#if showStatusPicker}
-    <StatusPickerModal isOpen={showStatusPicker} onClose={() => (showStatusPicker = false)} />
+    <LightPickerModal
+      isOpen={showStatusPicker}
+      onClose={() => (showStatusPicker = false)}
+      onSelect={handleStatusSelect}
+      currentColor={$myLightColor}
+      title="Change Status Light"
+      showMessageInput={false}
+      submitLabel="Update Status"
+      submitIcon="check"
+      allowToggleOff={true}
+      autoSubmitOnSelect={true}
+    />
   {/if}
 {/if}
 

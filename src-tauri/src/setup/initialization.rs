@@ -272,6 +272,23 @@ fn setup_message_routing(
                                 log::error!("[MESSAGE_ROUTING] Failed to emit chat-message: {}", e);
                             }
                         }
+                        Message::Notification(notification) => {
+                            log::debug!(
+                                "[MESSAGE_ROUTING] Received notification type {:?} for peer {}",
+                                notification.notification_type,
+                                notification.target_peer_id
+                            );
+
+                            // Emit to all peers so everyone can see notification status
+                            log::info!(
+                                "[MESSAGE_ROUTING] Notification: {} for peer {}",
+                                notification.message,
+                                notification.target_peer_id
+                            );
+                            if let Err(e) = app.emit("notification", notification) {
+                                log::error!("[MESSAGE_ROUTING] Failed to emit notification: {}", e);
+                            }
+                        }
                     }
                 }
                 Err(e) => {

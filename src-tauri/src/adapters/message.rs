@@ -1,4 +1,4 @@
-use crate::protocol::messages::{ChatMessage, ConfigMessage, PresenceMessage};
+use crate::protocol::messages::{ChatMessage, ConfigMessage, Notification, PresenceMessage};
 
 /// Message types for network communication
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -12,6 +12,9 @@ pub enum Message {
 
     /// Chat message
     Chat(ChatMessage),
+
+    /// Generic notification (patient ready, room ready, urgent assist, etc.)
+    Notification(Notification),
 }
 
 #[cfg(test)]

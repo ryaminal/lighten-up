@@ -25,6 +25,18 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+export type NotificationType = 'patient-ready' | 'room-ready' | 'urgent-assist' | 'general-message';
+
+export interface Notification {
+  type: NotificationType;
+  message: string;
+  target_peer_id: string;
+  sender_peer_id: string;
+  timestamp: number;
+  priority?: string;
+  color?: string;
+}
+
 // ===========================
 // Commands
 // ===========================
@@ -81,6 +93,23 @@ export async function deleteChatMessage(id: string): Promise<void> {
   await invoke('delete_chat_message', { id });
 }
 
+export async function sendNotification(
+  targetPeerId: string,
+  notificationType: NotificationType,
+  message: string,
+  priority?: string,
+  color?: string
+): Promise<void> {
+  await invoke('send_notification', { targetPeerId, notificationType, message, priority, color });
+}
+
+export async function sendPatientNotification(
+  targetPeerId: string,
+  patientName: string
+): Promise<void> {
+  await invoke('send_patient_notification', { targetPeerId, patientName });
+}
+
 // ===========================
 // Event Listeners
 // ===========================
@@ -92,6 +121,7 @@ export async function initializeTauri(callbacks: {
   onLightsChanged?: (lights: LightConfig[]) => void;
   onChatMessage?: (message: ChatMessage) => void;
   onChatMessageDeleted?: (id: string) => void;
+  onNotification?: (notification: Notification) => void;
 }): Promise<void> {
   // Clean up existing listeners
   await cleanupListeners();
@@ -124,6 +154,14 @@ export async function initializeTauri(callbacks: {
   if (callbacks.onChatMessageDeleted) {
     const unlisten = await listen<string>('chat-message-deleted', (event) => {
       callbacks.onChatMessageDeleted?.(event.payload);
+    });
+    unlistenFns.push(unlisten);
+  }
+
+  // Listen for notifications
+  if (callbacks.onNotification) {
+    const unlisten = await listen<Notification>('notification', (event) => {
+      callbacks.onNotification?.(event.payload);
     });
     unlistenFns.push(unlisten);
   }

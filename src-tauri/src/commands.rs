@@ -1,6 +1,6 @@
 use crate::adapters::{Message, NetworkAdapter};
 use crate::app_state::AppState;
-use crate::protocol::messages::{ChatMessage, LightConfig};
+use crate::protocol::messages::{ChatMessage, LightConfig, Notification, NotificationType};
 use crate::services::PeerPresence;
 use tauri::{AppHandle, Emitter, State};
 
@@ -235,4 +235,67 @@ pub async fn delete_chat_message(
     let _ = app.emit("chat-message-deleted", id);
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn send_notification(
+    target_peer_id: String,
+    notification_type: String,
+    message: String,
+    priority: Option<String>,
+    color: Option<String>,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let notif_type = match notification_type.as_str() {
+        "patient-ready" => NotificationType::PatientReady,
+        "room-ready" => NotificationType::RoomReady,
+        "urgent-assist" => NotificationType::UrgentAssist,
+        "general-message" => NotificationType::GeneralMessage,
+        _ => return Err(format!("Unknown notification type: {}", notification_type)),
+    };
+
+    let notification = Notification {
+        notification_type: notif_type,
+        message,
+        target_peer_id,
+        sender_peer_id: state.presence_service.get_my_peer_id(),
+        timestamp: crate::utils::current_timestamp(),
+        priority,
+        color,
+    };
+
+    state
+        .network
+        .broadcast(Message::Notification(notification.clone()))
+        .await
+        .map_err(|e| format!("Failed to broadcast notification: {}", e))?;
+
+    // Also emit to local frontend if we're notifying ourselves
+    let my_peer_id = state.presence_service.get_my_peer_id();
+    if notification.target_peer_id == my_peer_id {
+        let _ = app.emit("notification", notification);
+    }
+
+    Ok(())
+}
+
+// Legacy command for backwards compatibility - wraps send_notification
+#[tauri::command]
+pub async fn send_patient_notification(
+    target_peer_id: String,
+    patient_name: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    send_notification(
+        target_peer_id,
+        "patient-ready".to_string(),
+        patient_name,
+        None,
+        None,
+        app,
+        state,
+    )
+    .await
 }

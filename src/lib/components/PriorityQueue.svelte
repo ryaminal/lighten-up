@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { peers, lights } from '$lib/stores';
-  import { COLOR_CONFIG } from '$lib/config/colors';
-  import type { LightColor } from '$lib/generated/types';
+  import { peers, lights, notification } from '$lib/stores';
   import type { PeerPresence } from '$lib/tauri';
+  import { sendNotification } from '$lib/tauri';
   import { onMount, onDestroy } from 'svelte';
+  import LightPickerModal from './LightPickerModal.svelte';
 
   let currentTime = Date.now();
   let intervalId: number;
+  let isModalOpen = false;
+  let selectedPeer: PeerPresence | null = null;
 
   onMount(() => {
     intervalId = setInterval(() => {
@@ -23,17 +25,10 @@
     const colorHex = peer.light_state.color;
     const light = $lights?.find((l) => l.enabled && l.color === colorHex);
 
-    // Find matching LightColor enum
-    const colorEntry = Object.entries(COLOR_CONFIG).find(([_, config]) => config.hex === colorHex);
-    const lightColorName = colorEntry ? colorEntry[0] : 'Off';
-    const colorConfig = COLOR_CONFIG[lightColorName as LightColor];
-
     return {
-      name: light?.name || lightColorName,
+      name: light?.name || 'Unknown',
       priority: light?.priority || 0,
-      color: colorHex, // Use actual hex color, not the config color
-      borderColor: colorHex, // Use actual hex for border
-      borderClass: colorEntry ? colorConfig.borderClass : '', // Only use class if it matches
+      color: colorHex,
     };
   }
 
@@ -64,7 +59,32 @@
     _renderKey: currentTime,
   }));
 
-  $: hasUrgent = sortedPeers.some((p) => getLightConfig(p).priority === 0);
+  function handlePeerClick(peer: PeerPresence) {
+    selectedPeer = peer;
+    isModalOpen = true;
+  }
+
+  function handleModalClose() {
+    isModalOpen = false;
+    selectedPeer = null;
+  }
+
+  async function handleSendNotification(color: string, message: string | null) {
+    if (!selectedPeer) return;
+
+    // Get light name for the selected color to use as default message
+    const light = $lights?.find((l) => l.enabled && l.color === color);
+    const lightName = light?.name || 'Notification';
+    const finalMessage = message || lightName;
+
+    await sendNotification(
+      selectedPeer.peer_id,
+      'patient-ready',
+      finalMessage,
+      undefined,
+      color || undefined
+    );
+  }
 </script>
 
 <aside
@@ -113,68 +133,62 @@
                 : config.priority === 3
                   ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300'
                   : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}
-        {@const hoverClass =
-          config.priority === 0
-            ? 'hover:bg-red-50 dark:hover:bg-gray-800/80'
-            : config.priority === 1
-              ? 'hover:bg-orange-50 dark:hover:bg-gray-800/80'
-              : config.priority === 2
-                ? 'hover:bg-yellow-50 dark:hover:bg-gray-800/80'
-                : config.priority === 3
-                  ? 'hover:bg-blue-50 dark:hover:bg-gray-800/80'
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-800/80'}
+        {@const hasNotificationForPeer = $notification?.targetPeerId === peer.peer_id}
+        {@const notificationColor = hasNotificationForPeer ? $notification?.color : null}
 
         <div
-          class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 border-l-4 shadow-sm hover:shadow-md transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800 {hoverClass}"
-          style="border-left-color: {config.borderColor}"
+          class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 border-l-4 shadow-sm hover:shadow-md transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800 {hasNotificationForPeer
+            ? 'border-r-4'
+            : ''}"
+          style="border-left-color: {config.color};{notificationColor
+            ? ` border-right-color: ${notificationColor};`
+            : ''}"
+          on:click={() => handlePeerClick(peer)}
+          on:keydown={(e) => e.key === 'Enter' && handlePeerClick(peer)}
+          role="button"
+          tabindex="0"
+          aria-label="Notify {peer.peer_name} that patient is ready"
         >
-          <div class="flex justify-between items-center mb-2">
-            <div class="flex items-center gap-2">
-              <span
-                class="{badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider"
-              >
-                {priorityLabel}
-              </span>
-              <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-                {peer.peer_name}
-              </h3>
-            </div>
-            <span class="text-xs text-gray-400 dark:text-gray-500 font-mono"
+          <div class="flex justify-between items-start mb-2">
+            <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+              {peer.peer_name}
+            </h3>
+            <span
+              class="{badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+            >
+              {priorityLabel}
+            </span>
+          </div>
+          <div class="flex justify-between items-center gap-2">
+            <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 flex-1">
+              {peer.note || config.name}
+            </p>
+            <span class="text-xs text-gray-400 dark:text-gray-500 font-mono flex-shrink-0"
               >{getTimeInState(peer.light_state.timestamp)}</span
             >
-          </div>
-          <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-            {peer.note || config.name}
-          </p>
-          <div
-            class="absolute right-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <span class="material-icons-round text-gray-400 text-sm">chevron_right</span>
           </div>
         </div>
       {/each}
     {/if}
   </div>
-
-  <div
-    class="p-3 bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 text-xs text-center text-gray-500 dark:text-gray-400"
-  >
-    <div class="flex items-center justify-center space-x-2">
-      {#if hasUrgent}
-        <span class="relative flex h-2 w-2">
-          <span
-            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ef4444] opacity-75"
-          ></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-[#ef4444]"></span>
-        </span>
-        <span class="font-medium text-[#ef4444] dark:text-red-400">Action Required</span>
-      {:else}
-        <span class="w-2 h-2 rounded-full bg-green-500"></span>
-        <span>System Online</span>
-      {/if}
-    </div>
-  </div>
 </aside>
+
+<LightPickerModal
+  isOpen={isModalOpen}
+  onClose={handleModalClose}
+  onSelect={handleSendNotification}
+  currentColor={null}
+  title="Send Notification"
+  subtitle={selectedPeer ? `To: ${selectedPeer.peer_name}` : ''}
+  showMessageInput={true}
+  messageLabel="Message"
+  messagePlaceholder="Enter patient name or message"
+  messageRequired={false}
+  messageMaxLength={30}
+  submitLabel="Send Notification"
+  submitIcon="send"
+  allowToggleOff={false}
+/>
 
 <style>
   .custom-scrollbar::-webkit-scrollbar {

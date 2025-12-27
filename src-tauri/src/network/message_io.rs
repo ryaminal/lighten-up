@@ -65,5 +65,6 @@ fn extract_peer_id(message: &Message) -> Result<PeerId> {
         }
         Message::Config(config) => Ok(PeerId::new(&config.peer_id)),
         Message::Chat(chat) => Ok(PeerId::new(&chat.peer_id)),
+        Message::Notification(notification) => Ok(PeerId::new(&notification.sender_peer_id)),
     }
 }

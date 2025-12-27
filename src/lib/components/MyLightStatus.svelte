@@ -2,8 +2,6 @@
   import LightColorPicker from './LightColorPicker.svelte';
   import { myPeerName, myLightColor, myNote, lights } from '$lib/stores';
   import { setLightColor } from '$lib/tauri';
-  import { COLOR_CONFIG } from '$lib/config/colors';
-  import type { LightColor } from '$lib/generated/types';
 
   let note: string = '';
   const maxNoteLength = 60;
@@ -36,7 +34,7 @@
     isSaving = true;
     try {
       const trimmedNote = note.trim();
-      await setLightColor(color as LightColor, trimmedNote || undefined);
+      await setLightColor(color, trimmedNote || undefined);
     } catch (error) {
       console.error('Failed to save note:', error);
     } finally {
@@ -50,8 +48,7 @@
     return light?.name || '';
   }
 
-  $: currentConfig = COLOR_CONFIG[$myLightColor as LightColor] || COLOR_CONFIG.Off;
-  $: isOff = $myLightColor === 'Off';
+  $: isOff = $myLightColor === '#000000';
   $: statusMessage = $myNote?.trim() || '';
   $: lightName = getLightName($myLightColor);
 </script>
@@ -76,11 +73,12 @@
         {:else}
           <span class="relative flex h-3 w-3">
             <span
-              class="animate-ping absolute inline-flex h-full w-full rounded-full {currentConfig.colorClass} opacity-75"
+              class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+              style="background-color: {$myLightColor}"
             ></span>
             <span
-              class="relative inline-flex rounded-full h-3 w-3 {currentConfig.colorClass}"
-              style="box-shadow: 0 0 8px {currentConfig.hex}40"
+              class="relative inline-flex rounded-full h-3 w-3"
+              style="background-color: {$myLightColor}; box-shadow: 0 0 8px {$myLightColor}40"
             ></span>
           </span>
           <div class="flex flex-col gap-0.5">

@@ -467,7 +467,7 @@
                         class="flex h-8 w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-900 focus:bg-white dark:focus:bg-gray-900 text-gray-900 dark:text-white transition-all"
                         bind:value={light.name}
                         on:change={() => handleLightChange(light)}
-                        maxlength="30"
+                        maxlength="14"
                       />
                     </div>
 

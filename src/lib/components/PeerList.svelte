@@ -1,7 +1,5 @@
 <script lang="ts">
   import { peers, lights } from '$lib/stores';
-  import { COLOR_CONFIG } from '$lib/config/colors';
-  import type { LightColor } from '$lib/generated/types';
   import { onMount, onDestroy } from 'svelte';
 
   let currentTime = Date.now();
@@ -73,10 +71,10 @@
       <p class="text-slate-400 italic text-center mt-8">Searching for peers...</p>
     {:else}
       {#each peersWithTime as peer (peer.peer_id)}
-        {@const config = COLOR_CONFIG[peer.light_state.color as LightColor] ?? COLOR_CONFIG.Off}
         {@const lightName = getLightName(peer.light_state.color)}
         <div
-          class="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer border-l-[6px] {config.borderClass}"
+          class="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm hover:shadow-md transition-all cursor-pointer border-l-[6px]"
+          style="border-left-color: {peer.light_state.color}"
         >
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-start mb-2">
