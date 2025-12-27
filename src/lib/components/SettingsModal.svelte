@@ -396,11 +396,13 @@
                   Light Configuration
                 </h4>
               </div>
+
               <button
-                class="inline-flex items-center justify-center rounded-md text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-white h-8 px-3"
+                class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 bg-[#3b82f6] hover:bg-[#2563eb] text-white h-8 px-3"
                 on:click={handleAddLight}
+                aria-label="Add light"
               >
-                <span class="material-symbols-outlined text-sm mr-1.5">add</span>
+                <span class="material-symbols-outlined text-lg mr-1">add</span>
                 Add Light
               </button>
             </div>
