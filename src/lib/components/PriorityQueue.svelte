@@ -9,6 +9,7 @@
   let intervalId: number;
   let isModalOpen = false;
   let selectedPeer: PeerPresence | null = null;
+  let sortByName = false; // false = priority sort (default), true = alphabetical sort
 
   onMount(() => {
     intervalId = setInterval(() => {
@@ -44,13 +45,20 @@
   }
 
   // Sort peers by priority (lowest number = highest priority), then by time in state (oldest first)
+  // OR alphabetically by peer name if sortByName is enabled
   $: sortedPeers = [...($peers || [])].sort((a, b) => {
-    const aPriority = getLightConfig(a).priority;
-    const bPriority = getLightConfig(b).priority;
-    // Lower number = higher priority (0 is highest)
-    if (aPriority !== bPriority) return aPriority - bPriority;
-    // Then by time in state (oldest first)
-    return a.light_state.timestamp - b.light_state.timestamp;
+    if (sortByName) {
+      // Alphabetical sort by peer name
+      return a.peer_name.localeCompare(b.peer_name);
+    } else {
+      // Priority sort (default)
+      const aPriority = getLightConfig(a).priority;
+      const bPriority = getLightConfig(b).priority;
+      // Lower number = higher priority (0 is highest)
+      if (aPriority !== bPriority) return aPriority - bPriority;
+      // Then by time in state (oldest first)
+      return a.light_state.timestamp - b.light_state.timestamp;
+    }
   });
 
   // Force reactivity by creating a computed value that depends on both peers and currentTime
@@ -85,6 +93,10 @@
       color || undefined
     );
   }
+
+  function toggleSort() {
+    sortByName = !sortByName;
+  }
 </script>
 
 <aside
@@ -96,14 +108,21 @@
     <div>
       <h2 class="font-bold text-lg text-gray-800 dark:text-white">Priority Queue</h2>
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-        {sortedPeers.length} Active
+        {sortedPeers.length} Active •
+        {#if sortByName}
+          {sortByName ? 'A-Z' : 'Priority'}
+        {:else}
+          <span class="font-bold text-blue-600 dark:text-blue-400">Priority</span>
+        {/if}
       </p>
     </div>
     <button
       class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-      aria-label="Filter"
+      on:click={toggleSort}
+      aria-label={sortByName ? 'Sort by priority' : 'Sort alphabetically'}
+      title={sortByName ? 'Sort by priority' : 'Sort alphabetically'}
     >
-      <span class="material-icons-round text-xl">filter_list</span>
+      <span class="material-icons-round text-xl">{sortByName ? 'swap_vert' : 'sort'}</span>
     </button>
   </div>
 

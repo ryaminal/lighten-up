@@ -193,15 +193,23 @@
             ></span>
           </div>
           <div class="flex flex-col">
-            {#if notificationLightName}
+            {#if notificationLightName && notificationWithTime.message !== notificationLightName}
               <span
                 class="text-[10px] font-bold uppercase tracking-wider leading-none mb-1"
                 style="color: {styles.customColor}dd">{notificationLightName}</span
               >
+              <span class="text-sm font-medium text-gray-900 dark:text-gray-200"
+                >{notificationWithTime.message}</span
+              >
+            {:else if notificationLightName}
+              <span class="text-sm font-medium text-gray-900 dark:text-gray-200"
+                >{notificationLightName}</span
+              >
+            {:else}
+              <span class="text-sm font-medium text-gray-900 dark:text-gray-200"
+                >{notificationWithTime.message}</span
+              >
             {/if}
-            <span class="text-sm font-medium text-gray-900 dark:text-gray-200"
-              >{notificationWithTime.message}</span
-            >
           </div>
           <span class="text-xs ml-2" style="color: {styles.customColor}dd"
             >{getTimeAgo(notificationWithTime.timestamp)}</span
