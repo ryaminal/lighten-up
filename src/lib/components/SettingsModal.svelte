@@ -15,6 +15,7 @@
   let errorMessage = '';
   let successMessage = '';
   let scrollContainer: HTMLDivElement;
+  let lightTableContainer: HTMLDivElement;
 
   onMount(async () => {
     await loadData();
@@ -158,6 +159,12 @@
       .then((fresh) => {
         // Sort by priority only
         lights = fresh.sort((a, b) => a.priority - b.priority);
+        // Scroll to bottom to show the new light
+        setTimeout(() => {
+          if (lightTableContainer) {
+            lightTableContainer.scrollTop = lightTableContainer.scrollHeight;
+          }
+        }, 100);
       })
       .catch((err) => {
         errorMessage = `Failed to add light: ${err}`;
@@ -298,23 +305,18 @@
     tabindex="0"
   >
     <div
-      class="relative w-full max-w-2xl border bg-white dark:bg-[#111827] text-gray-900 dark:text-gray-100 shadow-lg sm:rounded-lg overflow-hidden flex flex-col max-h-[90vh]"
+      class="relative w-full max-w-2xl border bg-white dark:bg-[#111827] text-gray-900 dark:text-gray-100 shadow-lg sm:rounded-lg overflow-hidden flex flex-col max-h-[85vh]"
       on:click|stopPropagation
       role="dialog"
       aria-modal="true"
       tabindex="-1"
     >
       <!-- Header -->
-      <div class="flex flex-col space-y-1.5 p-6 pb-2 border-b border-gray-200 dark:border-gray-800">
+      <div class="flex flex-col space-y-1.5 p-6 pb-4 border-b border-gray-200 dark:border-gray-800">
         <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-semibold tracking-tight text-lg text-gray-900 dark:text-white">
-              User/Room Settings
-            </h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Configure room identification and light signaling preferences.
-            </p>
-          </div>
+          <h3 class="font-semibold tracking-tight text-lg text-gray-900 dark:text-white">
+            Settings
+          </h3>
           <button
             class="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:ring-offset-2 disabled:pointer-events-none hover:bg-gray-100 dark:hover:bg-gray-800 p-1"
             on:click={onClose}
@@ -331,10 +333,7 @@
         </div>
       {:else}
         <!-- Content -->
-        <div
-          bind:this={scrollContainer}
-          class="p-6 pt-6 overflow-y-auto space-y-8 custom-scrollbar"
-        >
+        <div bind:this={scrollContainer} class="p-6 pt-6 space-y-8">
           <!-- Identification Section -->
           <div class="space-y-4">
             <div class="flex items-center gap-2">
@@ -359,9 +358,6 @@
                   disabled
                   readonly
                 />
-                <p class="text-[0.8rem] text-gray-500 dark:text-gray-400">
-                  Unique system ID (read-only in some cases).
-                </p>
               </div>
 
               <div class="grid gap-2">
@@ -372,10 +368,8 @@
                   class="flex h-10 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 text-gray-900 dark:text-white"
                   bind:value={peerName}
                   disabled={isSaving}
+                  maxlength="15"
                 />
-                <p class="text-[0.8rem] text-gray-500 dark:text-gray-400">
-                  Friendly name shown on dashboards.
-                </p>
               </div>
             </div>
           </div>
@@ -404,10 +398,10 @@
               </button>
             </div>
 
-            <div class="rounded-md border border-gray-200 dark:border-gray-800">
-              <!-- Table Header -->
+            <div class="rounded-md border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <!-- Table Header (Sticky) -->
               <div
-                class="grid grid-cols-12 gap-6 p-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                class="grid grid-cols-12 gap-6 p-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider sticky top-0 z-10"
               >
                 <div class="col-span-1 text-center">Priority</div>
                 <div class="col-span-2 text-center">Color</div>
@@ -415,77 +409,80 @@
                 <div class="col-span-2 text-right">Actions</div>
               </div>
 
-              <!-- Table Rows -->
-              {#each lights as light, index (light.id)}
-                <div
-                  class="grid grid-cols-12 gap-6 p-3 items-center border-b border-gray-200 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-all duration-200 group"
-                >
-                  <!-- Up/Down Arrows -->
-                  <div class="col-span-1 flex flex-col items-center gap-1">
-                    <button
-                      class="inline-flex items-center justify-center rounded text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                      on:click={() => handleMoveLightUp(index)}
-                      disabled={index === 0}
-                      aria-label="Move up"
-                      title="Move up"
+              <!-- Table Rows (Scrollable) -->
+              <div bind:this={lightTableContainer} class="max-h-[240px] overflow-y-auto">
+                {#each lights as light, index (light.id)}
+                  <div
+                    class="grid grid-cols-12 gap-6 p-3 items-center border-b border-gray-200 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-all duration-200 group"
+                  >
+                    <!-- Up/Down Arrows -->
+                    <div class="col-span-1 flex flex-col items-center gap-1">
+                      <button
+                        class="inline-flex items-center justify-center rounded text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        on:click={() => handleMoveLightUp(index)}
+                        disabled={index === 0}
+                        aria-label="Move up"
+                        title="Move up"
+                      >
+                        <span class="material-icons-round text-base">keyboard_arrow_up</span>
+                      </button>
+                      <button
+                        class="inline-flex items-center justify-center rounded text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        on:click={() => handleMoveLightDown(index)}
+                        disabled={index === lights.length - 1}
+                        aria-label="Move down"
+                        title="Move down"
+                      >
+                        <span class="material-icons-round text-base">keyboard_arrow_down</span>
+                      </button>
+                    </div>
+
+                    <!-- Color Picker -->
+                    <div class="col-span-2 flex justify-center relative">
+                      <div
+                        class="h-6 w-6 rounded-full ring-offset-background transition-all cursor-pointer ring-2 ring-transparent group-hover:ring-gray-300 dark:group-hover:ring-gray-700 shadow-sm"
+                        style="background-color: {light.color}"
+                      ></div>
+                      <input
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        type="color"
+                        bind:value={light.color}
+                        on:change={() => handleLightChange(light)}
+                        on:click|stopPropagation
+                      />
+                    </div>
+
+                    <!-- Light Name -->
+                    <div class="col-span-7">
+                      <input
+                        class="flex h-8 w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-900 focus:bg-white dark:focus:bg-gray-900 text-gray-900 dark:text-white transition-all"
+                        bind:value={light.name}
+                        on:change={() => handleLightChange(light)}
+                        maxlength="30"
+                      />
+                    </div>
+
+                    <!-- Delete Button -->
+                    <div class="col-span-2 flex justify-end">
+                      <button
+                        class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 h-8 w-8 text-gray-400"
+                        on:click={() => handleDeleteLight(light.id)}
+                        aria-label="Delete light"
+                      >
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                {/each}
+
+                {#if lights.length === 0}
+                  <div class="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <span class="material-symbols-outlined text-4xl mb-2 opacity-50">lightbulb</span
                     >
-                      <span class="material-icons-round text-base">keyboard_arrow_up</span>
-                    </button>
-                    <button
-                      class="inline-flex items-center justify-center rounded text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                      on:click={() => handleMoveLightDown(index)}
-                      disabled={index === lights.length - 1}
-                      aria-label="Move down"
-                      title="Move down"
-                    >
-                      <span class="material-icons-round text-base">keyboard_arrow_down</span>
-                    </button>
+                    <p class="text-sm">No lights configured. Click "Add Light" to get started.</p>
                   </div>
-
-                  <!-- Color Picker -->
-                  <div class="col-span-2 flex justify-center relative">
-                    <div
-                      class="h-6 w-6 rounded-full ring-offset-background transition-all cursor-pointer ring-2 ring-transparent group-hover:ring-gray-300 dark:group-hover:ring-gray-700 shadow-sm"
-                      style="background-color: {light.color}"
-                    ></div>
-                    <input
-                      class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      type="color"
-                      bind:value={light.color}
-                      on:change={() => handleLightChange(light)}
-                      on:click|stopPropagation
-                    />
-                  </div>
-
-                  <!-- Light Name -->
-                  <div class="col-span-7">
-                    <input
-                      class="flex h-8 w-full rounded-md border border-transparent bg-transparent px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#3b82f6] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-900 focus:bg-white dark:focus:bg-gray-900 text-gray-900 dark:text-white transition-all"
-                      bind:value={light.name}
-                      on:change={() => handleLightChange(light)}
-                      maxlength="30"
-                    />
-                  </div>
-
-                  <!-- Delete Button -->
-                  <div class="col-span-2 flex justify-end">
-                    <button
-                      class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 h-8 w-8 text-gray-400"
-                      on:click={() => handleDeleteLight(light.id)}
-                      aria-label="Delete light"
-                    >
-                      <span class="material-symbols-outlined text-lg">delete</span>
-                    </button>
-                  </div>
-                </div>
-              {/each}
-
-              {#if lights.length === 0}
-                <div class="p-8 text-center text-gray-500 dark:text-gray-400">
-                  <span class="material-symbols-outlined text-4xl mb-2 opacity-50">lightbulb</span>
-                  <p class="text-sm">No lights configured. Click "Add Light" to get started.</p>
-                </div>
-              {/if}
+                {/if}
+              </div>
             </div>
           </div>
 
@@ -504,35 +501,6 @@
               {successMessage}
             </div>
           {/if}
-        </div>
-
-        <!-- Footer -->
-        <div
-          class="flex items-center justify-between p-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/20"
-        >
-          <button
-            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white h-10 px-4 py-2 text-gray-500 dark:text-gray-400"
-            on:click={handleResetDefaults}
-          >
-            <span class="material-symbols-outlined text-base mr-2">restart_alt</span>
-            Reset Defaults
-          </button>
-          <div class="flex gap-3">
-            <button
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-white h-10 px-4 py-2"
-              on:click={onClose}
-              disabled={isSaving}
-            >
-              Cancel
-            </button>
-            <button
-              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 bg-[#3b82f6] text-white hover:bg-[#3b82f6]/90 h-10 px-4 py-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              on:click={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
         </div>
       {/if}
     </div>
