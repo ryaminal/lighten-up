@@ -154,7 +154,8 @@
               class="bg-white dark:bg-[#111827] border border-gray-200 dark:border-gray-800 rounded-lg rounded-tl-none p-4 shadow-sm"
             >
               <p
-                class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-line"
+                class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-line break-words overflow-wrap-anywhere"
+                style="overflow-wrap: anywhere; word-break: break-word;"
               >
                 {message.content}
               </p>

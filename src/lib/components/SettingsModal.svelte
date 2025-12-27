@@ -32,6 +32,28 @@
       peerName = name;
       // Sort by priority only (ASC: 0 is highest)
       lights = lightsData.sort((a, b) => a.priority - b.priority);
+
+      // Normalize priorities to ensure they're sequential (0, 1, 2, 3, ...)
+      // This fixes any duplicate priorities from previous versions
+      const needsNormalization = lights.some((light, index) => light.priority !== index);
+      if (needsNormalization) {
+        console.log('[Settings] Normalizing priorities to fix duplicates');
+        const normalizedLights = lights.map((light, index) => ({
+          ...light,
+          priority: index,
+          updated_at: Math.floor(Date.now() / 1000),
+          updated_by: peerId,
+        }));
+
+        // Update all lights with normalized priorities
+        for (const light of normalizedLights) {
+          await updateLight(light);
+        }
+
+        // Refresh to get the updated data
+        const refreshed = await getLights();
+        lights = refreshed.sort((a, b) => a.priority - b.priority);
+      }
     } catch (err) {
       errorMessage = `Failed to load settings: ${err}`;
     } finally {
@@ -117,23 +139,25 @@
   async function handleMoveLightUp(index: number) {
     if (index === 0) return; // Already at top
 
-    const currentLight = lights[index];
-    const previousLight = lights[index - 1];
+    // Swap array positions
+    const newLights = [...lights];
+    [newLights[index - 1], newLights[index]] = [newLights[index], newLights[index - 1]];
 
-    // Swap priorities
-    const tempPriority = currentLight.priority;
-    currentLight.priority = previousLight.priority;
-    previousLight.priority = tempPriority;
+    // Update UI immediately
+    lights = newLights;
 
-    // Update both lights
-    currentLight.updated_at = Math.floor(Date.now() / 1000);
-    currentLight.updated_by = peerId;
-    previousLight.updated_at = Math.floor(Date.now() / 1000);
-    previousLight.updated_by = peerId;
+    // Reassign priorities based on new positions (0, 1, 2, 3, ...)
+    const updatedLights = newLights.map((light, i) => ({
+      ...light,
+      priority: i,
+      updated_at: Math.floor(Date.now() / 1000),
+      updated_by: peerId,
+    }));
 
     try {
-      await updateLight(currentLight);
-      await updateLight(previousLight);
+      // Update only the two lights that changed priority
+      await updateLight(updatedLights[index - 1]);
+      await updateLight(updatedLights[index]);
 
       // Refresh from backend to ensure consistency
       const refreshed = await getLights();
@@ -149,23 +173,25 @@
   async function handleMoveLightDown(index: number) {
     if (index === lights.length - 1) return; // Already at bottom
 
-    const currentLight = lights[index];
-    const nextLight = lights[index + 1];
+    // Swap array positions
+    const newLights = [...lights];
+    [newLights[index], newLights[index + 1]] = [newLights[index + 1], newLights[index]];
 
-    // Swap priorities
-    const tempPriority = currentLight.priority;
-    currentLight.priority = nextLight.priority;
-    nextLight.priority = tempPriority;
+    // Update UI immediately
+    lights = newLights;
 
-    // Update both lights
-    currentLight.updated_at = Math.floor(Date.now() / 1000);
-    currentLight.updated_by = peerId;
-    nextLight.updated_at = Math.floor(Date.now() / 1000);
-    nextLight.updated_by = peerId;
+    // Reassign priorities based on new positions (0, 1, 2, 3, ...)
+    const updatedLights = newLights.map((light, i) => ({
+      ...light,
+      priority: i,
+      updated_at: Math.floor(Date.now() / 1000),
+      updated_by: peerId,
+    }));
 
     try {
-      await updateLight(currentLight);
-      await updateLight(nextLight);
+      // Update only the two lights that changed priority
+      await updateLight(updatedLights[index]);
+      await updateLight(updatedLights[index + 1]);
 
       // Refresh from backend to ensure consistency
       const refreshed = await getLights();
@@ -336,7 +362,7 @@
                       aria-label="Move up"
                       title="Move up"
                     >
-                      <span class="material-symbols-outlined text-sm">arrow_upward</span>
+                      <span class="material-icons-round text-base">keyboard_arrow_up</span>
                     </button>
                     <button
                       class="inline-flex items-center justify-center rounded text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
@@ -345,7 +371,7 @@
                       aria-label="Move down"
                       title="Move down"
                     >
-                      <span class="material-symbols-outlined text-sm">arrow_downward</span>
+                      <span class="material-icons-round text-base">keyboard_arrow_down</span>
                     </button>
                   </div>
 
