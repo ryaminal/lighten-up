@@ -112,14 +112,14 @@ impl PresenceService {
         let mut peers = self.peers.write().await;
         peers.retain(|_, peer| now - peer.last_seen < PEER_TIMEOUT_SECS);
     }
-    
+
     pub async fn set_peer_notification(&self, peer_id: String, notification: Notification) {
         let mut peers = self.peers.write().await;
         if let Some(peer) = peers.get_mut(&peer_id) {
             peer.notification_status = Some(notification);
         }
     }
-    
+
     pub async fn clear_peer_notification(&self, peer_id: &str) {
         let mut peers = self.peers.write().await;
         if let Some(peer) = peers.get_mut(peer_id) {
@@ -173,12 +173,12 @@ async fn add_or_update_peer(
     timestamp: u64,
 ) {
     let mut peers_map = peers.write().await;
-    
+
     // Preserve existing notification_status if peer exists
     let existing_notification = peers_map
         .get(&peer_id)
         .and_then(|p| p.notification_status.clone());
-    
+
     peers_map.insert(
         peer_id.clone(),
         PeerPresence {

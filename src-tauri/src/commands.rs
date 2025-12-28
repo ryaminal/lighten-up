@@ -283,10 +283,10 @@ pub async fn send_notification(
 
     // Emit to local frontend for immediate UI update
     let my_peer_id = state.presence_service.get_my_peer_id();
-    
+
     // Always emit peer-notification-status for card indicators
     let _ = app.emit("peer-notification-status", notification.clone());
-    
+
     // Only show in banner (notification event) if we're the target
     if notification.target_peer_id == my_peer_id {
         let _ = app.emit("notification", notification);
