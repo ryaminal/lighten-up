@@ -258,7 +258,7 @@ pub async fn send_notification(
     let notification = Notification {
         notification_type: notif_type,
         message,
-        target_peer_id,
+        target_peer_id: target_peer_id.clone(),
         sender_peer_id: state.presence_service.get_my_peer_id(),
         timestamp: crate::utils::current_timestamp(),
         priority,
@@ -271,8 +271,26 @@ pub async fn send_notification(
         .await
         .map_err(|e| format!("Failed to broadcast notification: {}", e))?;
 
+    // Persist notification in presence service so it syncs with peer status
+    state
+        .presence_service
+        .set_peer_notification(target_peer_id, notification.clone())
+        .await;
+
+    // Emit peers-changed so UI updates immediately with the notification status
+    let peers = state.presence_service.get_all_peers().await;
+    let _ = app.emit("peers-changed", peers);
+
     // Emit to local frontend for immediate UI update
-    let _ = app.emit("notification", notification);
+    let my_peer_id = state.presence_service.get_my_peer_id();
+    
+    // Always emit peer-notification-status for card indicators
+    let _ = app.emit("peer-notification-status", notification.clone());
+    
+    // Only show in banner (notification event) if we're the target
+    if notification.target_peer_id == my_peer_id {
+        let _ = app.emit("notification", notification);
+    }
 
     Ok(())
 }

@@ -15,6 +15,7 @@ export interface PeerPresence {
   };
   note?: string | null;
   last_seen: number;
+  notification_status?: Notification | null;
 }
 
 export interface ChatMessage {
@@ -122,6 +123,7 @@ export async function initializeTauri(callbacks: {
   onChatMessage?: (message: ChatMessage) => void;
   onChatMessageDeleted?: (id: string) => void;
   onNotification?: (notification: Notification) => void;
+  onPeerNotificationStatus?: (notification: Notification) => void;
 }): Promise<void> {
   // Clean up existing listeners
   await cleanupListeners();
@@ -158,10 +160,18 @@ export async function initializeTauri(callbacks: {
     unlistenFns.push(unlisten);
   }
 
-  // Listen for notifications
+  // Listen for notifications (banner for target peer only)
   if (callbacks.onNotification) {
     const unlisten = await listen<Notification>('notification', (event) => {
       callbacks.onNotification?.(event.payload);
+    });
+    unlistenFns.push(unlisten);
+  }
+
+  // Listen for peer notification status (card indicators for everyone)
+  if (callbacks.onPeerNotificationStatus) {
+    const unlisten = await listen<Notification>('peer-notification-status', (event) => {
+      callbacks.onPeerNotificationStatus?.(event.payload);
     });
     unlistenFns.push(unlisten);
   }

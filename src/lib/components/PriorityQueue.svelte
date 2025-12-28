@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { peers, lights, peerNotifications } from '$lib/stores';
+  import { peers, lights } from '$lib/stores';
   import type { PeerPresence } from '$lib/tauri';
   import { sendNotification } from '$lib/tauri';
   import { onMount, onDestroy } from 'svelte';
@@ -152,17 +152,16 @@
                 : config.priority === 3
                   ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300'
                   : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'}
-        {@const peerNotification = $peerNotifications.get(peer.peer_id)}
-        {@const hasNotificationForPeer = peerNotification !== undefined}
+        {@const peerNotification = peer.notification_status}
+        {@const hasNotificationForPeer =
+          peerNotification !== undefined && peerNotification !== null}
         {@const notificationColor = hasNotificationForPeer ? peerNotification?.color : null}
 
         <div
-          class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 border-l-4 shadow-sm hover:shadow-md transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800 {hasNotificationForPeer
+          class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800 {hasNotificationForPeer
             ? 'border-r-4'
             : ''}"
-          style="border-left-color: {config.color};{notificationColor
-            ? ` border-right-color: ${notificationColor};`
-            : ''}"
+          style={notificationColor ? `border-right-color: ${notificationColor};` : ''}
           on:click={() => handlePeerClick(peer)}
           on:keydown={(e) => e.key === 'Enter' && handlePeerClick(peer)}
           role="button"

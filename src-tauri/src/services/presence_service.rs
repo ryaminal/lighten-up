@@ -1,4 +1,4 @@
-use crate::protocol::messages::{LightState, PresenceMessage};
+use crate::protocol::messages::{LightState, Notification, PresenceMessage};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -13,6 +13,7 @@ pub struct PeerPresence {
     pub light_state: LightState,
     pub note: Option<String>,
     pub last_seen: u64,
+    pub notification_status: Option<Notification>,
 }
 
 pub struct PresenceService {
@@ -111,6 +112,20 @@ impl PresenceService {
         let mut peers = self.peers.write().await;
         peers.retain(|_, peer| now - peer.last_seen < PEER_TIMEOUT_SECS);
     }
+    
+    pub async fn set_peer_notification(&self, peer_id: String, notification: Notification) {
+        let mut peers = self.peers.write().await;
+        if let Some(peer) = peers.get_mut(&peer_id) {
+            peer.notification_status = Some(notification);
+        }
+    }
+    
+    pub async fn clear_peer_notification(&self, peer_id: &str) {
+        let mut peers = self.peers.write().await;
+        if let Some(peer) = peers.get_mut(peer_id) {
+            peer.notification_status = None;
+        }
+    }
 
     pub async fn get_all_peers(&self) -> Vec<PeerPresence> {
         let mut all_peers: Vec<PeerPresence> = self.peers.read().await.values().cloned().collect();
@@ -122,6 +137,7 @@ impl PresenceService {
             light_state: self.my_light_state.read().await.clone(),
             note: self.my_note.read().await.clone(),
             last_seen: crate::utils::current_timestamp(),
+            notification_status: None, // I don't have a notification for myself
         };
         all_peers.push(my_presence);
 
@@ -157,6 +173,12 @@ async fn add_or_update_peer(
     timestamp: u64,
 ) {
     let mut peers_map = peers.write().await;
+    
+    // Preserve existing notification_status if peer exists
+    let existing_notification = peers_map
+        .get(&peer_id)
+        .and_then(|p| p.notification_status.clone());
+    
     peers_map.insert(
         peer_id.clone(),
         PeerPresence {
@@ -165,6 +187,7 @@ async fn add_or_update_peer(
             light_state,
             note,
             last_seen: timestamp,
+            notification_status: existing_notification,
         },
     );
 }

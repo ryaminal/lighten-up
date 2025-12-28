@@ -290,14 +290,44 @@ fn setup_message_routing(context: RoutingContext) {
                                 notification.target_peer_id
                             );
 
-                            // Emit to all peers so everyone can see notification status
-                            log::info!(
-                                "[MESSAGE_ROUTING] Notification: {} for peer {}",
-                                notification.message,
-                                notification.target_peer_id
-                            );
-                            if let Err(e) = app.emit("notification", notification) {
-                                log::error!("[MESSAGE_ROUTING] Failed to emit notification: {}", e);
+                            // Persist notification in presence service
+                            presence
+                                .set_peer_notification(
+                                    notification.target_peer_id.clone(),
+                                    notification.clone(),
+                                )
+                                .await;
+
+                            // Emit peers-changed so UI updates with notification status
+                            let peers = presence.get_all_peers().await;
+                            if let Err(e) = app.emit("peers-changed", peers) {
+                                log::error!(
+                                    "[MESSAGE_ROUTING] Failed to emit peers-changed: {}",
+                                    e
+                                );
+                            }
+
+                            let my_peer_id = presence.get_my_peer_id();
+                            
+                            // Always emit peer-notification-status for card indicators (everyone sees this)
+                            if let Err(e) = app.emit("peer-notification-status", notification.clone()) {
+                                log::error!("[MESSAGE_ROUTING] Failed to emit peer-notification-status: {}", e);
+                            }
+                            
+                            // Only emit to my notification banner if I am the target
+                            if notification.target_peer_id == my_peer_id {
+                                log::info!(
+                                    "[MESSAGE_ROUTING] Notification for me: {} from peer {}",
+                                    notification.message,
+                                    notification.sender_peer_id
+                                );
+                                if let Err(e) = app.emit("notification", notification) {
+                                    log::error!("[MESSAGE_ROUTING] Failed to emit notification: {}", e);
+                                }
+                            } else {
+                                log::debug!(
+                                    "[MESSAGE_ROUTING] Notification not for me, but showing status indicator"
+                                );
                             }
                         }
                     }
