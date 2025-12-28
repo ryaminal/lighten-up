@@ -30,6 +30,7 @@ mod tests {
             light_state: LightState::new("#FF0000".to_string()),
             note: Some("Testing".to_string()),
             timestamp: 123456,
+            notification_status: Box::new(None),
         };
 
         let message = Message::Presence(msg);

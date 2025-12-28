@@ -259,3 +259,433 @@ async fn remove_peer(peers: &Arc<RwLock<HashMap<String, PeerPresence>>>, peer_id
     let mut peers_map = peers.write().await;
     peers_map.remove(peer_id);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::protocol::messages::NotificationType;
+
+    #[tokio::test]
+    async fn new_creates_service_with_initial_state() {
+        let service = PresenceService::new("peer-1".to_string(), "Test Peer".to_string());
+
+        assert_eq!(service.get_my_peer_id(), "peer-1");
+        assert_eq!(service.get_peer_name().await, "Test Peer");
+        let peers = service.get_all_peers().await;
+        assert_eq!(peers.len(), 1);
+        assert_eq!(peers[0].peer_id, "peer-1");
+    }
+
+    #[tokio::test]
+    async fn set_light_color_updates_state() {
+        let service = PresenceService::new("peer-1".to_string(), "Test Peer".to_string());
+
+        service.set_light_color("red".to_string()).await;
+
+        let presence = service.get_my_presence().await;
+        match presence {
+            PresenceMessage::Online { light_state, .. } => {
+                assert_eq!(light_state.color, "red");
+            }
+            _ => panic!("Expected Online message"),
+        }
+    }
+
+    #[tokio::test]
+    async fn set_note_updates_state() {
+        let service = PresenceService::new("peer-1".to_string(), "Test Peer".to_string());
+
+        service.set_note(Some("Busy".to_string())).await;
+
+        let presence = service.get_my_presence().await;
+        match presence {
+            PresenceMessage::Online { note, .. } => {
+                assert_eq!(note, Some("Busy".to_string()));
+            }
+            _ => panic!("Expected Online message"),
+        }
+    }
+
+    #[tokio::test]
+    async fn set_peer_name_updates_name() {
+        let service = PresenceService::new("peer-1".to_string(), "Original Name".to_string());
+
+        service.set_peer_name("Updated Name".to_string()).await;
+
+        assert_eq!(service.get_peer_name().await, "Updated Name");
+        let presence = service.get_my_presence().await;
+        match presence {
+            PresenceMessage::Online { peer_name, .. } => {
+                assert_eq!(peer_name, "Updated Name");
+            }
+            _ => panic!("Expected Online message"),
+        }
+    }
+
+    #[tokio::test]
+    async fn get_offline_message_returns_goodbye() {
+        let service = PresenceService::new("peer-1".to_string(), "Test Peer".to_string());
+
+        let message = service.get_offline_message().await;
+
+        match message {
+            PresenceMessage::Goodbye { peer_id } => {
+                assert_eq!(peer_id, "peer-1");
+            }
+            _ => panic!("Expected Goodbye message"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_presence_adds_new_peer() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        let online_msg = PresenceMessage::Online {
+            peer_id: "peer-2".to_string(),
+            peer_name: "Other Peer".to_string(),
+            light_state: LightState::new("blue".to_string()),
+            note: Some("Available".to_string()),
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(None),
+        };
+
+        service.handle_presence(online_msg).await;
+
+        let peers = service.get_all_peers().await;
+        assert_eq!(peers.len(), 2);
+        let other_peer = peers.iter().find(|p| p.peer_id == "peer-2").unwrap();
+        assert_eq!(other_peer.peer_name, "Other Peer");
+        assert_eq!(other_peer.light_state.color, "blue");
+        assert_eq!(other_peer.note, Some("Available".to_string()));
+    }
+
+    #[tokio::test]
+    async fn handle_presence_updates_existing_peer() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        let online_msg1 = PresenceMessage::Online {
+            peer_id: "peer-2".to_string(),
+            peer_name: "Other Peer".to_string(),
+            light_state: LightState::new("blue".to_string()),
+            note: None,
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(None),
+        };
+        service.handle_presence(online_msg1).await;
+
+        let online_msg2 = PresenceMessage::Online {
+            peer_id: "peer-2".to_string(),
+            peer_name: "Other Peer Updated".to_string(),
+            light_state: LightState::new("green".to_string()),
+            note: Some("Updated".to_string()),
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(None),
+        };
+        service.handle_presence(online_msg2).await;
+
+        let peers = service.get_all_peers().await;
+        assert_eq!(peers.len(), 2);
+        let other_peer = peers.iter().find(|p| p.peer_id == "peer-2").unwrap();
+        assert_eq!(other_peer.peer_name, "Other Peer Updated");
+        assert_eq!(other_peer.light_state.color, "green");
+        assert_eq!(other_peer.note, Some("Updated".to_string()));
+    }
+
+    #[tokio::test]
+    async fn handle_presence_removes_peer_on_goodbye() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        let online_msg = PresenceMessage::Online {
+            peer_id: "peer-2".to_string(),
+            peer_name: "Other Peer".to_string(),
+            light_state: LightState::new("blue".to_string()),
+            note: None,
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(None),
+        };
+        service.handle_presence(online_msg).await;
+
+        let goodbye_msg = PresenceMessage::Goodbye {
+            peer_id: "peer-2".to_string(),
+        };
+        service.handle_presence(goodbye_msg).await;
+
+        let peers = service.get_all_peers().await;
+        assert_eq!(peers.len(), 1);
+        assert_eq!(peers[0].peer_id, "my-peer");
+    }
+
+    #[tokio::test]
+    async fn cleanup_stale_peers_removes_old_peers() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+
+        let old_timestamp = crate::utils::current_timestamp() - 31;
+        let online_msg = PresenceMessage::Online {
+            peer_id: "stale-peer".to_string(),
+            peer_name: "Stale Peer".to_string(),
+            light_state: LightState::new("red".to_string()),
+            note: None,
+            timestamp: old_timestamp,
+            notification_status: Box::new(None),
+        };
+        service.handle_presence(online_msg).await;
+
+        {
+            let mut peers = service.peers.write().await;
+            if let Some(peer) = peers.get_mut("stale-peer") {
+                peer.last_seen = old_timestamp;
+            }
+        }
+
+        let removed = service.cleanup_stale_peers().await;
+
+        assert!(removed);
+        let peers = service.get_all_peers().await;
+        assert_eq!(peers.len(), 1);
+        assert_eq!(peers[0].peer_id, "my-peer");
+    }
+
+    #[tokio::test]
+    async fn cleanup_stale_peers_keeps_active_peers() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        let online_msg = PresenceMessage::Online {
+            peer_id: "active-peer".to_string(),
+            peer_name: "Active Peer".to_string(),
+            light_state: LightState::new("green".to_string()),
+            note: None,
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(None),
+        };
+        service.handle_presence(online_msg).await;
+
+        let removed = service.cleanup_stale_peers().await;
+
+        assert!(!removed);
+        let peers = service.get_all_peers().await;
+        assert_eq!(peers.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn cleanup_stale_peers_boundary_at_30_seconds() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+
+        let boundary_timestamp = crate::utils::current_timestamp() - 30;
+        let online_msg = PresenceMessage::Online {
+            peer_id: "boundary-peer".to_string(),
+            peer_name: "Boundary Peer".to_string(),
+            light_state: LightState::new("yellow".to_string()),
+            note: None,
+            timestamp: boundary_timestamp,
+            notification_status: Box::new(None),
+        };
+        service.handle_presence(online_msg).await;
+
+        {
+            let mut peers = service.peers.write().await;
+            if let Some(peer) = peers.get_mut("boundary-peer") {
+                peer.last_seen = boundary_timestamp;
+            }
+        }
+
+        let removed = service.cleanup_stale_peers().await;
+
+        assert!(removed);
+        let peers = service.get_all_peers().await;
+        assert_eq!(peers.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn set_peer_notification_for_self() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        let notification = Notification {
+            notification_type: NotificationType::PatientReady,
+            message: "Patient ready".to_string(),
+            target_peer_id: "my-peer".to_string(),
+            sender_peer_id: "other-peer".to_string(),
+            timestamp: crate::utils::current_timestamp(),
+            priority: None,
+            color: Some("red".to_string()),
+        };
+
+        service
+            .set_peer_notification("my-peer".to_string(), notification.clone())
+            .await;
+
+        let peers = service.get_all_peers().await;
+        let my_peer = peers.iter().find(|p| p.peer_id == "my-peer").unwrap();
+        assert!(my_peer.notification_status.is_some());
+        assert_eq!(
+            my_peer.notification_status.as_ref().unwrap().message,
+            "Patient ready"
+        );
+    }
+
+    #[tokio::test]
+    async fn set_peer_notification_for_other_peer() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        let online_msg = PresenceMessage::Online {
+            peer_id: "peer-2".to_string(),
+            peer_name: "Other Peer".to_string(),
+            light_state: LightState::new("blue".to_string()),
+            note: None,
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(None),
+        };
+        service.handle_presence(online_msg).await;
+
+        let notification = Notification {
+            notification_type: NotificationType::UrgentAssist,
+            message: "Urgent assistance needed".to_string(),
+            target_peer_id: "peer-2".to_string(),
+            sender_peer_id: "my-peer".to_string(),
+            timestamp: crate::utils::current_timestamp(),
+            priority: Some("high".to_string()),
+            color: None,
+        };
+        service
+            .set_peer_notification("peer-2".to_string(), notification.clone())
+            .await;
+
+        let peers = service.get_all_peers().await;
+        let other_peer = peers.iter().find(|p| p.peer_id == "peer-2").unwrap();
+        assert!(other_peer.notification_status.is_some());
+        assert_eq!(
+            other_peer.notification_status.as_ref().unwrap().message,
+            "Urgent assistance needed"
+        );
+    }
+
+    #[tokio::test]
+    async fn clear_peer_notification_for_self() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        let notification = Notification {
+            notification_type: NotificationType::PatientReady,
+            message: "Patient ready".to_string(),
+            target_peer_id: "my-peer".to_string(),
+            sender_peer_id: "other-peer".to_string(),
+            timestamp: crate::utils::current_timestamp(),
+            priority: None,
+            color: Some("red".to_string()),
+        };
+        service
+            .set_peer_notification("my-peer".to_string(), notification)
+            .await;
+
+        service.clear_peer_notification("my-peer").await;
+
+        let peers = service.get_all_peers().await;
+        let my_peer = peers.iter().find(|p| p.peer_id == "my-peer").unwrap();
+        assert!(my_peer.notification_status.is_none());
+    }
+
+    #[tokio::test]
+    async fn clear_peer_notification_for_other_peer() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        let online_msg = PresenceMessage::Online {
+            peer_id: "peer-2".to_string(),
+            peer_name: "Other Peer".to_string(),
+            light_state: LightState::new("blue".to_string()),
+            note: None,
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(None),
+        };
+        service.handle_presence(online_msg).await;
+
+        let notification = Notification {
+            notification_type: NotificationType::UrgentAssist,
+            message: "Urgent".to_string(),
+            target_peer_id: "peer-2".to_string(),
+            sender_peer_id: "my-peer".to_string(),
+            timestamp: crate::utils::current_timestamp(),
+            priority: None,
+            color: None,
+        };
+        service
+            .set_peer_notification("peer-2".to_string(), notification)
+            .await;
+
+        service.clear_peer_notification("peer-2").await;
+
+        let peers = service.get_all_peers().await;
+        let other_peer = peers.iter().find(|p| p.peer_id == "peer-2").unwrap();
+        assert!(other_peer.notification_status.is_none());
+    }
+
+    #[tokio::test]
+    async fn get_all_peers_includes_self() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+
+        let peers = service.get_all_peers().await;
+
+        assert_eq!(peers.len(), 1);
+        assert_eq!(peers[0].peer_id, "my-peer");
+        assert_eq!(peers[0].peer_name, "Me");
+    }
+
+    #[tokio::test]
+    async fn get_all_peers_includes_all_peers() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+        for i in 1..=3 {
+            let online_msg = PresenceMessage::Online {
+                peer_id: format!("peer-{}", i),
+                peer_name: format!("Peer {}", i),
+                light_state: LightState::new("blue".to_string()),
+                note: None,
+                timestamp: crate::utils::current_timestamp(),
+                notification_status: Box::new(None),
+            };
+            service.handle_presence(online_msg).await;
+        }
+
+        let peers = service.get_all_peers().await;
+
+        assert_eq!(peers.len(), 4);
+        assert!(peers.iter().any(|p| p.peer_id == "my-peer"));
+        assert!(peers.iter().any(|p| p.peer_id == "peer-1"));
+        assert!(peers.iter().any(|p| p.peer_id == "peer-2"));
+        assert!(peers.iter().any(|p| p.peer_id == "peer-3"));
+    }
+
+    #[tokio::test]
+    async fn multiple_peers_with_different_states() {
+        let service = PresenceService::new("my-peer".to_string(), "Me".to_string());
+
+        let msg1 = PresenceMessage::Online {
+            peer_id: "peer-1".to_string(),
+            peer_name: "Peer 1".to_string(),
+            light_state: LightState::new("red".to_string()),
+            note: Some("Busy".to_string()),
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(None),
+        };
+        let msg2 = PresenceMessage::Online {
+            peer_id: "peer-2".to_string(),
+            peer_name: "Peer 2".to_string(),
+            light_state: LightState::new("green".to_string()),
+            note: None,
+            timestamp: crate::utils::current_timestamp(),
+            notification_status: Box::new(Some(Notification {
+                notification_type: NotificationType::PatientReady,
+                message: "Test".to_string(),
+                target_peer_id: "peer-2".to_string(),
+                sender_peer_id: "my-peer".to_string(),
+                timestamp: crate::utils::current_timestamp(),
+                priority: None,
+                color: None,
+            })),
+        };
+
+        service.handle_presence(msg1).await;
+        service.handle_presence(msg2).await;
+
+        let peers = service.get_all_peers().await;
+        assert_eq!(peers.len(), 3);
+
+        let peer1 = peers.iter().find(|p| p.peer_id == "peer-1").unwrap();
+        assert_eq!(peer1.light_state.color, "red");
+        assert_eq!(peer1.note, Some("Busy".to_string()));
+        assert!(peer1.notification_status.is_none());
+
+        let peer2 = peers.iter().find(|p| p.peer_id == "peer-2").unwrap();
+        assert_eq!(peer2.light_state.color, "green");
+        assert!(peer2.note.is_none());
+        assert!(peer2.notification_status.is_some());
+    }
+}

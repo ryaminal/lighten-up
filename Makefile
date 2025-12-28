@@ -1,7 +1,7 @@
 # Makefile for Lighten‑Up project
 # Provides convenient shortcuts for Rust and TypeScript checks.
 
-.PHONY: lint clippy fmt ts-check ts-lint ts-build rust-check rust-fmt rust-build build test
+.PHONY: lint clippy fmt ts-check ts-lint ts-build ts-test ts-test-watch rust-check rust-fmt rust-build rust-test build test
 
 # ------------------------------------------------------------
 # Rust targets
@@ -19,8 +19,13 @@ fmt:
 
 # Build the Rust backend.
 rust-build:
-	@echo "Building Rust backend..."
+	@echo "Running Rust build..."
 	@cd src-tauri && cargo build
+
+# Run Rust tests.
+rust-test:
+	@echo "Running Rust tests..."
+	@cd src-tauri && cargo test --lib
 
 # Run both clippy and fmt.
 rust-check: clippy fmt
@@ -44,6 +49,16 @@ ts-build:
 	@echo "Running frontend build..."
 	@pnpm run build
 
+# Run frontend tests.
+ts-test:
+	@echo "Running frontend tests..."
+	@pnpm test
+
+# Run frontend tests in watch mode.
+ts-test-watch:
+	@echo "Running frontend tests in watch mode..."
+	@pnpm test:watch
+
 # Run both TypeScript checks and linting.
 ts-all: ts-check ts-lint
 
@@ -59,6 +74,6 @@ build: rust-build ts-build
 lint: rust-check ts-all
 	@echo "All checks passed."
 
-# Full test suite (linting + building).
-test: lint build
+# Full test suite (linting + testing + building).
+test: lint rust-test ts-test build
 	@echo "All tests passed."
