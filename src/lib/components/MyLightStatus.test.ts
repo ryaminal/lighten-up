@@ -18,6 +18,7 @@ describe('MyLightStatus', () => {
     myNote.set('');
     lights.set([]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockIPC((cmd, payload: any) => {
       if (cmd === 'set_light_color') {
         // Simulate successful save
@@ -298,6 +299,7 @@ describe('MyLightStatus', () => {
       myLightColor.set('#ff0000');
 
       let savedNote: string | undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockIPC((cmd, payload: any) => {
         if (cmd === 'set_light_color') {
           savedNote = payload.note;
@@ -359,6 +361,7 @@ describe('MyLightStatus', () => {
 
   describe('Edge Cases', () => {
     it('should handle undefined lights', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lights.set(undefined as any);
       myLightColor.set('#ff0000');
 
@@ -369,6 +372,7 @@ describe('MyLightStatus', () => {
     });
 
     it('should handle null myNote', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       myNote.set(null as any);
 
       render(MyLightStatus);
@@ -378,6 +382,7 @@ describe('MyLightStatus', () => {
     });
 
     it('should handle undefined myNote', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       myNote.set(undefined as any);
 
       render(MyLightStatus);
@@ -387,6 +392,7 @@ describe('MyLightStatus', () => {
     });
 
     it('should handle null myPeerName', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       myPeerName.set(null as any);
 
       render(MyLightStatus);

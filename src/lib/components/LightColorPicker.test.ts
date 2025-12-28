@@ -16,6 +16,7 @@ describe('LightColorPicker', () => {
     myLightColor.set('#000000');
     lights.set([]);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockIPC((cmd, payload: any) => {
       if (cmd === 'set_light_color') {
         myLightColor.set(payload.color);
@@ -170,6 +171,7 @@ describe('LightColorPicker', () => {
     });
 
     it('should handle null lights', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lights.set(null as any);
 
       const { container } = render(LightColorPicker, { note: '' });
@@ -356,7 +358,9 @@ describe('LightColorPicker', () => {
       const user = userEvent.setup();
       const now = Date.now();
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let capturedPayload: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockIPC((cmd, payload: any) => {
         if (cmd === 'set_light_color') {
           capturedPayload = payload;
@@ -395,7 +399,9 @@ describe('LightColorPicker', () => {
       const user = userEvent.setup();
       const now = Date.now();
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let capturedPayload: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockIPC((cmd, payload: any) => {
         if (cmd === 'set_light_color') {
           capturedPayload = payload;
@@ -432,7 +438,9 @@ describe('LightColorPicker', () => {
       const user = userEvent.setup();
       const now = Date.now();
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let capturedPayload: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockIPC((cmd, payload: any) => {
         if (cmd === 'set_light_color') {
           capturedPayload = payload;
@@ -471,6 +479,7 @@ describe('LightColorPicker', () => {
       const now = Date.now();
 
       // Simulate slow backend
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockIPC(async (cmd, payload: any) => {
         if (cmd === 'set_light_color') {
           await new Promise((resolve) => setTimeout(resolve, 100));

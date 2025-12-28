@@ -338,6 +338,7 @@ describe('BottomStatusBar', () => {
 
   describe('Edge Cases', () => {
     it('should handle null myLightColor', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       myLightColor.set(null as any);
 
       render(BottomStatusBar, { onOpenStatusPicker: mockOnOpenStatusPicker });
@@ -347,6 +348,7 @@ describe('BottomStatusBar', () => {
     });
 
     it('should handle undefined peers', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       peers.set(undefined as any);
 
       render(BottomStatusBar, { onOpenStatusPicker: mockOnOpenStatusPicker });
@@ -355,6 +357,7 @@ describe('BottomStatusBar', () => {
     });
 
     it('should handle undefined lights', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lights.set(undefined as any);
       myLightColor.set('#ff0000');
 

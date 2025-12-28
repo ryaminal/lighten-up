@@ -1166,7 +1166,6 @@ describe('LightPickerModal', () => {
 
   describe('Keyboard Navigation', () => {
     it('should close on Escape key', async () => {
-      const user = userEvent.setup();
       const now = Date.now();
       const onClose = vi.fn();
 
@@ -1537,6 +1536,7 @@ describe('LightPickerModal', () => {
     });
 
     it('should handle null lights', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lights.set(null as any);
 
       const { container } = render(LightPickerModal, {
