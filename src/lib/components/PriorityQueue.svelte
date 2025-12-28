@@ -160,18 +160,16 @@
           peerNotification !== undefined && peerNotification !== null}
         {@const notificationColor = hasNotificationForPeer ? peerNotification?.color : null}
         {@const isStatusLightOn = config.color !== '#000000'}
-        {@const styleString = [
-          isStatusLightOn ? `border-left: 4px solid ${config.color}` : 'border-left: 0',
-          hasNotificationForPeer
-            ? `border-right: 4px solid ${notificationColor}`
-            : 'border-right: 0',
-          'border-top: 0',
-          'border-bottom: 0',
-        ].join('; ')}
+        {@const boxShadowParts = [
+          isStatusLightOn ? `inset 4px 0 0 ${config.color}` : null,
+          hasNotificationForPeer ? `inset -4px 0 0 ${notificationColor}` : null,
+        ].filter(Boolean)}
+        {@const boxShadowStyle =
+          boxShadowParts.length > 0 ? `box-shadow: ${boxShadowParts.join(', ')}` : ''}
 
         <div
           class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800"
-          style={styleString}
+          style={boxShadowStyle}
           on:click={() => handlePeerClick(peer)}
           on:keydown={(e) => e.key === 'Enter' && handlePeerClick(peer)}
           role="button"
