@@ -172,7 +172,7 @@
         {@const boxShadowHover = insetShadows ? `${hoverShadow}, ${insetShadows}` : hoverShadow}
 
         <div
-          class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800"
+          class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 transition-all cursor-pointer border border-gray-200 dark:border-gray-700"
           style="box-shadow: {boxShadowNormal}; --hover-shadow: {boxShadowHover};"
           on:mouseenter={(e) => (e.currentTarget.style.boxShadow = boxShadowHover)}
           on:mouseleave={(e) => (e.currentTarget.style.boxShadow = boxShadowNormal)}
