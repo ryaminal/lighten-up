@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { peers, lights } from '../stores';
 import { mockIPC, clearMocks } from '@tauri-apps/api/mocks';
 import PriorityQueue from './PriorityQueue.svelte';
-import type { PeerPresence } from '../tauri';
 
 // Mock the event listener API
 vi.mock('@tauri-apps/api/event', () => ({
@@ -941,9 +940,9 @@ describe('PriorityQueue', () => {
     it('should send notification with light name as default message', async () => {
       const user = userEvent.setup();
       const now = Math.floor(Date.now() / 1000);
-      let capturedPayload: any;
+      let capturedPayload: unknown;
 
-      mockIPC((cmd, payload: any) => {
+      mockIPC((cmd, payload: unknown) => {
         if (cmd === 'send_notification') {
           capturedPayload = payload;
           return null;
@@ -1012,18 +1011,19 @@ describe('PriorityQueue', () => {
         { timeout: 3000 }
       );
 
-      expect(capturedPayload.targetPeerId).toBe('peer-1');
-      expect(capturedPayload.notificationType).toBe('patient-ready');
-      expect(capturedPayload.message).toBe('Available'); // Light name as default
-      expect(capturedPayload.color).toBe('#00ff00');
+      const payload = capturedPayload as Record<string, unknown>;
+      expect(payload.targetPeerId).toBe('peer-1');
+      expect(payload.notificationType).toBe('patient-ready');
+      expect(payload.message).toBe('Available'); // Light name as default
+      expect(payload.color).toBe('#00ff00');
     });
 
     it('should send notification with custom message', async () => {
       const user = userEvent.setup();
       const now = Math.floor(Date.now() / 1000);
-      let capturedPayload: any;
+      let capturedPayload: unknown;
 
-      mockIPC((cmd, payload: any) => {
+      mockIPC((cmd, payload: unknown) => {
         if (cmd === 'send_notification') {
           capturedPayload = payload;
           return null;
@@ -1083,7 +1083,8 @@ describe('PriorityQueue', () => {
 
       await waitFor(() => {
         expect(capturedPayload).toBeDefined();
-        expect(capturedPayload.message).toBe('John Doe'); // Custom message
+        const payload = capturedPayload as Record<string, unknown>;
+        expect(payload.message).toBe('John Doe'); // Custom message
       });
     });
   });
@@ -1130,6 +1131,7 @@ describe('PriorityQueue', () => {
 
   describe('Edge Cases', () => {
     it('should handle null peers', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       peers.set(null as any);
       lights.set([]);
 
@@ -1155,6 +1157,7 @@ describe('PriorityQueue', () => {
           last_seen: now,
         },
       ]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       lights.set(null as any);
 
       expect(() => {

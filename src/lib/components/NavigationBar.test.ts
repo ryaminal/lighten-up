@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/event', () => ({
 }));
 
 describe('NavigationBar', () => {
-  let onOpenSettings: ReturnType<typeof vi.fn>;
+  let onOpenSettings: () => void;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -127,7 +127,7 @@ describe('NavigationBar', () => {
     });
 
     it('should position settings button at bottom', () => {
-      const { container } = render(NavigationBar, { props: { onOpenSettings } });
+      render(NavigationBar, { props: { onOpenSettings } });
 
       const settingsButton = screen.getByLabelText('Settings');
       const settingsContainer = settingsButton.closest('.mt-auto');
