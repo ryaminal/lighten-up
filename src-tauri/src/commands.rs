@@ -271,11 +271,8 @@ pub async fn send_notification(
         .await
         .map_err(|e| format!("Failed to broadcast notification: {}", e))?;
 
-    // Also emit to local frontend if we're notifying ourselves
-    let my_peer_id = state.presence_service.get_my_peer_id();
-    if notification.target_peer_id == my_peer_id {
-        let _ = app.emit("notification", notification);
-    }
+    // Emit to local frontend for immediate UI update
+    let _ = app.emit("notification", notification);
 
     Ok(())
 }

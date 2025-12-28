@@ -18,6 +18,7 @@
     myNote,
     myPeerId,
     notification,
+    setPeerNotification,
   } from '$lib/stores';
   import NavigationBar from '$lib/components/NavigationBar.svelte';
   import GlobalChat from '$lib/components/GlobalChat.svelte';
@@ -86,7 +87,18 @@
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onNotification: (notif: any) => {
           console.log('[Notification] Received:', notif);
+          // Store in global notification store (for backwards compatibility)
           notification.set({
+            type: notif.type,
+            message: notif.message,
+            targetPeerId: notif.target_peer_id,
+            senderPeerId: notif.sender_peer_id,
+            timestamp: notif.timestamp,
+            priority: notif.priority,
+            color: notif.color,
+          });
+          // Also store in peer-specific notifications map
+          setPeerNotification(notif.target_peer_id, {
             type: notif.type,
             message: notif.message,
             targetPeerId: notif.target_peer_id,

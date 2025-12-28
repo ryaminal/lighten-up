@@ -28,6 +28,7 @@ export const error = writable<string | null>(null);
 export const currentView = writable<ViewType>('dashboard');
 export const showNavigation = writable(true);
 export const notification = writable<Notification | null>(null);
+export const peerNotifications = writable<Map<string, Notification>>(new Map());
 
 export function updatePeers(peerList: PeerPresence[]) {
   peers.set(peerList);
@@ -43,4 +44,20 @@ export function setLoading(loading: boolean) {
 
 export function setNotification(notif: Notification | null) {
   notification.set(notif);
+}
+
+export function setPeerNotification(peerId: string, notif: Notification) {
+  peerNotifications.update((map) => {
+    const newMap = new Map(map);
+    newMap.set(peerId, notif);
+    return newMap;
+  });
+}
+
+export function clearPeerNotification(peerId: string) {
+  peerNotifications.update((map) => {
+    const newMap = new Map(map);
+    newMap.delete(peerId);
+    return newMap;
+  });
 }

@@ -35,6 +35,7 @@
         .filter((light) => light.enabled && light.color !== '#000000')
         .sort((a, b) => a.priority - b.priority)
         .map((light) => ({
+          id: light.id,
           color: light.color,
           name: light.name,
           priority: light.priority,
@@ -213,7 +214,7 @@
               Select Color
             </div>
             <div class="grid grid-cols-4 gap-2">
-              {#each lightButtons as { color, name, priority } (color)}
+              {#each lightButtons as { id, color, name, priority } (id)}
                 {@const isSelected = selectedColor === color}
                 {@const isCurrent = currentColor === color}
                 <button
