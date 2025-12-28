@@ -175,11 +175,13 @@
             <h3 class="font-semibold text-gray-900 dark:text-gray-100 text-sm">
               {peer.peer_name}
             </h3>
-            <span
-              class="{badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
-            >
-              {priorityLabel}
-            </span>
+            {#if isStatusLightOn}
+              <span
+                class="{badgeClass} text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider flex-shrink-0"
+              >
+                {priorityLabel}
+              </span>
+            {/if}
           </div>
           <div class="flex justify-between items-center gap-2">
             <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 flex-1">
