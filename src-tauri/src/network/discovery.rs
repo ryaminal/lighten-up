@@ -50,7 +50,10 @@ impl Discovery {
             SERVICE_TYPE,
             instance_name,
             &host_name,
-            my_addrs.unwrap_or(IpAddr::V4(Ipv4Addr::LOCALHOST)),
+            my_addrs.unwrap_or_else(|| {
+                log::warn!("Failed to obtain local IP address, falling back to 127.0.0.1");
+                IpAddr::V4(Ipv4Addr::LOCALHOST)
+            }),
             self.my_port,
             None,
         )

@@ -66,13 +66,13 @@ pub async fn initialize_services(app: &AppHandle) -> Result<AppState, String> {
     ));
 
     // Set up message routing
-    setup_message_routing(
-        app.clone(),
-        network.clone(),
-        presence_service.clone(),
-        config_service.clone(),
-        chat_service.clone(),
-    );
+    setup_message_routing(RoutingContext {
+        app: app.clone(),
+        network: network.clone(),
+        presence: presence_service.clone(),
+        config: config_service.clone(),
+        chat: chat_service.clone(),
+    });
 
     // Start background tasks
     spawn_heartbeat_task(network.clone(), presence_service.clone());
@@ -143,13 +143,24 @@ fn initialize_peer_identity(db: &Arc<Database>) -> Result<(String, String), Stri
     Ok((peer_id, peer_name))
 }
 
-fn setup_message_routing(
+/// Holds the core services needed for message routing.
+struct RoutingContext {
     app: AppHandle,
     network: Arc<AppNetwork>,
     presence: Arc<PresenceService>,
     config: Arc<ConfigService>,
     chat: Arc<ChatService>,
-) {
+}
+
+fn setup_message_routing(context: RoutingContext) {
+    // Destructure the context for easier access
+    let RoutingContext {
+        app,
+        network,
+        presence,
+        config,
+        chat,
+    } = context;
     tokio::spawn(async move {
         log::info!("[MESSAGE_ROUTING] Message routing task started");
 

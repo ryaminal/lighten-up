@@ -25,7 +25,7 @@
       class="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary flex-shrink-0 hover:bg-primary/30 transition-colors cursor-pointer"
       title="Lighten Up"
     >
-      <span class="text-2xl">💡</span>
+      <span class="text-2xl">Light</span>
     </div>
   </div>
   <nav class="flex-1 w-full px-3 space-y-4 flex flex-col items-center overflow-y-auto">
@@ -37,7 +37,7 @@
       title="Active Lights"
       on:click={() => navigate('dashboard')}
     >
-      <span class="text-2xl">💡</span>
+      <span class="text-2xl">Light</span>
     </button>
     <button
       class="h-12 w-12 flex items-center justify-center rounded-xl {$currentView === 'config'
@@ -47,7 +47,7 @@
       title="Light Configuration"
       on:click={() => navigate('config')}
     >
-      <span class="text-xl">⚙️</span>
+      <span class="text-xl">Settings</span>
     </button>
   </nav>
   <div class="mt-auto pt-4 border-t border-slate-700/50 w-full flex justify-center">
