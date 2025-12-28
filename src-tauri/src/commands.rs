@@ -306,7 +306,15 @@ pub async fn clear_notification(
         .clear_peer_notification(&peer_id)
         .await;
 
-    // Emit peers-changed so UI updates immediately
+    // Broadcast updated presence to all peers so they see the notification was cleared
+    let presence_msg = state.presence_service.get_my_presence().await;
+    state
+        .network
+        .broadcast(Message::Presence(presence_msg))
+        .await
+        .map_err(|e| format!("Failed to broadcast presence: {}", e))?;
+
+    // Emit peers-changed so local UI updates immediately
     let peers = state.presence_service.get_all_peers().await;
     let _ = app.emit("peers-changed", peers);
 
