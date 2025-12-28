@@ -1,7 +1,7 @@
 # Makefile for Lighten‑Up project
 # Provides convenient shortcuts for Rust and TypeScript checks.
 
-.PHONY: lint clippy fmt ts-check ts-lint ts-build ts-test ts-test-watch rust-check rust-fmt rust-build rust-test build test
+.PHONY: lint clippy fmt ts-check ts-lint ts-build ts-test ts-test-watch e2e e2e-headed e2e-debug rust-check rust-fmt rust-build rust-test build test
 
 # ------------------------------------------------------------
 # Rust targets
@@ -58,6 +58,21 @@ ts-test:
 ts-test-watch:
 	@echo "Running frontend tests in watch mode..."
 	@pnpm test:watch
+
+# Run E2E tests with Playwright.
+e2e:
+	@echo "Running E2E tests..."
+	@pnpm run test:e2e
+
+# Run E2E tests in headed mode (visible browser).
+e2e-headed:
+	@echo "Running E2E tests in headed mode..."
+	@pnpm run test:e2e:headed
+
+# Run E2E tests in debug mode.
+e2e-debug:
+	@echo "Running E2E tests in debug mode..."
+	@pnpm run test:e2e:debug
 
 # Run both TypeScript checks and linting.
 ts-all: ts-check ts-lint
