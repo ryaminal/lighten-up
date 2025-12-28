@@ -76,7 +76,7 @@ pub async fn initialize_services(app: &AppHandle) -> Result<AppState, String> {
 
     // Start background tasks
     spawn_heartbeat_task(network.clone(), presence_service.clone());
-    spawn_cleanup_task(presence_service.clone());
+    spawn_cleanup_task(presence_service.clone(), app.clone());
     spawn_online_presence_task(network.clone(), presence_service.clone());
     spawn_config_sync_task(network.clone(), config_service.clone(), peer_id_str.clone());
 
@@ -404,7 +404,10 @@ fn spawn_online_presence_task(network: Arc<AppNetwork>, presence: Arc<PresenceSe
             // Small delay between broadcasts
             tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
-            log::info!("[INIT] Broadcasting status request to get immediate peer updates (attempt {})", attempt);
+            log::info!(
+                "[INIT] Broadcasting status request to get immediate peer updates (attempt {})",
+                attempt
+            );
             let request = crate::protocol::messages::PresenceMessage::RequestStatus {
                 peer_id: pres_for_online.get_my_peer_id(),
             };
@@ -417,18 +420,26 @@ fn spawn_online_presence_task(network: Arc<AppNetwork>, presence: Arc<PresenceSe
                 tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
             }
         }
-        
+
         log::info!("[INIT] Completed initial presence broadcast sequence");
     });
 }
 
-fn spawn_cleanup_task(presence: Arc<PresenceService>) {
+fn spawn_cleanup_task(presence: Arc<PresenceService>, app: AppHandle) {
     tokio::spawn(async move {
-        log::info!("[CLEANUP] Cleanup task started");
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
+        log::info!("[CLEANUP] Cleanup task started, checking every 5s for stale peers");
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(5));
         loop {
             interval.tick().await;
-            presence.cleanup_stale_peers().await;
+            let removed_any = presence.cleanup_stale_peers().await;
+
+            // If we removed stale peers, notify the UI immediately
+            if removed_any {
+                let peers = presence.get_all_peers().await;
+                if let Err(e) = app.emit("peers-changed", peers) {
+                    log::error!("[CLEANUP] Failed to emit peers-changed: {}", e);
+                }
+            }
         }
     });
 }

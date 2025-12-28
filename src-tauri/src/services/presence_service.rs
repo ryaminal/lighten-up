@@ -4,7 +4,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-const PEER_TIMEOUT_SECS: u64 = 60;
+// Peers are considered offline if not seen for 30 seconds (3 missed 10s heartbeats)
+const PEER_TIMEOUT_SECS: u64 = 30;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PeerPresence {
@@ -118,10 +119,32 @@ impl PresenceService {
         }
     }
 
-    pub async fn cleanup_stale_peers(&self) {
+    pub async fn cleanup_stale_peers(&self) -> bool {
         let now = crate::utils::current_timestamp();
         let mut peers = self.peers.write().await;
+
+        let initial_count = peers.len();
+        let stale_peers: Vec<String> = peers
+            .iter()
+            .filter(|(_, peer)| now - peer.last_seen >= PEER_TIMEOUT_SECS)
+            .map(|(id, peer)| format!("{} ({})", id, peer.peer_name))
+            .collect();
+
         peers.retain(|_, peer| now - peer.last_seen < PEER_TIMEOUT_SECS);
+
+        let removed_any = !stale_peers.is_empty();
+
+        if removed_any {
+            log::info!(
+                "[CLEANUP] Removed {} stale peer(s): {}",
+                stale_peers.len(),
+                stale_peers.join(", ")
+            );
+        } else if initial_count > 0 {
+            log::debug!("[CLEANUP] All {} peers still active", initial_count);
+        }
+
+        removed_any
     }
 
     pub async fn set_peer_notification(&self, peer_id: String, notification: Notification) {
@@ -198,13 +221,16 @@ async fn add_or_update_peer(
     peer_name: String,
     light_state: LightState,
     note: Option<String>,
-    timestamp: u64,
+    _timestamp: u64, // Sender's timestamp (for message ordering, not used for last_seen)
     notification_status: Option<Notification>,
 ) {
     let mut peers_map = peers.write().await;
 
     let is_new = !peers_map.contains_key(&peer_id);
-    
+
+    // Use current receiver time for last_seen to avoid clock skew issues
+    let now = crate::utils::current_timestamp();
+
     // Use the notification_status from the incoming message
     peers_map.insert(
         peer_id.clone(),
@@ -213,15 +239,19 @@ async fn add_or_update_peer(
             peer_name: peer_name.clone(),
             light_state,
             note,
-            last_seen: timestamp,
+            last_seen: now, // Use receiver's current time, not sender's timestamp
             notification_status,
         },
     );
-    
+
     if is_new {
         log::info!("[PRESENCE] Added new peer: {} ({})", peer_id, peer_name);
     } else {
-        log::debug!("[PRESENCE] Updated existing peer: {} ({})", peer_id, peer_name);
+        log::debug!(
+            "[PRESENCE] Updated existing peer: {} ({})",
+            peer_id,
+            peer_name
+        );
     }
 }
 
