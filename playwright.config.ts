@@ -47,5 +47,11 @@ export default defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    // Ensure the server is killed when tests finish
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
+
+  /* Global teardown to ensure processes are killed */
+  globalTeardown: './e2e/helpers/globalTeardown.ts',
 });

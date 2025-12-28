@@ -1,5 +1,6 @@
 import { Page } from '@playwright/test';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Mock Tauri APIs for browser-based E2E testing
  * This provides mock implementations of Tauri invoke functions
@@ -8,8 +9,8 @@ export async function mockTauriAPIs(page: Page) {
   await page.addInitScript(() => {
     // Mock window.__TAURI_INTERNALS__
     (window as any).__TAURI_INTERNALS__ = {
-      invoke: async (cmd: string, args: any) => {
-        console.log('[Mock Tauri] invoke:', cmd, args);
+      invoke: async (cmd: string, _args: any) => {
+        console.log('[Mock Tauri] invoke:', cmd, _args);
 
         // Mock responses based on command
         switch (cmd) {
@@ -33,11 +34,11 @@ export async function mockTauriAPIs(page: Page) {
     // Mock event listening
     (window as any).__TAURI__ = {
       event: {
-        listen: async (event: string, handler: Function) => {
+        listen: async (event: string, _handler: any) => {
           console.log('[Mock Tauri] Listening to event:', event);
           return () => {}; // Return unlisten function
         },
-        once: async (event: string, handler: Function) => {
+        once: async (event: string, _handler: any) => {
           console.log('[Mock Tauri] Listening once to event:', event);
           return () => {};
         },
@@ -46,8 +47,8 @@ export async function mockTauriAPIs(page: Page) {
         },
       },
       core: {
-        invoke: async (cmd: string, args: any) => {
-          return (window as any).__TAURI_INTERNALS__.invoke(cmd, args);
+        invoke: async (cmd: string, _args: any) => {
+          return (window as any).__TAURI_INTERNALS__.invoke(cmd, _args);
         },
       },
     };

@@ -13,7 +13,6 @@ test.describe('Global Chat', () => {
   });
 
   test('should show empty state when no messages', async ({ page }) => {
-    const emptyState = page.locator('text=No messages yet');
     // Empty state might be visible or chat might have messages
     // Just check the page loaded
     await expect(page.locator('h1')).toContainText('Global Chat');
