@@ -31,14 +31,21 @@ This covers every step and exact user interaction from patient arrival through t
 #### Steps:
 
 5. **Nurse or Tech Preps Room:**
-   - Nurse logs into any workstation, sees the Light Panel.
-   - When patient is ready, Nurse clicks/presses the relevant Light (e.g. "Ready in Room 3").
-   - Adds a comment as needed in the Action Window. (e.g., “Procedure X set up”).
-   - Clicks "Turn On Light" or updates an existing one.
+   - Nurse logs into any workstation, sees the Light Panel and Priority Queue.
+   - When patient is ready, Nurse can:
+     - **Option A (Traditional):** Click/press the relevant Light (e.g. "Ready in Room 3")
+     - **Option B (Direct Notification):** Click the doctor's card in the Priority Queue sidebar
+       - Opens Light Picker Modal
+       - Select the appropriate priority light color (Critical/Urgent/High/Medium)
+       - Optionally add a message (e.g., "Room 3 ready for procedure")
+       - Click "Send Notification"
+   - Doctor's card in Priority Queue shows **right border** (notification indicator) in the selected color
 6. **Doctor receives notification:**
-   - Doctor sees colored/flashing Light on their Light Panel.
-   - Receives tone/popup notification.
-   - Doctor (or anyone) can click the Light, view Action Window, see comments/history.
+   - Doctor sees colored/flashing Light on their Light Panel (Option A) OR
+   - Doctor sees notification banner in bottom status bar with message and color indicator (Option B)
+   - Doctor's own card in their Priority Queue shows the notification (right border)
+   - Doctor can click the X button on the notification banner to dismiss it
+   - **When dismissed:** Right border (notification indicator) clears on all peers' screens
 
 ### c. Treatment/Interaction (Doctor/Nurse)
 
@@ -224,8 +231,25 @@ This covers every step and exact user interaction from patient arrival through t
 
 - Light Panel: full grid, up to 120 customizable Lights
 - Lights: Off (gray/empty), On (green/yellow/red), Flashing (optional)
+- **Priority Queue (Right Sidebar):**
+  - Real-time list of all online peers sorted by priority
+  - Each card shows peer name, status, elapsed time, and priority badge
+  - **Left border (4px inset shadow):** Status light color (peer's current state)
+    - Only visible when peer's status light is active (not #000000/off)
+    - Color matches their chosen status light configuration
+  - **Right border (4px inset shadow):** Notification indicator
+    - Only visible when you've sent them a notification
+    - Color matches the notification priority/light color
+    - Persists until recipient dismisses the notification
+  - **Priority badge:** Shows only when status light is on (Critical/Urgent/High/Medium/Low)
+  - **Sorting:** Peers with status light off have priority 1000 and sort to bottom
+  - **Click interaction:** Opens Light Picker Modal to send notification to that peer
 - Action Window: modal, displays comments, BlueNotes, all activity history for that Light
 - Popups: user-customizable size (small/medium/large) and position, always-on-top
+- **Bottom Status Bar:**
+  - **Left section:** Current status light indicator with name and quick picker access
+  - **Center section:** Active notification banner (animated dot, message, timestamp, dismiss X button)
+  - **Right section:** Online peer count with icon
 - GoFocus dock: narrow, positionable on screen edge; Lights listed in color/priority order
 - Focused mode: only live Lights shown, sorted by age (first in, topmost)
 - Conversations: Inbox window with thread list, each thread clickable to open full conversation
@@ -250,6 +274,9 @@ This covers every step and exact user interaction from patient arrival through t
 
 - **Activate Light:** Click or tap any Light on main Panel; fill Action Window note if prompted; click Confirm/On
 - **Deactivate/Resolve Light:** Click colored Light (Panel, Popup, Focused, or GoFocus); choose "Turn Off Light"
+- **Send notification to peer:** Click peer's card in Priority Queue sidebar; select light color and optional message; click "Send Notification"
+- **Dismiss received notification:** Click X button on notification banner in bottom status bar (clears indicator for all peers)
+- **Change your status:** Click status indicator in bottom-left of status bar; select light color or "Off"
 - **Respond to alert:** Click popup, Action Window opens, view/add comment, "Turn Off Light" or "Update"
 - **Opt-out of popups/sounds:** Menu > Notifications > Open Alert Manager; switch off for unwanted Lights
 - **Send direct message:** Click "Conversations," select user(s), type + send. Reply via popup or Inbox.

@@ -88,6 +88,12 @@ _Industry verticals: Dental, Medical, Eyecare, Veterinary, General Office_
 - Office-wide or user-specific notifications
 - Audible sound library (customizable per alert or user)
 - App notifications for phones/watches (integration with Pushover etc)
+- **Peer-to-peer notification system:**
+  - Send targeted notifications to specific peers (e.g., "Patient ready in Room 3")
+  - Notification appears as banner in recipient's bottom status bar
+  - Visual indicator on sender's priority card (right border) showing notification was sent
+  - Recipient can dismiss notification, which clears the indicator for all peers
+  - Supports custom messages and color-coded priority levels
 
 ### 5.5 Light Tags
 
@@ -170,7 +176,17 @@ _Industry verticals: Dental, Medical, Eyecare, Veterinary, General Office_
 ## 7. User Interface Requirements
 
 - **Light Panel** as center of workflow: grid-based, customizable, touch- and mouse-friendly
+- **Priority Queue:** Real-time sidebar showing all active peers with visual status indicators
+  - Left border (4px inset shadow): Status light color indicating peer's current state
+  - Right border (4px inset shadow): Notification light showing when you've sent them a notification
+  - Priority badge: Displays only when status light is active (Critical/Urgent/High/Medium)
+  - Peers with status light off sort to bottom of queue (priority 1000)
+  - Click peer card to send notification via light picker modal
 - **Conversation Popups:** Context-aware, can be moved/resized by user
+- **Bottom Status Bar:**
+  - Left: Current status light indicator with quick access to status picker
+  - Center: Active notification banner with dismiss button (X)
+  - Right: Online peer count
 - **Customizable Sounds:** Local mute/volume, Snap-to-popup
 - **Notification Popups:** Appear in configurable corners, with text and optional sound
 - **Elapsed Timers:** Color and/or shape changes as duration passes (green → yellow → red)
