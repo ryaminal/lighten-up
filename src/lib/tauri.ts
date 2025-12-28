@@ -111,6 +111,10 @@ export async function sendPatientNotification(
   await invoke('send_patient_notification', { targetPeerId, patientName });
 }
 
+export async function clearNotification(peerId: string): Promise<void> {
+  await invoke('clear_notification', { peerId });
+}
+
 // ===========================
 // Event Listeners
 // ===========================

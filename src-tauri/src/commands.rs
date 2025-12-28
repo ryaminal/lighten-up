@@ -295,6 +295,24 @@ pub async fn send_notification(
     Ok(())
 }
 
+#[tauri::command]
+pub async fn clear_notification(
+    peer_id: String,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    state
+        .presence_service
+        .clear_peer_notification(&peer_id)
+        .await;
+
+    // Emit peers-changed so UI updates immediately
+    let peers = state.presence_service.get_all_peers().await;
+    let _ = app.emit("peers-changed", peers);
+
+    Ok(())
+}
+
 // Legacy command for backwards compatibility - wraps send_notification
 #[tauri::command]
 pub async fn send_patient_notification(

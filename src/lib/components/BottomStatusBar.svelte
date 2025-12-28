@@ -1,6 +1,7 @@
 <script lang="ts">
   import { myLightColor, lights, peers, notification } from '$lib/stores';
   import { onMount, onDestroy } from 'svelte';
+  import { clearNotification, getMyPeerId } from '$lib/tauri';
 
   export let onOpenStatusPicker: () => void;
 
@@ -133,6 +134,11 @@
   }
 
   function dismissNotification() {
+    // Clear from backend
+    getMyPeerId().then((myPeerId) => {
+      clearNotification(myPeerId);
+    });
+    // Clear from store
     notification.set(null);
   }
 </script>
