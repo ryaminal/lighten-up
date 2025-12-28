@@ -94,7 +94,7 @@ impl PresenceService {
                     light_state,
                     note,
                     timestamp,
-                    notification_status,
+                    *notification_status,
                 )
                 .await;
             }
@@ -182,7 +182,7 @@ async fn create_online_message(
         light_state: state,
         note: my_note,
         timestamp: crate::utils::current_timestamp(),
-        notification_status: notif_status,
+        notification_status: Box::new(notif_status),
     }
 }
 

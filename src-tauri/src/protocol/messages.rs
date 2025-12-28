@@ -8,7 +8,7 @@ pub enum PresenceMessage {
         light_state: LightState,
         note: Option<String>,
         timestamp: u64,
-        notification_status: Option<Notification>,
+        notification_status: Box<Option<Notification>>,
     },
     Goodbye {
         peer_id: String,
