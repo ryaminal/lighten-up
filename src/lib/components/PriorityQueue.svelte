@@ -158,10 +158,12 @@
         {@const notificationColor = hasNotificationForPeer ? peerNotification?.color : null}
 
         <div
-          class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800 {hasNotificationForPeer
+          class="group relative bg-white dark:bg-gray-900 rounded-lg p-3 border-l-4 shadow-sm hover:shadow-md transition-all cursor-pointer ring-1 ring-gray-100 dark:ring-gray-800 {hasNotificationForPeer
             ? 'border-r-4'
             : ''}"
-          style={notificationColor ? `border-right-color: ${notificationColor};` : ''}
+          style="border-left-color: {config.color};{notificationColor
+            ? ` border-right-color: ${notificationColor};`
+            : ''}"
           on:click={() => handlePeerClick(peer)}
           on:keydown={(e) => e.key === 'Enter' && handlePeerClick(peer)}
           role="button"

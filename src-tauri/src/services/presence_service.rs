@@ -22,6 +22,7 @@ pub struct PresenceService {
     peers: Arc<RwLock<HashMap<String, PeerPresence>>>,
     my_light_state: Arc<RwLock<LightState>>,
     my_note: Arc<RwLock<Option<String>>>,
+    my_notification_status: Arc<RwLock<Option<Notification>>>,
 }
 
 impl PresenceService {
@@ -32,6 +33,7 @@ impl PresenceService {
             peers: Arc::new(RwLock::new(HashMap::new())),
             my_light_state: Arc::new(RwLock::new(LightState::new("#000000".to_string()))),
             my_note: Arc::new(RwLock::new(None)),
+            my_notification_status: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -114,16 +116,30 @@ impl PresenceService {
     }
 
     pub async fn set_peer_notification(&self, peer_id: String, notification: Notification) {
-        let mut peers = self.peers.write().await;
-        if let Some(peer) = peers.get_mut(&peer_id) {
-            peer.notification_status = Some(notification);
+        // If this is for me, store in my_notification_status
+        if peer_id == self.my_peer_id {
+            let mut my_notif = self.my_notification_status.write().await;
+            *my_notif = Some(notification);
+        } else {
+            // Otherwise store in peers map
+            let mut peers = self.peers.write().await;
+            if let Some(peer) = peers.get_mut(&peer_id) {
+                peer.notification_status = Some(notification);
+            }
         }
     }
 
     pub async fn clear_peer_notification(&self, peer_id: &str) {
-        let mut peers = self.peers.write().await;
-        if let Some(peer) = peers.get_mut(peer_id) {
-            peer.notification_status = None;
+        // If this is for me, clear my_notification_status
+        if peer_id == self.my_peer_id {
+            let mut my_notif = self.my_notification_status.write().await;
+            *my_notif = None;
+        } else {
+            // Otherwise clear in peers map
+            let mut peers = self.peers.write().await;
+            if let Some(peer) = peers.get_mut(peer_id) {
+                peer.notification_status = None;
+            }
         }
     }
 
@@ -137,7 +153,7 @@ impl PresenceService {
             light_state: self.my_light_state.read().await.clone(),
             note: self.my_note.read().await.clone(),
             last_seen: crate::utils::current_timestamp(),
-            notification_status: None, // I don't have a notification for myself
+            notification_status: self.my_notification_status.read().await.clone(),
         };
         all_peers.push(my_presence);
 
