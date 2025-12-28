@@ -135,6 +135,7 @@ export async function initializeTauri(callbacks: {
   // Listen for peers changed
   if (callbacks.onPeersChanged) {
     const unlisten = await listen<PeerPresence[]>('peers-changed', (event) => {
+      console.log('[Tauri] peers-changed event received with', event.payload.length, 'peers');
       callbacks.onPeersChanged?.(event.payload);
     });
     unlistenFns.push(unlisten);

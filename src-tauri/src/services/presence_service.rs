@@ -87,6 +87,11 @@ impl PresenceService {
                 timestamp,
                 notification_status,
             } => {
+                log::info!(
+                    "[PRESENCE] Received Online from peer {} ({})",
+                    peer_id,
+                    peer_name
+                );
                 add_or_update_peer(
                     &self.peers,
                     peer_id,
@@ -106,7 +111,8 @@ impl PresenceService {
                 remove_peer(&self.peers, &peer_id).await;
             }
             // RequestStatus is a lightweight ping; we do not need to update state.
-            PresenceMessage::RequestStatus { .. } => {
+            PresenceMessage::RequestStatus { peer_id } => {
+                log::info!("[PRESENCE] Received RequestStatus from peer {}", peer_id);
                 // No action needed – the routing layer will reply directly.
             }
         }
@@ -197,18 +203,26 @@ async fn add_or_update_peer(
 ) {
     let mut peers_map = peers.write().await;
 
+    let is_new = !peers_map.contains_key(&peer_id);
+    
     // Use the notification_status from the incoming message
     peers_map.insert(
         peer_id.clone(),
         PeerPresence {
-            peer_id,
-            peer_name,
+            peer_id: peer_id.clone(),
+            peer_name: peer_name.clone(),
             light_state,
             note,
             last_seen: timestamp,
             notification_status,
         },
     );
+    
+    if is_new {
+        log::info!("[PRESENCE] Added new peer: {} ({})", peer_id, peer_name);
+    } else {
+        log::debug!("[PRESENCE] Updated existing peer: {} ({})", peer_id, peer_name);
+    }
 }
 
 async fn remove_peer(peers: &Arc<RwLock<HashMap<String, PeerPresence>>>, peer_id: &str) {
