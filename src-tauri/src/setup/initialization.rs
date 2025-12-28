@@ -77,6 +77,7 @@ pub async fn initialize_services(app: &AppHandle) -> Result<AppState, String> {
     // Start background tasks
     spawn_heartbeat_task(network.clone(), presence_service.clone());
     spawn_cleanup_task(presence_service.clone());
+    spawn_online_presence_task(network.clone(), presence_service.clone());
     spawn_config_sync_task(network.clone(), config_service.clone(), peer_id_str.clone());
 
     Ok(AppState::new(
@@ -189,6 +190,10 @@ fn setup_message_routing(context: RoutingContext) {
                                 crate::protocol::messages::PresenceMessage::RequestStatus {
                                     peer_id,
                                 } => {
+                                    log::info!(
+                                        "[MESSAGE_ROUTING] Received status request from {}, sending presence",
+                                        peer_id
+                                    );
                                     // Build our current presence and send back to the requester
                                     let my_presence = presence.get_my_presence().await;
                                     let reply = Message::Presence(my_presence);
@@ -199,6 +204,11 @@ fn setup_message_routing(context: RoutingContext) {
                                         log::error!(
                                             "[MESSAGE_ROUTING] Failed to reply to status request: {}",
                                             e
+                                        );
+                                    } else {
+                                        log::info!(
+                                            "[MESSAGE_ROUTING] Successfully sent presence to {}",
+                                            peer_id
                                         );
                                     }
                                 }
@@ -355,47 +365,60 @@ fn spawn_heartbeat_task(network: Arc<AppNetwork>, presence: Arc<PresenceService>
     let pres_for_heartbeat = presence.clone();
 
     tokio::spawn(async move {
-        log::info!("[HEARTBEAT] Heartbeat task started, broadcasting every 30s");
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
+        log::info!("[HEARTBEAT] Heartbeat task started, broadcasting every 10s");
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(10));
         loop {
             interval.tick().await;
             let msg = pres_for_heartbeat.get_my_presence().await;
-            log::info!("[HEARTBEAT] Broadcasting presence");
+            let message = crate::adapters::message::Message::Presence(msg);
 
-            let message = Message::Presence(msg);
+            // Broadcast presence to all peers
             if let Err(e) = net_for_heartbeat.broadcast(message).await {
-                log::error!("[HEARTBEAT] Failed to broadcast: {}", e);
+                log::error!("[HEARTBEAT] Failed to broadcast presence: {}", e);
             }
         }
     });
+}
 
-    // Wait for mDNS discovery to find peers, then broadcast our presence
+fn spawn_online_presence_task(network: Arc<AppNetwork>, presence: Arc<PresenceService>) {
+    // Wait briefly for mDNS discovery, then immediately broadcast presence and request status
     let net_for_online = network.clone();
     let pres_for_online = presence.clone();
     tokio::spawn(async move {
-        // Wait for mDNS discovery to complete
-        log::info!("[INIT] Waiting 2 seconds for mDNS discovery to find peers...");
-        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        // Very short delay to allow mDNS to initialize (300ms is enough for local network)
+        log::info!("[INIT] Waiting 300ms for mDNS initialization...");
+        tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
 
-        log::info!("[INIT] Broadcasting initial online presence");
-        let online_msg = pres_for_online.get_my_presence().await;
-        if let Err(e) = net_for_online
-            .broadcast(Message::Presence(online_msg))
-            .await
-        {
-            log::error!("[INIT] Failed to broadcast online presence: {}", e);
+        // Broadcast our presence and request status multiple times with short delays
+        // This ensures we catch peers even if mDNS discovery is still in progress
+        for attempt in 1..=3 {
+            log::info!("[INIT] Broadcasting online presence (attempt {})", attempt);
+            let online_msg = pres_for_online.get_my_presence().await;
+            if let Err(e) = net_for_online
+                .broadcast(Message::Presence(online_msg))
+                .await
+            {
+                log::error!("[INIT] Failed to broadcast online presence: {}", e);
+            }
+
+            // Small delay between broadcasts
+            tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
+            log::info!("[INIT] Broadcasting status request to get immediate peer updates (attempt {})", attempt);
+            let request = crate::protocol::messages::PresenceMessage::RequestStatus {
+                peer_id: pres_for_online.get_my_peer_id(),
+            };
+            if let Err(e) = net_for_online.broadcast(Message::Presence(request)).await {
+                log::error!("[INIT] Failed to broadcast status request: {}", e);
+            }
+
+            // Wait before next attempt (except on last attempt)
+            if attempt < 3 {
+                tokio::time::sleep(tokio::time::Duration::from_millis(300)).await;
+            }
         }
-
-        // Small delay between broadcasts
-        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-
-        log::info!("[INIT] Broadcasting status request");
-        let request = crate::protocol::messages::PresenceMessage::RequestStatus {
-            peer_id: pres_for_online.get_my_peer_id(),
-        };
-        if let Err(e) = net_for_online.broadcast(Message::Presence(request)).await {
-            log::error!("[INIT] Failed to broadcast status request: {}", e);
-        }
+        
+        log::info!("[INIT] Completed initial presence broadcast sequence");
     });
 }
 
@@ -412,9 +435,9 @@ fn spawn_cleanup_task(presence: Arc<PresenceService>) {
 
 fn spawn_config_sync_task(network: Arc<AppNetwork>, _config: Arc<ConfigService>, peer_id: String) {
     tokio::spawn(async move {
-        // Wait for mDNS discovery and initial presence broadcasts
-        log::info!("[INIT] Waiting 3 seconds before requesting config sync...");
-        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+        // Wait briefly for presence broadcasts to complete
+        log::info!("[INIT] Waiting 500ms before requesting config sync...");
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
         log::info!("[INIT] Broadcasting config sync request");
         let sync_request = crate::protocol::messages::ConfigMessage {
