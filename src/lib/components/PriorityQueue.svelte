@@ -26,9 +26,12 @@
     const colorHex = peer.light_state.color;
     const light = $lights?.find((l) => l.enabled && l.color === colorHex);
 
+    // If status light is off (#000000), give it very low priority (high number)
+    const isOff = colorHex === '#000000';
+
     return {
       name: light?.name || 'Unknown',
-      priority: light?.priority || 0,
+      priority: isOff ? 1000 : (light?.priority ?? 0),
       color: colorHex,
     };
   }
