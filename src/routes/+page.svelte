@@ -72,8 +72,9 @@
         onPeersChanged: (updatedPeers) => {
           console.log('[Peers] Updated:', updatedPeers.length, 'peers');
           peers.set(updatedPeers);
-          // Update my status whenever peers change
-          updateMyStatusFromPeers(updatedPeers, initialPeerId);
+          // Update my status whenever peers change - use the stored peer ID
+          const currentPeerId = initialPeerId;
+          updateMyStatusFromPeers(updatedPeers, currentPeerId);
         },
         onLightsChanged: (updatedLights) => {
           console.log('[Lights] Updated:', updatedLights.length, 'lights', updatedLights);

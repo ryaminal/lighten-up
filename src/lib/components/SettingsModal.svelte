@@ -9,11 +9,10 @@
 
   let peerId = '';
   let peerName = '';
+  let initialPeerName = ''; // Track initial value to detect changes
   let lights: LightConfig[] = [];
   let isLoading = true;
-  let isSaving = false;
   let errorMessage = '';
-  let successMessage = '';
   let scrollContainer: HTMLDivElement;
   let lightTableContainer: HTMLDivElement;
 
@@ -31,6 +30,7 @@
       ]);
       peerId = id;
       peerName = name;
+      initialPeerName = name; // Store initial value
       // Sort by priority only (ASC: 0 is highest)
       lights = lightsData.sort((a, b) => a.priority - b.priority);
 
@@ -62,25 +62,41 @@
     }
   }
 
-  async function _handleSave() {
-    if (!peerName.trim()) {
+  // Auto-save peer name when field loses focus
+  async function savePeerName() {
+    const trimmedName = peerName.trim();
+
+    if (!trimmedName) {
       errorMessage = 'Display name cannot be empty';
+      // Restore the previous valid name
+      peerName = initialPeerName;
+      return;
+    }
+
+    // Only save if the name actually changed
+    if (trimmedName === initialPeerName) {
+      console.log('[Settings] Peer name unchanged, skipping save');
       return;
     }
 
     try {
-      isSaving = true;
       errorMessage = '';
-
-      await invoke('set_peer_name', { name: peerName.trim() });
-
-      // Close immediately without delay
-      onClose();
+      console.log('[Settings] Saving peer name:', trimmedName);
+      await invoke('set_peer_name', { name: trimmedName });
+      initialPeerName = trimmedName; // Update the baseline after successful save
+      console.log('[Settings] Peer name saved successfully:', trimmedName);
     } catch (err) {
-      errorMessage = `Failed to save settings: ${err}`;
-    } finally {
-      isSaving = false;
+      console.error('[Settings] Failed to save peer name:', err);
+      errorMessage = `Failed to save name: ${err}`;
+      // Restore the previous valid name on error
+      peerName = initialPeerName;
     }
+  }
+
+  async function handleClose() {
+    // Save peer name if it changed before closing
+    await savePeerName();
+    onClose();
   }
 
   function handleAddLight() {
@@ -182,6 +198,7 @@
     }
   }
 
+  // Auto-save light changes (name/color) when field loses focus or color changes
   async function handleLightChange(light: LightConfig) {
     try {
       // Check for duplicate colors (excluding the current light)
@@ -280,7 +297,7 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-      onClose();
+      handleClose();
     }
   }
 
@@ -299,7 +316,7 @@
 {#if isOpen}
   <div
     class="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/80 backdrop-blur-sm transition-all duration-200"
-    on:click={onClose}
+    on:click={handleClose}
     on:keydown={handleKeydown}
     role="button"
     tabindex="0"
@@ -320,7 +337,7 @@
           </h3>
           <button
             class="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:ring-offset-2 disabled:pointer-events-none hover:bg-gray-100 dark:hover:bg-gray-800 p-1"
-            on:click={onClose}
+            on:click={handleClose}
             aria-label="Close"
           >
             <span class="material-icons-round text-lg">close</span>
@@ -374,7 +391,7 @@
                 <input
                   class="flex h-10 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm ring-offset-background placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 text-gray-900 dark:text-white"
                   bind:value={peerName}
-                  disabled={isSaving}
+                  on:blur={savePeerName}
                   maxlength="15"
                 />
               </div>
@@ -500,14 +517,6 @@
               class="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm"
             >
               {errorMessage}
-            </div>
-          {/if}
-
-          {#if successMessage}
-            <div
-              class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 text-sm"
-            >
-              {successMessage}
             </div>
           {/if}
         </div>
