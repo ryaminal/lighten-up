@@ -43,6 +43,7 @@ impl PresenceService {
             &self.my_peer_name,
             &self.my_light_state,
             &self.my_note,
+            &self.my_notification_status,
         )
         .await
     }
@@ -84,6 +85,7 @@ impl PresenceService {
                 light_state,
                 note,
                 timestamp,
+                notification_status,
             } => {
                 add_or_update_peer(
                     &self.peers,
@@ -92,6 +94,7 @@ impl PresenceService {
                     light_state,
                     note,
                     timestamp,
+                    notification_status,
                 )
                 .await;
             }
@@ -166,10 +169,12 @@ async fn create_online_message(
     peer_name: &Arc<RwLock<String>>,
     light_state: &Arc<RwLock<LightState>>,
     note: &Arc<RwLock<Option<String>>>,
+    my_notification_status: &Arc<RwLock<Option<Notification>>>,
 ) -> PresenceMessage {
     let state = light_state.read().await.clone();
     let my_note = note.read().await.clone();
     let name = peer_name.read().await.clone();
+    let notif_status = my_notification_status.read().await.clone();
 
     PresenceMessage::Online {
         peer_id: peer_id.to_string(),
@@ -177,6 +182,7 @@ async fn create_online_message(
         light_state: state,
         note: my_note,
         timestamp: crate::utils::current_timestamp(),
+        notification_status: notif_status,
     }
 }
 
@@ -187,14 +193,11 @@ async fn add_or_update_peer(
     light_state: LightState,
     note: Option<String>,
     timestamp: u64,
+    notification_status: Option<Notification>,
 ) {
     let mut peers_map = peers.write().await;
 
-    // Preserve existing notification_status if peer exists
-    let existing_notification = peers_map
-        .get(&peer_id)
-        .and_then(|p| p.notification_status.clone());
-
+    // Use the notification_status from the incoming message
     peers_map.insert(
         peer_id.clone(),
         PeerPresence {
@@ -203,7 +206,7 @@ async fn add_or_update_peer(
             light_state,
             note,
             last_seen: timestamp,
-            notification_status: existing_notification,
+            notification_status,
         },
     );
 }
